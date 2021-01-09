@@ -714,8 +714,8 @@ module pulp_soc import dm::*; #(
         .USE_FPU    ( USE_FPU            ),
         .CORE_ID    ( FC_CORE_CORE_ID    ),
         .CLUSTER_ID ( FC_CORE_CLUSTER_ID ),
-        .USE_HWPE   ( USE_HWPE           ),
-        .USE_ZFINX  ( USE_ZFINX          )
+        .USE_HWPE   ( USE_HWPE           )
+//        .USE_ZFINX  ( USE_ZFINX          )
     ) fc_subsystem_i (
         .clk_i               ( s_soc_clk           ),
         .rst_ni              ( s_soc_rstn          ),
