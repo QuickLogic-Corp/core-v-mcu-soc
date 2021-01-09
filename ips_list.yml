@@ -76,8 +76,8 @@ ibex:
   group: lowRISC
   domain: [soc]
 cv32e40p:
-  commit: cv32e40p_v1.0.0
-  group: openhwgroup
+  commit: master
+  group: QuickLogic-Corp
   domain: [soc]
 scm:
   commit: v1.0.1
