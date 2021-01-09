@@ -75,6 +75,10 @@ ibex:
   commit: e65a27e14dda7bb3b09cadc4e9232305fd451cec
   group: lowRISC
   domain: [soc]
+cv32e40p:
+  commit: cv32e40p_v1.0.0
+  group: openhwgroup
+  domain: [soc]
 scm:
   commit: v1.0.1
   domain: [cluster, soc]
