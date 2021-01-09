@@ -86,7 +86,8 @@ generic_FLL:
   commit: v0.1
   domain: [soc]
 tech_cells_generic:
-  commit: v0.1.6
+  group: QuickLogic-Corp
+  commit: master
   domain: [cluster, soc]
 udma/udma_core:
   commit: v1.0.0
