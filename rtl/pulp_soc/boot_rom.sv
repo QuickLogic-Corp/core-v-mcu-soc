@@ -38,15 +38,45 @@ module boot_rom #(
 
     `ifndef PULP_FPGA_EMUL
 
-        generic_rom #(
-            .ADDR_WIDTH(ROM_ADDR_WIDTH-2), //The ROM uses 32-bit word addressing while the bus addresses bytes
-            .DATA_WIDTH(32)
-         ) rom_mem_i (
+        //generic_rom #(
+        //    .ADDR_WIDTH(ROM_ADDR_WIDTH-2), //The ROM uses 32-bit word addressing while the bus addresses bytes
+        //    .DATA_WIDTH(32)
+        // ) rom_mem_i (
+        //    .CLK            (  clk_i                ),
+        //    .CEN            (  ~mem_slave.req        ),
+        //    .A              (  address[ROM_ADDR_WIDTH-1:2]  ), //Cutoff insignificant address bits. The
+        //                                                             //interconnect makes sure we only receive addresses in the bootrom address space
+        //    .Q              (  mem_slave.r_rdata      )
+        //);
+        
+        IN22FDX_ROMI_FRG_W02048B032M32C064_boot_code
+        `ifndef SYNTHESIS
+        #(
+        .ROMDATA_FILE_NAME  ("./boot/boot_code.cde" ),
+        .BINARY_FILE        ( 1                     )
+         )
+        `endif
+        rom_mem_i (
             .CLK            (  clk_i                ),
-            .CEN            (  ~mem_slave.req        ),
-            .A              (  address[ROM_ADDR_WIDTH-1:2]  ), //Cutoff insignificant address bits. The
-                                                                     //interconnect makes sure we only receive addresses in the bootrom address space
-            .Q              (  mem_slave.r_rdata      )
+            .CEN            (  ~mem_slave.req       ),
+            .POWERGATE      (  1'b0                 ),
+            .AS             (  address[7]     		),
+            .AW             (  address[ROM_ADDR_WIDTH-1:8]  ),
+            .AC             (  address[6:2] 	  	),
+            .T_BIST         ( 1'b0                  ),
+            .T_LOGIC        ( 1'b0                  ),
+            .T_SCAN         ( 1'b0                  ),
+            .T_SI           ( 1'b0                  ),
+            .T_CEN          ( 1'b1                  ),
+            .T_AS           ( 1'b0                  ),
+            .T_AW           ( '0                    ),
+            .T_AC           ( '0                    ),
+            .T_POWERGATE    ( 1'b0                  ),
+            .T_WBT          ( 1'b0                  ),
+            .MA_SAWL        ( '0                    ),
+            .MA_WL          ( 1'b0                  ),
+            .Q              (  mem_slave.r_data     ),
+            .T_SO           (                       )
         );
 
         // assign mem_slave.add[31:ROM_ADDR_WIDTH] = '0;
