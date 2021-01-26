@@ -219,6 +219,61 @@ module pulp_soc import dm::*; #(
     output logic                    [3:0] sdio_data_o,
     input  logic                    [3:0] sdio_data_i,
     output logic                    [3:0] sdio_data_oen_o,
+input  logic [1:0]                    selected_mode_i,
+    input  logic                          fpga_clk_1_i,
+    input  logic                          fpga_clk_2_i,
+    input  logic                          fpga_clk_3_i,
+    input  logic                          fpga_clk_4_i,
+    input  logic                          fpga_clk_5_i,
+
+    //eFPGA SPIS
+    input  logic                          efpga_fcb_spis_rst_n_i    ,
+    input  logic                          efpga_fcb_spis_mosi_i     ,
+    input  logic                          efpga_fcb_spis_cs_n_i     ,
+    input  logic                          efpga_fcb_spis_clk_i      ,
+    input  logic                          efpga_fcb_spi_mode_en_bo_i,
+    output logic                          efpga_fcb_spis_miso_en_o  ,
+    output logic                          efpga_fcb_spis_miso_o     ,
+
+
+    //eFPGA TEST MODE
+    input  logic                          efpga_STM_i                  ,
+    output logic                          efpga_test_fcb_pif_vldo_en_o ,
+    output logic                          efpga_test_fcb_pif_vldo_o    ,
+    output logic                          efpga_test_fcb_pif_do_l_en_o ,
+    output logic                          efpga_test_fcb_pif_do_l_0_o  ,
+    output logic                          efpga_test_fcb_pif_do_l_1_o  ,
+    output logic                          efpga_test_fcb_pif_do_l_2_o  ,
+    output logic                          efpga_test_fcb_pif_do_l_3_o  ,
+    output logic                          efpga_test_fcb_pif_do_h_en_o ,
+    output logic                          efpga_test_fcb_pif_do_h_0_o  ,
+    output logic                          efpga_test_fcb_pif_do_h_1_o  ,
+    output logic                          efpga_test_fcb_pif_do_h_2_o  ,
+    output logic                          efpga_test_fcb_pif_do_h_3_o  ,
+    output logic                          efpga_test_FB_SPE_OUT_0_o    ,
+    output logic                          efpga_test_FB_SPE_OUT_1_o    ,
+    output logic                          efpga_test_FB_SPE_OUT_2_o    ,
+    output logic                          efpga_test_FB_SPE_OUT_3_o    ,
+    input  logic                          efpga_test_fcb_pif_vldi_i    ,
+    input  logic                          efpga_test_fcb_pif_di_l_0_i  ,
+    input  logic                          efpga_test_fcb_pif_di_l_1_i  ,
+    input  logic                          efpga_test_fcb_pif_di_l_2_i  ,
+    input  logic                          efpga_test_fcb_pif_di_l_3_i  ,
+    input  logic                          efpga_test_fcb_pif_di_h_0_i  ,
+    input  logic                          efpga_test_fcb_pif_di_h_1_i  ,
+    input  logic                          efpga_test_fcb_pif_di_h_2_i  ,
+    input  logic                          efpga_test_fcb_pif_di_h_3_i  ,
+    input  logic                          efpga_test_FB_SPE_IN_0_i     ,
+    input  logic                          efpga_test_FB_SPE_IN_1_i     ,
+    input  logic                          efpga_test_FB_SPE_IN_2_i     ,
+    input  logic                          efpga_test_FB_SPE_IN_3_i     ,
+    input  logic                          efpga_test_M_0_i             ,
+    input  logic                          efpga_test_M_1_i             ,
+    input  logic                          efpga_test_M_2_i             ,
+    input  logic                          efpga_test_M_3_i             ,
+    input  logic                          efpga_test_M_4_i             ,
+    input  logic                          efpga_test_M_5_i             ,
+    input  logic                          efpga_test_MLATCH_i          ,
 
     ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////
@@ -330,6 +385,7 @@ module pulp_soc import dm::*; #(
     logic                  s_soc_clk;
     logic                  s_soc_rstn;
     logic                  s_cluster_clk;
+    logic                  s_efpga_clk, s_efpga_div_clk;
     logic                  s_cluster_rstn;
     logic                  s_cluster_rstn_soc_ctrl;
     logic                  s_sel_fll_clk;
@@ -445,6 +501,9 @@ module pulp_soc import dm::*; #(
     XBAR_TCDM_BUS s_lint_fc_data_bus ();
     XBAR_TCDM_BUS s_lint_fc_instr_bus ();
     XBAR_TCDM_BUS s_lint_hwpe_bus[NB_HWPE_PORTS-1:0]();
+    XBAR_TCDM_BUS s_lint_efpga_tcdm_bus[N_EFPGA_TCDM_PORTS-1:0]();
+    XBAR_TCDM_BUS s_lint_efpga_apbprogram_bus();
+    XBAR_TCDM_BUS s_lint_efpga_apbt1_bus();
 
     `ifdef REMAP_ADDRESS
         logic [3:0] base_addr_int;
@@ -543,6 +602,7 @@ module pulp_soc import dm::*; #(
         .NB_CORES           ( NB_CORES                              ),
         .NB_CLUSTERS        ( `NB_CLUSTERS                          ),
         .EVNT_WIDTH         ( EVNT_WIDTH                            ),
+        .N_EFPGA_TCDM_PORTS ( N_EFPGA_TCDM_PORTS                    ),
         .NGPIO              ( NGPIO                                 ),
         .NPAD               ( NPAD                                  ),
         .NBIT_PADCFG        ( NBIT_PADCFG                           ),
@@ -554,6 +614,8 @@ module pulp_soc import dm::*; #(
 
         .clk_i                  ( s_soc_clk              ),
         .periph_clk_i           ( s_periph_clk           ),
+        .efpga_clk_i            ( s_efpga_clk            ),
+        .efpga_div_clk_i        ( s_efpga_div_clk        ),
         .rst_ni                 ( s_soc_rstn             ),
         .sel_fll_clk_i          ( s_sel_fll_clk          ),
         .ref_clk_i              ( ref_clk_i              ),
@@ -579,6 +641,10 @@ module pulp_soc import dm::*; #(
 
         .l2_rx_master           ( s_lint_udma_rx_bus     ),
         .l2_tx_master           ( s_lint_udma_tx_bus     ),
+        
+        .l2_efpga_tcdm_master    ( s_lint_efpga_tcdm_bus  		),
+        .efpga_apbprogram_slave  ( s_lint_efpga_apbprogram_bus 	),
+        .efpga_apbt1_slave       ( s_lint_efpga_apbt1_bus      	),
 
         .soc_jtag_reg_i         ( soc_jtag_reg_tap       ),
         .soc_jtag_reg_o         ( soc_jtag_reg_soc       ),
@@ -598,6 +664,9 @@ module pulp_soc import dm::*; #(
         .gpio_out               ( gpio_out_o             ),
         .gpio_dir               ( gpio_dir_o             ),
         .gpio_padcfg            ( s_gpio_cfg             ),
+        .fpga_out_o             ( fpga_out_o             ),
+        .fpga_in_i             	( fpga_in_i              ),
+        .fpga_oe_o             	( fpga_oe_o              ),
 
         .pad_mux_o              ( s_pad_mux              ),
         .pad_cfg_o              ( s_pad_cfg              ),
@@ -645,6 +714,61 @@ module pulp_soc import dm::*; #(
         .sddata_o               ( sdio_data_o            ),
         .sddata_i               ( sdio_data_i            ),
         .sddata_oen_o           ( sdio_data_oen_o        ),
+        
+        .selected_mode_i              ( selected_mode_i              ),
+        .fpga_clk_1_i                 ( fpga_clk_1_i                 ),
+        .fpga_clk_2_i                 ( fpga_clk_2_i                 ),
+        .fpga_clk_3_i                 ( fpga_clk_3_i                 ),
+        .fpga_clk_4_i                 ( fpga_clk_4_i                 ),
+        .fpga_clk_5_i                 ( fpga_clk_5_i                 ),
+
+         //eFPGA SPIS
+        .efpga_fcb_spis_rst_n_i       ( efpga_fcb_spis_rst_n_i       ),
+        .efpga_fcb_spis_mosi_i        ( efpga_fcb_spis_mosi_i        ),
+        .efpga_fcb_spis_cs_n_i        ( efpga_fcb_spis_cs_n_i        ),
+        .efpga_fcb_spis_clk_i         ( efpga_fcb_spis_clk_i         ),
+        .efpga_fcb_spi_mode_en_bo_i   ( efpga_fcb_spi_mode_en_bo_i   ),
+        .efpga_fcb_spis_miso_en_o     ( efpga_fcb_spis_miso_en_o     ),
+        .efpga_fcb_spis_miso_o        ( efpga_fcb_spis_miso_o        ),
+
+         //eFPGA TEST MODE
+        .efpga_STM_i                  ( efpga_STM_i                  ),
+        .efpga_test_fcb_pif_vldo_en_o ( efpga_test_fcb_pif_vldo_en_o ),
+        .efpga_test_fcb_pif_vldo_o    ( efpga_test_fcb_pif_vldo_o    ),
+        .efpga_test_fcb_pif_do_l_en_o ( efpga_test_fcb_pif_do_l_en_o ),
+        .efpga_test_fcb_pif_do_l_0_o  ( efpga_test_fcb_pif_do_l_0_o  ),
+        .efpga_test_fcb_pif_do_l_1_o  ( efpga_test_fcb_pif_do_l_1_o  ),
+        .efpga_test_fcb_pif_do_l_2_o  ( efpga_test_fcb_pif_do_l_2_o  ),
+        .efpga_test_fcb_pif_do_l_3_o  ( efpga_test_fcb_pif_do_l_3_o  ),
+        .efpga_test_fcb_pif_do_h_en_o ( efpga_test_fcb_pif_do_h_en_o ),
+        .efpga_test_fcb_pif_do_h_0_o  ( efpga_test_fcb_pif_do_h_0_o  ),
+        .efpga_test_fcb_pif_do_h_1_o  ( efpga_test_fcb_pif_do_h_1_o  ),
+        .efpga_test_fcb_pif_do_h_2_o  ( efpga_test_fcb_pif_do_h_2_o  ),
+        .efpga_test_fcb_pif_do_h_3_o  ( efpga_test_fcb_pif_do_h_3_o  ),
+        .efpga_test_FB_SPE_OUT_0_o    ( efpga_test_FB_SPE_OUT_0_o    ),
+        .efpga_test_FB_SPE_OUT_1_o    ( efpga_test_FB_SPE_OUT_1_o    ),
+        .efpga_test_FB_SPE_OUT_2_o    ( efpga_test_FB_SPE_OUT_2_o    ),
+        .efpga_test_FB_SPE_OUT_3_o    ( efpga_test_FB_SPE_OUT_3_o    ),
+        .efpga_test_fcb_pif_vldi_i    ( efpga_test_fcb_pif_vldi_i    ),
+        .efpga_test_fcb_pif_di_l_0_i  ( efpga_test_fcb_pif_di_l_0_i  ),
+        .efpga_test_fcb_pif_di_l_1_i  ( efpga_test_fcb_pif_di_l_1_i  ),
+        .efpga_test_fcb_pif_di_l_2_i  ( efpga_test_fcb_pif_di_l_2_i  ),
+        .efpga_test_fcb_pif_di_l_3_i  ( efpga_test_fcb_pif_di_l_3_i  ),
+        .efpga_test_fcb_pif_di_h_0_i  ( efpga_test_fcb_pif_di_h_0_i  ),
+        .efpga_test_fcb_pif_di_h_1_i  ( efpga_test_fcb_pif_di_h_1_i  ),
+        .efpga_test_fcb_pif_di_h_2_i  ( efpga_test_fcb_pif_di_h_2_i  ),
+        .efpga_test_fcb_pif_di_h_3_i  ( efpga_test_fcb_pif_di_h_3_i  ),
+        .efpga_test_FB_SPE_IN_0_i     ( efpga_test_FB_SPE_IN_0_i     ),
+        .efpga_test_FB_SPE_IN_1_i     ( efpga_test_FB_SPE_IN_1_i     ),
+        .efpga_test_FB_SPE_IN_2_i     ( efpga_test_FB_SPE_IN_2_i     ),
+        .efpga_test_FB_SPE_IN_3_i     ( efpga_test_FB_SPE_IN_3_i     ),
+        .efpga_test_M_0_i             ( efpga_test_M_0_i             ),
+        .efpga_test_M_1_i             ( efpga_test_M_1_i             ),
+        .efpga_test_M_2_i             ( efpga_test_M_2_i             ),
+        .efpga_test_M_3_i             ( efpga_test_M_3_i             ),
+        .efpga_test_M_4_i             ( efpga_test_M_4_i             ),
+        .efpga_test_M_5_i             ( efpga_test_M_5_i             ),
+        .efpga_test_MLATCH_i          ( efpga_test_MLATCH_i          ),
 
         .timer_ch0_o            ( timer_ch0_o            ),
         .timer_ch1_o            ( timer_ch1_o            ),
@@ -751,7 +875,7 @@ module pulp_soc import dm::*; #(
         .rstn_soc_sync_o            ( s_soc_rstn                    ),
         .rstn_cluster_sync_o        ( s_cluster_rstn                ),
 
-        .clk_cluster_o              ( s_cluster_clk                 ),
+        .clk_cluster_o              ( s_efpga_clk                 ),
         .test_mode_i                ( dft_test_mode_i               ),
         .shift_enable_i             ( 1'b0                          ),
 
@@ -798,9 +922,12 @@ module pulp_soc import dm::*; #(
         .tcdm_udma_tx          ( s_lint_udma_tx_bus  ),
         .tcdm_debug            ( s_lint_debug_bus    ),
         .tcdm_hwpe             ( s_lint_hwpe_bus     ),
+        .tcdm_efpga            ( s_lint_efpga_tcdm_bus       ),
         .axi_master_plug       ( s_data_in_bus       ),
         .axi_slave_plug        ( s_data_out_bus      ),
         .apb_peripheral_bus    ( s_apb_periph_bus    ),
+        .apb_efpga_program 	   ( s_apb_efpga_program_bus ),
+        .apb_efpga_t1      	   ( s_apb_efpga_t1_bus      ),
         .l2_interleaved_slaves ( s_mem_l2_bus        ),
         .l2_private_slaves     ( s_mem_l2_pri_bus    ),
         .boot_rom_slave        ( s_mem_rom_bus       )
