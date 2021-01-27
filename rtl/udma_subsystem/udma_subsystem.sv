@@ -152,7 +152,8 @@ module udma_subsystem
     localparam CH_ID_TX_I2C     = N_SPI*2+ + N_UART;
     localparam CH_ID_TX_SDIO    = N_SPI*2+N_UART+N_I2C;
     localparam CH_ID_TX_I2S     = CH_ID_TX_SDIO+1;
-    localparam CH_ID_TX_EXT_PER = CH_ID_TX_I2S+1;
+    localparam CH_ID_TX_FPGA    = CH_ID_TX_I2S+1;;
+    localparam CH_ID_TX_EXT_PER = CH_ID_TX_FPGA+1;
 
     //RX Channels
     localparam CH_ID_RX_UART    = 0;
@@ -161,7 +162,8 @@ module udma_subsystem
     localparam CH_ID_RX_SDIO    = N_SPI+N_UART+N_I2C;
     localparam CH_ID_RX_I2S     = CH_ID_RX_SDIO+1;
     localparam CH_ID_RX_CAM     = CH_ID_RX_I2S+1;
-    localparam CH_ID_RX_EXT_PER = CH_ID_RX_CAM+1;
+    localparam CH_ID_RX_FPGA    = CH_ID_RX_CAM+1;
+    localparam CH_ID_RX_EXT_PER = CH_ID_RX_FPGA+1;
 
     localparam PER_ID_UART    = 0;                  //0
     localparam PER_ID_SPIM    = PER_ID_UART +1;     //1
@@ -170,7 +172,8 @@ module udma_subsystem
     localparam PER_ID_I2S     = PER_ID_SDIO+1;      //5
     localparam PER_ID_CAM     = PER_ID_I2S+1;       //6
     localparam PER_ID_FILTER  = PER_ID_CAM+1;       //7
-    localparam PER_ID_EXT_PER = PER_ID_FILTER+1;    //8
+    localparam PER_ID_FPGA  = PER_ID_FILTER+1;      //8
+    localparam PER_ID_EXT_PER = FPGA+1;             //9
 
 
     localparam CH_ID_EXT_TX_FILTER = 0;
@@ -1064,6 +1067,7 @@ module udma_subsystem
         .data_rx_o           ( s_rx_ch_data[CH_ID_RX_EXT_PER]        ),
         .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_EXT_PER]       ),
         .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_EXT_PER]       )
+
     );
 `endif
 endmodule
