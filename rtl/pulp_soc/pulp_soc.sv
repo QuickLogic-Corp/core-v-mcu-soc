@@ -304,6 +304,8 @@ input  logic [1:0]                    selected_mode_i,
 
     localparam FC_CORE_CORE_ID       = 4'd0;
     localparam FC_CORE_MHARTID       = {FC_CORE_CLUSTER_ID, 1'b0, FC_CORE_CORE_ID};
+    
+    localparam N_EFPGA_TCDM_PORTS    = `N_EFPGA_TCDM_PORTS;
 
 
     //  PULP RISC-V cores have not continguos MHARTID.

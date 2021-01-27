@@ -42,6 +42,7 @@ module udma_subsystem
     input  logic                       dft_cg_enable_i,
 
     input  logic                       sys_clk_i,
+    input  logic                       efpga_clk_i,
     input  logic                       sys_resetn_i,
 
     input  logic                       periph_clk_i,
@@ -55,11 +56,26 @@ module udma_subsystem
     output logic                       udma_apb_pready,
     output logic                       udma_apb_pslverr,
 
-    output logic            [32*4-1:0] events_o,
+    output logic           [32*4-1:0] events_o, //4 events for each peripheral
 
     input  logic                      event_valid_i,
     input  logic                [7:0] event_data_i,
     output logic                      event_ready_o,
+
+    //TX side - uDMA <-> external Peripheral
+    output logic                       efpga_data_tx_valid_o,
+    input  logic                       efpga_data_tx_ready_i,
+    output logic               [31:0]  efpga_data_tx_o,
+
+    //RX side - uDMA <-> external Peripheral
+    input  logic                       efpga_data_rx_valid_i,
+    output logic                       efpga_data_rx_ready_o,
+    input  logic               [31:0]  efpga_data_rx_i,
+
+    //configuration external peripheral
+    input  logic               [31:0]  efpga_setup_i,
+    output logic               [31:0]  efpga_setup_o,
+
 
     output logic     [N_SPI-1:0]       spi_clk,
     output logic     [N_SPI-1:0] [3:0] spi_csn,
@@ -906,6 +922,89 @@ module udma_subsystem
         .filter_eof_i             ( s_stream_eot[STREAM_ID_FILTER]      ),
         .filter_ready_o           ( s_stream_ready[STREAM_ID_FILTER]    )
     );
+    
+     //PER_ID 6
+    assign s_events[4*PER_ID_FPGA]   = s_rx_ch_events[CH_ID_RX_FPGA];
+    assign s_events[4*PER_ID_FPGA+1] = s_tx_ch_events[CH_ID_TX_FPGA];
+    assign s_events[4*PER_ID_FPGA+2] = 1'b0;
+    assign s_events[4*PER_ID_FPGA+3] = 1'b0;
+
+    assign s_rx_cfg_stream[CH_ID_RX_FPGA] = 'h0;
+    assign s_rx_cfg_stream_id[CH_ID_RX_FPGA] = 'h0;
+    assign s_rx_ch_destination[CH_ID_RX_FPGA] = 'h0;
+    assign s_tx_ch_destination[CH_ID_TX_FPGA] = 'h0;
+
+    udma_external_per_top #(
+        .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
+        .TRANS_SIZE(TRANS_SIZE)
+    ) i_efpga (
+        .sys_clk_i           ( s_clk_periphs_core[PER_ID_FPGA]         ),
+        .periph_clk_i        ( efpga_clk_i                             ),
+        .rstn_i              ( sys_resetn_i                            ),
+
+        .cfg_data_i          ( s_periph_data_to                        ),
+        .cfg_addr_i          ( s_periph_addr                           ),
+        .cfg_valid_i         ( s_periph_valid[PER_ID_FPGA]             ),
+        .cfg_rwn_i           ( s_periph_rwn                            ),
+        .cfg_ready_o         ( s_periph_ready[PER_ID_FPGA]             ),
+        .cfg_data_o          ( s_periph_data_from[PER_ID_FPGA]         ),
+
+        .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_FPGA]       ),
+        .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_FPGA]            ),
+        .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_FPGA]      ),
+        .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_FPGA]              ),
+        .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_FPGA]             ),
+        .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_FPGA]               ),
+        .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_FPGA]          ),
+        .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_FPGA]        ),
+        .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_FPGA]       ),
+
+        .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_TX_FPGA]       ),
+        .cfg_tx_size_o       ( s_tx_cfg_size[CH_ID_TX_FPGA]            ),
+        .cfg_tx_continuous_o ( s_tx_cfg_continuous[CH_ID_TX_FPGA]      ),
+        .cfg_tx_en_o         ( s_tx_cfg_en[CH_ID_TX_FPGA]              ),
+        .cfg_tx_clr_o        ( s_tx_cfg_clr[CH_ID_TX_FPGA]             ),
+        .cfg_tx_en_i         ( s_tx_ch_en[CH_ID_TX_FPGA]               ),
+        .cfg_tx_pending_i    ( s_tx_ch_pending[CH_ID_TX_FPGA]          ),
+        .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_TX_FPGA]        ),
+        .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_TX_FPGA]       ),
+
+        .data_tx_req_o       ( s_tx_ch_req[CH_ID_TX_FPGA]              ),
+        .data_tx_gnt_i       ( s_tx_ch_gnt[CH_ID_TX_FPGA]              ),
+        .data_tx_datasize_o  ( s_tx_ch_datasize[CH_ID_TX_FPGA]         ),
+        .data_tx_i           ( s_tx_ch_data[CH_ID_TX_FPGA]             ),
+        .data_tx_valid_i     ( s_tx_ch_valid[CH_ID_TX_FPGA]            ),
+        .data_tx_ready_o     ( s_tx_ch_ready[CH_ID_TX_FPGA]            ),
+
+        .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_FPGA]         ),
+        .data_rx_o           ( s_rx_ch_data[CH_ID_RX_FPGA]             ),
+        .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_FPGA]            ),
+        .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_FPGA]            ),
+        
+        .external_per_status_i  ( efpga_setup_i                         ),
+        .external_per_setup_o   ( efpga_setup_o                         ),
+
+        //TX side - uDMA <-> external Peripheral
+        .data_tx_dc_valid_o  ( efpga_data_tx_valid_o                    ),
+        .data_tx_dc_ready_i  ( efpga_data_tx_ready_i                    ),
+        .data_tx_dc_o        ( efpga_data_tx_o                          ),
+
+        //RX side - uDMA <-> external Peripheral
+        .data_rx_dc_valid_i  ( efpga_data_rx_valid_i                    ),
+        .data_rx_dc_ready_o  ( efpga_data_rx_ready_o                    ),
+        .data_rx_dc_i        ( efpga_data_rx_i                          )
+    );
+    
+        //fills remaining events with 0s
+    //generate
+    //    for (genvar g_evt=N_PERIPHS;g_evt<32;g_evt++)
+    //    begin: i_evt_assign
+    //        assign s_events[4*g_evt]   = 1'b0;
+    //        assign s_events[4*g_evt+1] = 1'b0;
+    //        assign s_events[4*g_evt+2] = 1'b0;
+    //        assign s_events[4*g_evt+3] = 1'b0;
+     //   end
+    //endgenerate
 
 `ifdef PULP_TRAINING
     //PER_ID 8

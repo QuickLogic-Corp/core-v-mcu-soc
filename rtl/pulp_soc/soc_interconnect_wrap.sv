@@ -161,7 +161,7 @@ module soc_interconnect_wrap
     //Synopsys 2019.3 has a bug; It doesn't handle expressions for array indices on the left-hand side of assignments.
     // Using a macro instead of a package parameter is an ugly but necessary workaround.
     // E.g. assign a[param+i] = b[i] doesn't work, but assign a[i] = b[i-param] does.
-    `define NR_SOC_TCDM_MASTER_PORTS 5
+    `define NR_SOC_TCDM_MASTER_PORTS 9  // 5 orig + 4xeFPGA
     for (genvar i = 0; i < 4; i++) begin
         `TCDM_ASSIGN_INTF(master_ports[`NR_SOC_TCDM_MASTER_PORTS + i], axi_bridge_2_interconnect[i])
     end
@@ -181,7 +181,7 @@ module soc_interconnect_wrap
 
     //Interconnect instantiation
     soc_interconnect #(
-                       .NR_MASTER_PORTS(pkg_soc_interconnect::NR_TCDM_MASTER_PORTS), // FC instructions, FC data, uDMA RX, uDMA TX, debug access, 4 four 64-bit
+                       .NR_MASTER_PORTS(pkg_soc_interconnect::NR_TCDM_MASTER_PORTS), // FC instructions, FC data, uDMA RX, uDMA TX, debug access, 4xeFPGA, 4 four 64-bit
                                               // axi plug
                        .NR_MASTER_PORTS_INTERLEAVED_ONLY(NR_HWPE_PORTS), // HWPEs (PULP accelerators) only have access
                                                                          // to the interleaved memory region
