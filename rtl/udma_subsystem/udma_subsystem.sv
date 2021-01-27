@@ -165,15 +165,15 @@ module udma_subsystem
     localparam CH_ID_RX_FPGA    = CH_ID_RX_CAM+1;
     localparam CH_ID_RX_EXT_PER = CH_ID_RX_FPGA+1;
 
-    localparam PER_ID_UART    = 0;                  //0
-    localparam PER_ID_SPIM    = PER_ID_UART +1;     //1
-    localparam PER_ID_I2C     = N_SPI+N_UART;       //2, 3
-    localparam PER_ID_SDIO    = N_SPI+N_UART+N_I2C; //4
-    localparam PER_ID_I2S     = PER_ID_SDIO+1;      //5
-    localparam PER_ID_CAM     = PER_ID_I2S+1;       //6
-    localparam PER_ID_FILTER  = PER_ID_CAM+1;       //7
-    localparam PER_ID_FPGA  = PER_ID_FILTER+1;      //8
-    localparam PER_ID_EXT_PER = FPGA+1;             //9
+    localparam PER_ID_UART      = 0;                  //0
+    localparam PER_ID_SPIM      = PER_ID_UART +1;     //1
+    localparam PER_ID_I2C       = N_SPI+N_UART;       //2, 3
+    localparam PER_ID_SDIO      = N_SPI+N_UART+N_I2C; //4
+    localparam PER_ID_I2S       = PER_ID_SDIO+1;      //5
+    localparam PER_ID_CAM       = PER_ID_I2S+1;       //6
+    localparam PER_ID_FILTER    = PER_ID_CAM+1;       //7
+    localparam PER_ID_FPGA      = PER_ID_FILTER+1;      //8
+    localparam PER_ID_EXT_PER   = PER_ID_FPGA+1;             //9
 
 
     localparam CH_ID_EXT_TX_FILTER = 0;
