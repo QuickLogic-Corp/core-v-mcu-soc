@@ -147,7 +147,7 @@ module soc_peripherals #(
     input  logic                 [3:0] sddata_i,
     output logic                 [3:0] sddata_oen_o,
 
-input  logic [1:0]                 selected_mode_i,
+    input  logic [1:0]                 selected_mode_i,
     input  logic                       fpga_clk_1_i,
     input  logic                       fpga_clk_2_i,
     input  logic                       fpga_clk_3_i,
@@ -238,8 +238,6 @@ input  logic [1:0]                 selected_mode_i,
     APB_BUS s_soc_evnt_gen_bus ();
     APB_BUS s_stdout_bus ();
     APB_BUS s_apb_timer_bus ();
-
-    localparam UDMA_EVENTS = 16*8;
 
     logic [31:0] s_gpio_sync;
     logic       s_sel_hyper_axi;
@@ -756,7 +754,7 @@ input  logic [1:0]                 selected_mode_i,
 
     logic fpga_clk1_int, fpga_clk2_int, sel_clk_mode;
 
-    assign sel_clk_mode = selected_mode_i == MODE_FUNCTIONAL_ASIC;
+    assign sel_clk_mode = selected_mode_i == 2'b00; // TODO MODE_FUNCTIONAL_ASIC;
 
     pulp_clock_mux2 clk_mux_efpga_clk_1_i (
         .clk0_i    ( fpga_clk_1_i  ),
