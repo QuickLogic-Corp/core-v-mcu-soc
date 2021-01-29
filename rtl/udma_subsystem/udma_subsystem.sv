@@ -14,10 +14,7 @@ module udma_subsystem
     parameter L2_ADDR_WIDTH  = 19,   //L2 addr space of 2MB
     parameter CAM_DATA_WIDTH = 8,
     parameter APB_ADDR_WIDTH = 12,  //APB slaves are 4KB by default
-    parameter TRANS_SIZE     = 20,  //max uDMA transaction size of 1MB
-    parameter N_SPI          = 4,
-    parameter N_UART         = 4,
-    parameter N_I2C          = 1
+    parameter TRANS_SIZE     = 20   //max uDMA transaction size of 1MB
 )
 (
     output logic                       L2_ro_wen_o    ,
@@ -77,26 +74,26 @@ module udma_subsystem
     output logic               [31:0]  efpga_setup_o,
 
 
-    output logic     [N_SPI-1:0]       spi_clk,
-    output logic     [N_SPI-1:0] [3:0] spi_csn,
-    output logic     [N_SPI-1:0] [3:0] spi_oen,
-    output logic     [N_SPI-1:0] [3:0] spi_sdo,
-    input  logic     [N_SPI-1:0] [3:0] spi_sdi,
+    output logic     [`N_SPI-1:0]       spi_clk,
+    output logic     [`N_SPI-1:0] [3:0] spi_csn,
+    output logic     [`N_SPI-1:0] [3:0] spi_oen,
+    output logic     [`N_SPI-1:0] [3:0] spi_sdo,
+    input  logic     [`N_SPI-1:0] [3:0] spi_sdi,
 
-    input  logic           [N_I2C-1:0] i2c_scl_i,
-    output logic           [N_I2C-1:0] i2c_scl_o,
-    output logic           [N_I2C-1:0] i2c_scl_oe,
-    input  logic           [N_I2C-1:0] i2c_sda_i,
-    output logic           [N_I2C-1:0] i2c_sda_o,
-    output logic           [N_I2C-1:0] i2c_sda_oe,
+    input  logic           [`N_I2C-1:0] i2c_scl_i,
+    output logic           [`N_I2C-1:0] i2c_scl_o,
+    output logic           [`N_I2C-1:0] i2c_scl_oe,
+    input  logic           [`N_I2C-1:0] i2c_sda_i,
+    output logic           [`N_I2C-1:0] i2c_sda_o,
+    output logic           [`N_I2C-1:0] i2c_sda_oe,
 
     input  logic                       cam_clk_i,
     input  logic  [CAM_DATA_WIDTH-1:0] cam_data_i,
     input  logic                       cam_hsync_i,
     input  logic                       cam_vsync_i,
 
-    input  logic          [N_UART-1:0] uart_rx_i,
-    output logic          [N_UART-1:0] uart_tx_o,
+    input  logic          [`N_UART-1:0] uart_rx_i,
+    output logic          [`N_UART-1:0] uart_tx_o,
 
     output logic                       sdio_clk_o,
     output logic                       sdio_cmd_o,
@@ -120,46 +117,38 @@ module udma_subsystem
 
     localparam L2_AWIDTH_NOAL = L2_ADDR_WIDTH + 2;
 
-    localparam N_I2S     = 1;
-    localparam N_CAM     = 1;
-    localparam N_CSI2    = 0;
-    localparam N_HYPER   = 0;
-    localparam N_SDIO    = 1;
-    localparam N_JTAG    = 0;
-    localparam N_MRAM    = 0;
-    localparam N_FILTER  = 1;
-    localparam N_FPGA    = 0;
+    if (`N_I2S != 0) $error("Requested number of I2S not supported. Only support 0");
 `ifdef PULP_TRAINING
     localparam N_EXT_PER = 1;
 `else
     localparam N_EXT_PER = 0;
 `endif
 
-    localparam N_RX_CHANNELS =   N_SPI + N_HYPER + N_MRAM + N_JTAG + N_SDIO + N_UART + N_I2C + N_I2S + N_CAM + 2*N_CSI2 + N_FPGA + N_EXT_PER;
-    localparam N_TX_CHANNELS = 2*N_SPI + N_HYPER + N_MRAM + N_JTAG + N_SDIO + N_UART + N_I2C + N_I2S + N_FPGA + N_EXT_PER;
+    localparam N_RX_CHANNELS =   `N_SPI + `N_HYPER + `N_MRAM + `N_JTAG + `N_SDIO + `N_UART + `N_I2C + `N_I2S + `N_CAM + 2*`N_CSI2 + `N_FPGA + N_EXT_PER;
+    localparam N_TX_CHANNELS = 2*`N_SPI + `N_HYPER + `N_MRAM + `N_JTAG + `N_SDIO + `N_UART + `N_I2C + `N_I2S + `N_FPGA + N_EXT_PER;
 
-    localparam N_RX_EXT_CHANNELS =   N_FILTER;
-    localparam N_TX_EXT_CHANNELS = 2*N_FILTER;
-    localparam N_STREAMS         =   N_FILTER;
+    localparam N_RX_EXT_CHANNELS =   `N_FILTER;
+    localparam N_TX_EXT_CHANNELS = 2*`N_FILTER;
+    localparam N_STREAMS         =   `N_FILTER;
     localparam STREAM_ID_WIDTH   = 1;//$clog2(N_STREAMS)
 
-    localparam N_PERIPHS = N_SPI + N_HYPER + N_UART + N_MRAM + N_I2C + N_CAM + N_I2S + N_CSI2 + N_SDIO + N_JTAG + N_FILTER + N_FPGA + N_EXT_PER;
+    localparam N_PERIPHS = `N_SPI + `N_HYPER + `N_UART + `N_MRAM + `N_I2C + `N_CAM + `N_I2S + `N_CSI2 + `N_SDIO + `N_JTAG + `N_FILTER + `N_FPGA + N_EXT_PER;
 
     //TX Channels
     localparam CH_ID_TX_UART    = 0;
-    localparam CH_ID_TX_SPIM    = N_UART;
-    localparam CH_ID_CMD_SPIM   = N_SPI + N_UART;
-    localparam CH_ID_TX_I2C     = N_SPI*2+ + N_UART;
-    localparam CH_ID_TX_SDIO    = N_SPI*2+N_UART+N_I2C;
+    localparam CH_ID_TX_SPIM    = `N_UART;
+    localparam CH_ID_CMD_SPIM   = `N_SPI + `N_UART;
+    localparam CH_ID_TX_I2C     = `N_SPI*2+ + `N_UART;
+    localparam CH_ID_TX_SDIO    = `N_SPI*2+`N_UART+`N_I2C;
     localparam CH_ID_TX_I2S     = CH_ID_TX_SDIO+1;
     localparam CH_ID_TX_FPGA    = CH_ID_TX_I2S+1;;
     localparam CH_ID_TX_EXT_PER = CH_ID_TX_FPGA+1;
 
     //RX Channels
     localparam CH_ID_RX_UART    = 0;
-    localparam CH_ID_RX_SPIM    = N_UART;
-    localparam CH_ID_RX_I2C     = N_SPI+N_UART;
-    localparam CH_ID_RX_SDIO    = N_SPI+N_UART+N_I2C;
+    localparam CH_ID_RX_SPIM    = `N_UART;
+    localparam CH_ID_RX_I2C     = `N_SPI+`N_UART;
+    localparam CH_ID_RX_SDIO    = `N_SPI+`N_UART+`N_I2C;
     localparam CH_ID_RX_I2S     = CH_ID_RX_SDIO+1;
     localparam CH_ID_RX_CAM     = CH_ID_RX_I2S+1;
     localparam CH_ID_RX_FPGA    = CH_ID_RX_CAM+1;
@@ -167,8 +156,8 @@ module udma_subsystem
 
     localparam PER_ID_UART      = 0;                  //0
     localparam PER_ID_SPIM      = PER_ID_UART +1;     //1
-    localparam PER_ID_I2C       = N_SPI+N_UART;       //2, 3
-    localparam PER_ID_SDIO      = N_SPI+N_UART+N_I2C; //4
+    localparam PER_ID_I2C       = `N_SPI+`N_UART;       //2, 3
+    localparam PER_ID_SDIO      = `N_SPI+`N_UART+`N_I2C; //4
     localparam PER_ID_I2S       = PER_ID_SDIO+1;      //5
     localparam PER_ID_CAM       = PER_ID_I2S+1;       //6
     localparam PER_ID_FILTER    = PER_ID_CAM+1;       //7
@@ -260,9 +249,9 @@ module udma_subsystem
     logic [N_PERIPHS-1:0]        s_periph_valid;
     logic [N_PERIPHS-1:0]        s_periph_ready;
 
-    logic            [N_SPI-1:0] s_spi_eot;
-    logic            [N_I2C-1:0] s_i2c_evt;
-    logic           [N_UART-1:0] s_uart_evt;
+    logic            [`N_SPI-1:0] s_spi_eot;
+    logic            [`N_I2C-1:0] s_i2c_evt;
+    logic           [`N_UART-1:0] s_uart_evt;
 
     logic         [3:0] s_trigger_events;
 
@@ -413,7 +402,7 @@ module udma_subsystem
 
     //PER_ID 0
     generate
-        for (genvar g_uart=0;g_uart<N_UART;g_uart++)
+        for (genvar g_uart=0;g_uart<`N_UART;g_uart++)
         begin : i_uart_gen
             assign s_events[4*(PER_ID_UART+g_uart)+0] = s_rx_ch_events[CH_ID_RX_UART+g_uart];
             assign s_events[4*(PER_ID_UART+g_uart)+1] = s_tx_ch_events[CH_ID_TX_UART+g_uart];
@@ -482,7 +471,7 @@ module udma_subsystem
 
     //PER_ID 1
     generate
-        for (genvar g_spi=0;g_spi<N_SPI;g_spi++)
+        for (genvar g_spi=0;g_spi<`N_SPI;g_spi++)
         begin : i_spim_gen
             assign s_events[4*(PER_ID_SPIM+g_spi)+0] = s_rx_ch_events[CH_ID_RX_SPIM+g_spi];
             assign s_events[4*(PER_ID_SPIM+g_spi)+1] = s_tx_ch_events[CH_ID_TX_SPIM+g_spi];
@@ -585,7 +574,7 @@ module udma_subsystem
 
     //PER_ID 2, 3
     generate
-        for (genvar g_i2c=0;g_i2c<N_I2C;g_i2c++)
+        for (genvar g_i2c=0;g_i2c<`N_I2C;g_i2c++)
         begin: i_i2c_gen
             assign s_events[4*(PER_ID_I2C+g_i2c)+0] = s_rx_ch_events[CH_ID_RX_I2C+g_i2c];
             assign s_events[4*(PER_ID_I2C+g_i2c)+1] = s_tx_ch_events[CH_ID_TX_I2C+g_i2c];
