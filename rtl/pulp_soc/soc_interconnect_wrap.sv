@@ -52,12 +52,12 @@ module soc_interconnect_wrap
         XBAR_TCDM_BUS.Slave      tcdm_udma_rx, //RX Channel for the uDMA
         XBAR_TCDM_BUS.Slave      tcdm_debug, //Debug access port from either the legacy or the riscv-debug unit
         XBAR_TCDM_BUS.Slave      tcdm_hwpe[NR_HWPE_PORTS], //Hardware Processing Element ports
-        XBAR_TCDM_BUS.Slave      lint_efpga[`N_EFPGA_TCDM_PORTS-1:0],  // EFPGA ports
+        XBAR_TCDM_BUS.Slave      tcdm_efpga[`N_EFPGA_TCDM_PORTS-1:0],  // EFPGA ports
         AXI_BUS.Slave            axi_master_plug,                     // Normally used for cluster -> SoC communication
         AXI_BUS.Master           axi_slave_plug,                      // Normally used for SoC -> cluster communication
         APB_BUS.Master           apb_peripheral_bus,                  // Connects to all the SoC Peripherals
-        XBAR_TCDM_BUS.Master     lint_efpga_apbprogram,
-        XBAR_TCDM_BUS.Master     lint_efpga_apbt1,
+        XBAR_TCDM_BUS.Master     tcdm_efpga_apbprogram,
+        XBAR_TCDM_BUS.Master     tcdm_efpga_apbt1,
         XBAR_TCDM_BUS.Master     l2_interleaved_slaves[NR_L2_PORTS], // Connects to the interleaved memory banks
         XBAR_TCDM_BUS.Master     l2_private_slaves[2], // Connects to core-private memory banks
         XBAR_TCDM_BUS.Master     boot_rom_slave //Connects to the bootrom
@@ -159,6 +159,10 @@ module soc_interconnect_wrap
     `TCDM_ASSIGN_INTF(master_ports[2], tcdm_udma_tx)
     `TCDM_ASSIGN_INTF(master_ports[3], tcdm_udma_rx)
     `TCDM_ASSIGN_INTF(master_ports[4], tcdm_debug)
+    `TCDM_ASSIGN_INTF(master_ports[5], tcdm_efpga[0])
+    `TCDM_ASSIGN_INTF(master_ports[6], tcdm_efpga[1])
+    `TCDM_ASSIGN_INTF(master_ports[7], tcdm_efpga[2])
+    `TCDM_ASSIGN_INTF(master_ports[8], tcdm_efpga[3])
 
     //Assign the 4 master ports from the AXI plug to the interface array
 
