@@ -91,6 +91,16 @@ module apb_soc_ctrl #(
 
     output logic               [31:0] fc_bootaddr_o,
 
+    output logic                [2:0] sel_clk_dc_fifo_efpga_o,
+    output logic                      clk_gating_dc_fifo_o,
+    output logic                [3:0] reset_type1_efpga_o,
+    output logic                      enable_udma_efpga_o,
+    output logic                      enable_events_efpga_o,
+    output logic                      enable_apb_efpga_o,
+    output logic                      enable_tcdm3_efpga_o,
+    output logic                      enable_tcdm2_efpga_o,
+    output logic                      enable_tcdm1_efpga_o,
+    output logic                      enable_tcdm0_efpga_o,                                                          
     output logic                      fc_fetchen_o,
     output logic                      sel_hyper_axi_o,
     output logic                      cluster_pow_o, // power cluster
@@ -153,6 +163,35 @@ module apb_soc_ctrl #(
    assign cluster_byp_o = r_cluster_byp;
    assign cluster_irq_o = r_cluster_irq;
 
+    assign clk_div_cluster_data_o = r_clk_div_cluster;
+
+   edge_propagator_tx i_edgeprop_clu
+   (
+     .clk_i(HCLK),
+     .rstn_i(HRESETn),
+     .valid_i(s_div_cluster_valid),
+     .ack_i(clk_div_cluster_ack_i),
+     .valid_o(clk_div_cluster_valid_o)
+   );
+
+   assign s_div_cluster_valid = s_apb_write & s_div_cluster_sel;
+   assign s_div_cluster_sel   = s_apb_addr == `REG_CLK_DIV_CLU;
+
+  always_comb begin : proc_id
+    sel_clk_dc_fifo_efpga_o = '0;
+    for(int unsigned i=0;i<6;i++)
+    begin
+      if (r_sel_clk_dc_fifo_onehot[i])
+        sel_clk_dc_fifo_efpga_o = i;
+    end
+  end
+
+  assign clk_gating_dc_fifo_o = r_clk_gating_dc_fifo;
+
+  assign reset_type1_efpga_o  = r_reset_type1_efpga;
+
+  assign {enable_udma_efpga_o, enable_events_efpga_o, enable_apb_efpga_o, enable_tcdm3_efpga_o, enable_tcdm2_efpga_o, enable_tcdm1_efpga_o, enable_tcdm0_efpga_o} = r_enable_inout_efpga[5:0];
+                                                  
    always_comb begin
      for (int i=0;i<64;i++)
      begin
@@ -185,6 +224,11 @@ module apb_soc_ctrl #(
         r_cluster_boot         <= '0;
         r_cluster_rstn         <= 1'b1;
         r_cluster_irq          <= 1'b0;
+        r_clk_div_cluster        <= 'h0;
+        r_sel_clk_dc_fifo_onehot <= '0;
+        r_clk_gating_dc_fifo     <= 1'b1;
+        r_reset_type1_efpga      <= '0;
+        r_enable_inout_efpga     <= '0;                                
       end
       else
       begin
@@ -369,6 +413,24 @@ module apb_soc_ctrl #(
                     r_cluster_boot[31:0] <= PWDATA;
                 `REG_CLUSTER_BOOT_ADDR1:
                     r_cluster_boot[63:32] <= PWDATA;
+                `REG_CLK_DIV_CLU:
+                    r_clk_div_cluster  <= PWDATA[7:0];
+                `SEL_CLK_DC_FIFO_EFPGA:
+                    r_sel_clk_dc_fifo_onehot <= PWDATA[5:0];
+                `CLK_GATING_DC_FIFO_EFPGA:
+                    r_clk_gating_dc_fifo     <= PWDATA[0];
+                `RESET_TYPE1_EFPGA:
+                    r_reset_type1_efpga      <= PWDATA[3:0];
+                `ENABLE_IN_OUT_EFPGA:
+                    //0: TCDM0
+                    //1: TCDM1
+                    //2: TCDM2
+                    //3: TCDM3:
+                    //4: APB
+                    //5: EVENTS
+                    //6: uDMA
+                    r_enable_inout_efpga     <= PWDATA[5:0];
+                
                 default: begin
                 `ifndef SYNTHESIS
                   `ifdef MSG_VERBOSE
@@ -503,6 +565,16 @@ module apb_soc_ctrl #(
             PRDATA = r_cluster_boot[31:0];
           `REG_CLUSTER_BOOT_ADDR1:
             PRDATA = r_cluster_boot[63:32];
+          `REG_CLK_DIV_CLU:
+            PRDATA = {24'h0,r_clk_div_cluster};
+          `SEL_CLK_DC_FIFO_EFPGA:
+            PRDATA = {26'h0, r_sel_clk_dc_fifo_onehot};
+          `CLK_GATING_DC_FIFO_EFPGA:
+            PRDATA = {31'b0, r_clk_gating_dc_fifo};
+          `RESET_TYPE1_EFPGA:
+            PRDATA = {28'b0, r_reset_type1_efpga};
+          `ENABLE_IN_OUT_EFPGA:
+            PRDATA = {26'b0, r_enable_inout_efpga};                 
           default:
             begin
             PRDATA = 'h0;
