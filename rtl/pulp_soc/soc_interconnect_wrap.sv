@@ -51,7 +51,7 @@ module soc_interconnect_wrap
         XBAR_TCDM_BUS.Slave      tcdm_udma_rx, //RX Channel for the uDMA
         XBAR_TCDM_BUS.Slave      tcdm_debug, //Debug access port from either the legacy or the riscv-debug unit
         XBAR_TCDM_BUS.Slave      tcdm_hwpe[NR_HWPE_PORTS], //Hardware Processing Element ports
-        XBAR_TCDM_BUS.Slave      lint_efpga[N_EFPGA_TCDM_PORTS-1:0],  // EFPGA ports
+        XBAR_TCDM_BUS.Slave      lint_efpga[`N_EFPGA_TCDM_PORTS-1:0],  // EFPGA ports
         AXI_BUS.Slave            axi_master_plug,                     // Normally used for cluster -> SoC communication
         AXI_BUS.Master           axi_slave_plug,                      // Normally used for SoC -> cluster communication
         APB_BUS.Master           apb_peripheral_bus,                  // Connects to all the SoC Peripherals

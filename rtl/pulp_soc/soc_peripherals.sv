@@ -243,8 +243,6 @@ input  logic [1:0]                 selected_mode_i,
     APB_BUS s_stdout_bus ();
     APB_BUS s_apb_timer_bus ();
 
-    localparam UDMA_EVENTS = 16*8;
-
     logic [31:0] s_gpio_sync;
     logic       s_sel_hyper_axi;
 
@@ -760,8 +758,9 @@ input  logic [1:0]                 selected_mode_i,
 
     logic fpga_clk1_int, fpga_clk2_int, sel_clk_mode;
 
-    assign sel_clk_mode = selected_mode_i == MODE_FUNCTIONAL_ASIC;
-
+    //assign sel_clk_mode = selected_mode_i == MODE_FUNCTIONAL_ASIC;
+    assign sel_clk_mode = 1'b1;
+  
     pulp_clock_mux2 clk_mux_efpga_clk_1_i (
         .clk0_i    ( fpga_clk_1_i  ),
         .clk1_i    ( efpga_clk_i   ),
@@ -822,9 +821,9 @@ input  logic [1:0]                 selected_mode_i,
         .apbprogram_i            ( efpga_apbprogram_slave                                           ),
         .apbt1_i                 ( efpga_apbt1_slave                                                ),
 
-        .efpga_gpio_oe_o          ( fpgaio_oe_o                                                     ),
-        .efpga_gpio_data_i        ( fpgaio_in_i                                                     ),
-        .efpga_gpio_data_o        ( fpgaio_out_o                                                    ),
+        .fpgaio_oe_o          ( fpgaio_oe_o                                                     ),
+        .fpgaio_data_i        ( fpgaio_in_i                                                     ),
+        .fpgaio_data_o        ( fpgaio_out_o                                                    ),
 
         .efpga_event_o            ( s_efpga_hwpe_events                                              ),
 
