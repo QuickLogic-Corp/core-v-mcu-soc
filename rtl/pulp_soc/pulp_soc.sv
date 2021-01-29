@@ -506,7 +506,7 @@ input  logic [1:0]                    selected_mode_i,
     XBAR_TCDM_BUS s_lint_fc_data_bus ();
     XBAR_TCDM_BUS s_lint_fc_instr_bus ();
     XBAR_TCDM_BUS s_lint_hwpe_bus[NB_HWPE_PORTS-1:0]();
-    XBAR_TCDM_BUS s_lint_efpga_tcdm_bus[N_EFPGA_TCDM_PORTS-1:0]();
+    XBAR_TCDM_BUS s_lint_efpga_bus[`N_EFPGA_TCDM_PORTS-1:0]();
     XBAR_TCDM_BUS s_lint_efpga_apbprogram_bus();
     XBAR_TCDM_BUS s_lint_efpga_apbt1_bus();
 
