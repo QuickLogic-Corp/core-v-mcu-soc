@@ -17,7 +17,6 @@ module soc_peripherals #(
     parameter NB_CORES       = 4,
     parameter NB_CLUSTERS    = 0,
     parameter EVNT_WIDTH     = 8,
-    parameter N_EFPGA_TCDM_PORTS        = 4,
     parameter NGPIO          = 64,
     parameter N_FPGAIO        = 43,
     parameter NPAD           = 64,
@@ -68,7 +67,7 @@ module soc_peripherals #(
     // MASTER PORT TO CLUSTER FLL
     FLL_BUS.Master                     cluster_fll_master,
     // MASTER PORT TO L2 from eFPGA
-    XBAR_TCDM_BUS.Master               l2_efpga_tcdm_master [N_EFPGA_TCDM_PORTS-1:0],
+    XBAR_TCDM_BUS.Master               l2_efpga_tcdm_master[`N_EFPGA_TCDM_PORTS-1:0],
     XBAR_TCDM_BUS.Slave                efpga_apbprogram_slave,
     XBAR_TCDM_BUS.Slave                efpga_apbt1_slave,
 /*
