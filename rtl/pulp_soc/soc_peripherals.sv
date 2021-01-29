@@ -269,14 +269,14 @@ input  logic [1:0]                 selected_mode_i,
 
 
     logic [N_EFPGA_EVENTS-1:0] s_efpga_hwpe_events;
-    logic [N_EFPGA_TCDM_PORTS-1:0]                             tcdm_req;
-    logic [N_EFPGA_TCDM_PORTS-1:0][TCDM_EFPGA_ADDR_WIDTH-1:0]  tcdm_addr;
-    logic [N_EFPGA_TCDM_PORTS-1:0]                             tcdm_wen;
-    logic [N_EFPGA_TCDM_PORTS-1:0][31:0]                       tcdm_wdata;
-    logic [N_EFPGA_TCDM_PORTS-1:0][3:0]                        tcdm_be;
-    logic [N_EFPGA_TCDM_PORTS-1:0]                             tcdm_gnt;
-    logic [N_EFPGA_TCDM_PORTS-1:0][31:0]                       tcdm_r_rdata;
-    logic [N_EFPGA_TCDM_PORTS-1:0]                             tcdm_r_valid;
+    logic [`N_EFPGA_TCDM_PORTS-1:0]                             tcdm_req;
+    logic [`N_EFPGA_TCDM_PORTS-1:0][TCDM_EFPGA_ADDR_WIDTH-1:0]  tcdm_addr;
+    logic [`N_EFPGA_TCDM_PORTS-1:0]                             tcdm_wen;
+    logic [`N_EFPGA_TCDM_PORTS-1:0][31:0]                       tcdm_wdata;
+    logic [`N_EFPGA_TCDM_PORTS-1:0][3:0]                        tcdm_be;
+    logic [`N_EFPGA_TCDM_PORTS-1:0]                             tcdm_gnt;
+    logic [`N_EFPGA_TCDM_PORTS-1:0][31:0]                       tcdm_r_rdata;
+    logic [`N_EFPGA_TCDM_PORTS-1:0]                             tcdm_r_valid;
     logic                                                      enable_udma_efpga;
     logic                                                      enable_events_efpga;
     logic                                                      enable_apb_efpga;
