@@ -14,9 +14,7 @@ module efpga_subsystem
 #(
         parameter L2_ADDR_WIDTH       = 32,
         parameter APB_HWCE_ADDR_WIDTH = 7,
-        parameter N_EFPGA_EVENTS      = 16,
-        parameter N_FPGAIO            = 43,
-        parameter N_EFPGA_TCDM_PORTS  = 4
+        parameter N_EFPGA_EVENTS      = 16
 )
 (
     input  logic                                             asic_clk_i,
@@ -64,13 +62,13 @@ module efpga_subsystem
     output  logic [31:0]                                     udma_cfg_data_o              ,
 
 
-    XBAR_TCDM_BUS.Master                                     l2_asic_tcdm_o[N_TCDM_PORTS-1:0],
+    XBAR_TCDM_BUS.Master                                     l2_asic_tcdm_o['N_EFPGA_TCDM_PORTS-1:0],
     XBAR_TCDM_BUS.Slave                                      apbprogram_i,
     XBAR_TCDM_BUS.Slave                                      apbt1_i,
 
-    output logic  [N_FPGAIO-1:0]                            efpga_gpio_oe_o,
-    input  logic  [N_FPGAIO-1:0]                            efpga_gpio_data_i,
-    output logic  [N_FPGAIO-1:0]                            efpga_gpio_data_o,
+    output logic  [`N_FPGAIO-1:0]                            efpga_gpio_oe_o,
+    input  logic  [`N_FPGAIO-1:0]                            efpga_gpio_data_i,
+    output logic  [`N_FPGAIO-1:0]                            efpga_gpio_data_o,
     output logic  [N_EFPGA_EVENTS-1:0]                      efpga_event_o,
 
     //eFPGA SPIS
@@ -150,7 +148,7 @@ module efpga_subsystem
 
     genvar i;
 
-    XBAR_TCDM_BUS               l2_efpga_tcdm [N_TCDM_PORTS-1:0]();
+    XBAR_TCDM_BUS               l2_efpga_tcdm [`N_EFPGA_TCDM_PORTS-1:0]();
 
     logic                       fcb_apbs_penable_x;
     logic  [31:0]               fcb_apbs_prdata_x;
@@ -159,15 +157,15 @@ module efpga_subsystem
     logic                       fcb_apbs_pwrite_x;
     logic                       fcb_apbs_psel_x;
 
-    logic  [N_TCDM_PORTS-1:0]                    tcdm_req_fpga, tcdm_req_fpga_gated;
-    logic  [N_TCDM_PORTS-1:0][L2_ADDR_WIDTH-1:0] tcdm_addr_fpga;
-    logic  [N_TCDM_PORTS-1:0]                    tcdm_wen_fpga;
-    logic  [N_TCDM_PORTS-1:0][31:0]              tcdm_wdata_fpga;
-    logic  [N_TCDM_PORTS-1:0][31:0]              tcdm_rdata_fpga;
-    logic  [N_TCDM_PORTS-1:0][3:0]               tcdm_be_fpga;
-    logic  [N_TCDM_PORTS-1:0]                    tcdm_gnt_fpga;
-    logic  [N_TCDM_PORTS-1:0][31:0]              tcdm_r_rdata_fpga;
-    logic  [N_TCDM_PORTS-1:0]                    tcdm_r_valid_fpga;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0]                    tcdm_req_fpga, tcdm_req_fpga_gated;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0][L2_ADDR_WIDTH-1:0] tcdm_addr_fpga;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0]                    tcdm_wen_fpga;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0][31:0]              tcdm_wdata_fpga;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0][31:0]              tcdm_rdata_fpga;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0][3:0]               tcdm_be_fpga;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0]                    tcdm_gnt_fpga;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0][31:0]              tcdm_r_rdata_fpga;
+    logic  [`N_EFPGA_TCDM_PORTS-1:0]                    tcdm_r_valid_fpga;
 
     /*
 

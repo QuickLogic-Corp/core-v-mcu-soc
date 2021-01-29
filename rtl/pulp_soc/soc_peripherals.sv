@@ -67,6 +67,10 @@ module soc_peripherals #(
     FLL_BUS.Master                     per_fll_master,
     // MASTER PORT TO CLUSTER FLL
     FLL_BUS.Master                     cluster_fll_master,
+    // MASTER PORT TO L2 from eFPGA
+    XBAR_TCDM_BUS.Master               l2_efpga_tcdm_master [N_EFPGA_TCDM_PORTS-1:0],
+    XBAR_TCDM_BUS.Slave                efpga_apbprogram_slave,
+    XBAR_TCDM_BUS.Slave                efpga_apbt1_slave,
 /*
     input  logic                       jtag_req_valid_i,
     output logic                       debug_req_ready_o,
@@ -777,11 +781,9 @@ input  logic [1:0]                 selected_mode_i,
     #(
        .L2_ADDR_WIDTH             ( TCDM_EFPGA_ADDR_WIDTH                                           ),
        .APB_HWCE_ADDR_WIDTH       ( APB_EFPGA_HWCE_ADDR_WIDTH                                       ),
-       .N_EFPGA_EVENTS            ( N_EFPGA_EVENTS                                                  ),
-       .N_FPGAIO                  ( N_FPGAIO                                                    ),
-       .N_EFPGA_TCDM_PORTS        ( N_EFPGA_TCDM_PORTS                                              )
+       .N_EFPGA_EVENTS            ( N_EFPGA_EVENTS                                                  )
     )
-    efpga_subsystem_i
+    i_efpga_subsystem
     (
         .asic_clk_i              (  clk_i                                                           ),
         .fpga_clk0_i             (  ref_clk_i                                                       ),
