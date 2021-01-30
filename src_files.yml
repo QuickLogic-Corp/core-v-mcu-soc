@@ -91,3 +91,15 @@ components_behav:
   flags: [
     skip_synthesis,
   ]
+
+efpga_subsystem:
+  incdirs: [
+    ../includes,
+    .,
+  ]
+  files: [
+    efpga_subsystem.sv,
+    apb_efpga_hwce.sv,
+    dc_accelerator_fsm.sv,
+    efpga_sel_clk_dc_fifo.sv,
+  ]
