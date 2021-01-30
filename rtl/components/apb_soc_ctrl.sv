@@ -49,6 +49,12 @@
 `define REG_BOOTSEL     7'b0110001 //BASEADDR+0xC4 bootsel
 `define REG_CLKSEL      7'b0110010 //BASEADDR+0xC8 clocksel
 
+`define REG_CLK_DIV_CLU           7'b0110110 //BASEADDR+0xD8
+`define SEL_CLK_DC_FIFO_EFPGA     7'b0111000 //BASEADDR+0xE0
+`define CLK_GATING_DC_FIFO_EFPGA  7'b0111001 //BASEADDR+0xE4
+`define RESET_TYPE1_EFPGA         7'b0111010 //BASEADDR+0xE8
+`define ENABLE_IN_OUT_EFPGA       7'b0111011 //BASEADDR+0xEC
+
 `define REG_CLUSTER_CTRL 7'b0011100 //BASEADDR+0x70 CLUSTER Ctrl
 `define REG_CTRL_PER     7'b0011110
 `define REG_CLUSTER_IRQ  7'b0011111
@@ -139,6 +145,9 @@ module apb_soc_ctrl #(
 
    logic            r_sel_hyper_axi;
    logic      [1:0] r_bootsel;
+   
+   logic [7:0]      r_clk_div_cluster;
+   logic            s_div_cluster_valid, s_div_cluster_sel;
 
    logic s_apb_write;
 

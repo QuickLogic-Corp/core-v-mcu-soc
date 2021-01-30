@@ -8,6 +8,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+`include "pulp_soc_defines.sv"
+
 module udma_subsystem
 #(
     parameter L2_DATA_WIDTH  = 32,
