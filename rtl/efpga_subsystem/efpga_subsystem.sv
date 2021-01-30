@@ -13,8 +13,7 @@
 module efpga_subsystem
 #(
         parameter L2_ADDR_WIDTH       = 32,
-        parameter APB_HWCE_ADDR_WIDTH = 7,
-        parameter N_EFPGA_EVENTS      = 16
+        parameter APB_HWCE_ADDR_WIDTH = 7
 )
 (
     input  logic                                             asic_clk_i,
@@ -62,14 +61,14 @@ module efpga_subsystem
     output  logic [31:0]                                     udma_cfg_data_o              ,
 
 
-    XBAR_TCDM_BUS.Master                                     l2_asic_tcdm_o['N_EFPGA_TCDM_PORTS-1:0],
+    XBAR_TCDM_BUS.Master                                     l2_asic_tcdm_o[`N_EFPGA_TCDM_PORTS-1:0],
     XBAR_TCDM_BUS.Slave                                      apbprogram_i,
     XBAR_TCDM_BUS.Slave                                      apbt1_i,
 
     output logic  [`N_FPGAIO-1:0]                            fpgaio_oe_o,
     input  logic  [`N_FPGAIO-1:0]                            fpgaio_i,
     output logic  [`N_FPGAIO-1:0]                            fpgaio_o,
-    output logic  [N_EFPGA_EVENTS-1:0]                      efpga_event_o,
+    output logic  [`N_EFPGA_EVENTS-1:0]                      efpga_event_o,
 
     //eFPGA SPIS
     input  logic                                             efpga_fcb_spis_rst_n_i       ,
@@ -203,8 +202,8 @@ module efpga_subsystem
    XBAR_TCDM_BUS                                  apbt1_int();
 
 
-    logic                       efpga_clk;
-    logic  [N_EVENTS-1:0]       event_fpga,event_fpga_gate, event_edge, wedge_ack;
+    logic                                         efpga_clk;
+    logic  [`N_FPGA_EVENTS-1:0]                   event_fpga,event_fpga_gate, event_edge, wedge_ack;
 
 
 `ifndef SYNTHESIS
@@ -408,7 +407,7 @@ module efpga_subsystem
             .en_i(1'b1),
             .serial_i(event_edge[i]),
             .serial_o(wedge_ack[i]),
-            .r_edge_o(event_o[i]),
+            .r_edge_o(efpga_event_o[i]),
             .f_edge_o()
         );
         edge_propagator_tx i_prop_efpga

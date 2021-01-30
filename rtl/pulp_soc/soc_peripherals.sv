@@ -775,8 +775,7 @@ input  logic [1:0]                 selected_mode_i,
     efpga_subsystem
     #(
        .L2_ADDR_WIDTH             ( TCDM_EFPGA_ADDR_WIDTH                                           ),
-       .APB_HWCE_ADDR_WIDTH       ( APB_EFPGA_HWCE_ADDR_WIDTH                                       ),
-       .N_EFPGA_EVENTS            ( N_EFPGA_EVENTS                                                  )
+       .APB_HWCE_ADDR_WIDTH       ( APB_EFPGA_HWCE_ADDR_WIDTH                                       )
     )
     i_efpga_subsystem
     (
