@@ -149,6 +149,11 @@ module apb_soc_ctrl #(
    logic [7:0]      r_clk_div_cluster;
    logic            s_div_cluster_valid, s_div_cluster_sel;
 
+   logic [5:0]      r_sel_clk_dc_fifo_onehot;
+   logic            r_clk_gating_dc_fifo;
+   logic [3:0]      r_reset_type1_efpga;
+   logic [5:0]      r_enable_inout_efpga;
+                                          
    logic s_apb_write;
 
    // sanity check on NBIT_PADCFG
