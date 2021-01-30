@@ -235,7 +235,7 @@ module efpga_subsystem
     );
 */
     generate
-        for (i = 0; i < N_TCDM_PORTS; i++) begin : DC_FIFO_TCDM_EFPGA
+        for (i = 0; i < `N_EFPGA_TCDM_PORTS; i++) begin : DC_FIFO_TCDM_EFPGA
 
              log_int_dc_slice_wrap logint_dc_efpga_tcdm
              (
@@ -398,7 +398,7 @@ module efpga_subsystem
 
     generate
 
-    for(i=0;i<N_EVENTS;i++)
+    for(i=0;i<`N_EFPGA_EVENTS;i++)
     begin
         pulp_sync_wedge i_wedge_efpga
         (
@@ -424,9 +424,9 @@ module efpga_subsystem
 
     //TODO enable_udma_efpga_i
   `ifndef SYNTHESIS
-    assign #1 event_fpga_gate      = event_fpga & {N_EVENTS{enable_events_efpga_i}};
+    assign #1 event_fpga_gate      = event_fpga & {`N_EFPGA_EVENTS{enable_events_efpga_i}};
   `else
-    assign event_fpga_gate      = event_fpga & {N_EVENTS{enable_events_efpga_i}};
+    assign event_fpga_gate      = event_fpga & {`N_EFPGA_EVENTS{enable_events_efpga_i}};
   `endif
     assign apb_hwce_ready_gated    = enable_apb_efpga_i & apb_hwce_ready;
     assign tcdm_req_fpga_gated[3]  = enable_tcdm3_efpga_i &  tcdm_req_fpga[3];
