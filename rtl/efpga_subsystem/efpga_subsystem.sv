@@ -203,7 +203,7 @@ module efpga_subsystem
 
 
     logic                                         efpga_clk;
-    logic  [`N_FPGA_EVENTS-1:0]                   event_fpga,event_fpga_gate, event_edge, wedge_ack;
+    logic  [`N_EFPGA_EVENTS-1:0]                   event_fpga,event_fpga_gate, event_edge, wedge_ack;
 
 
 `ifndef SYNTHESIS
