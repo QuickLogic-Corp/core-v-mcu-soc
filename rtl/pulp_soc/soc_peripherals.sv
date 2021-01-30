@@ -817,8 +817,8 @@ input  logic [1:0]                 selected_mode_i,
         .apbt1_i                 ( efpga_apbt1_slave                                                ),
 
         .fpgaio_oe_o          ( fpgaio_oe_o                                                     ),
-        .fpgaio_data_i        ( fpgaio_in_i                                                     ),
-        .fpgaio_data_o        ( fpgaio_out_o                                                    ),
+        .fpgaio_in_i        ( fpgaio_in_i                                                     ),
+        .fpgaio_out_o        ( fpgaio_out_o                                                    ),
 
         .efpga_event_o            ( s_efpga_hwpe_events                                              ),
 
