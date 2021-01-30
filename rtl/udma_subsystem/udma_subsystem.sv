@@ -138,33 +138,34 @@ module udma_subsystem
 
     //TX Channels
     localparam CH_ID_TX_UART    = 0;
-    localparam CH_ID_TX_SPIM    = `N_UART;
-    localparam CH_ID_CMD_SPIM   = `N_SPI + `N_UART;
-    localparam CH_ID_TX_I2C     = `N_SPI*2+ + `N_UART;
-    localparam CH_ID_TX_SDIO    = `N_SPI*2+`N_UART+`N_I2C;
-    localparam CH_ID_TX_I2S     = CH_ID_TX_SDIO+1;
-    localparam CH_ID_TX_FPGA    = CH_ID_TX_I2S+1;;
-    localparam CH_ID_TX_EXT_PER = CH_ID_TX_FPGA+1;
+    localparam CH_ID_TX_SPIM    = CH_ID_TX_UART + `N_UART;
+    localparam CH_ID_CMD_SPIM   = CH_ID_TX_SPIM + `N_SPI;
+    localparam CH_ID_TX_I2C     = CH_ID_CMD_SPIM + `N_SPI;
+    localparam CH_ID_TX_SDIO    = CH_ID_TX_I2C  +`N_I2C;
+    localparam CH_ID_TX_I2S     = CH_ID_TX_SDIO + `N_SDIO;
+    localparam CH_ID_TX_FPGA    = CH_ID_TX_I2S  + `N_I2S;
+    localparam CH_ID_TX_EXT_PER = CH_ID_TX_FPGA + `N_FPGA;
 
     //RX Channels
     localparam CH_ID_RX_UART    = 0;
-    localparam CH_ID_RX_SPIM    = `N_UART;
-    localparam CH_ID_RX_I2C     = `N_SPI+`N_UART;
-    localparam CH_ID_RX_SDIO    = `N_SPI+`N_UART+`N_I2C;
-    localparam CH_ID_RX_I2S     = CH_ID_RX_SDIO+1;
-    localparam CH_ID_RX_CAM     = CH_ID_RX_I2S+1;
-    localparam CH_ID_RX_FPGA    = CH_ID_RX_CAM+1;
-    localparam CH_ID_RX_EXT_PER = CH_ID_RX_FPGA+1;
+    localparam CH_ID_RX_SPIM    = CH_ID_RX_UART + `N_UART;
+    localparam CH_ID_RX_I2C     = CH_ID_RX_SPIM + `N_SPI;
+    localparam CH_ID_RX_SDIO    = CH_ID_RX_I2C  + `N_I2C;
+    localparam CH_ID_RX_I2S     = CH_ID_RX_SDIO + `N_SDIO;
+    localparam CH_ID_RX_CAM     = CH_ID_RX_I2S  + `N_I2S;
+    localparam CH_ID_RX_FPGA    = CH_ID_RX_CAM  + `N_CAM;
+    localparam CH_ID_RX_EXT_PER = CH_ID_RX_FPGA + `N_FPGA;
 
-    localparam PER_ID_UART      = 0;                  //0
-    localparam PER_ID_SPIM      = PER_ID_UART +1;     //1
-    localparam PER_ID_I2C       = `N_SPI+`N_UART;       //2, 3
-    localparam PER_ID_SDIO      = `N_SPI+`N_UART+`N_I2C; //4
-    localparam PER_ID_I2S       = PER_ID_SDIO+1;      //5
-    localparam PER_ID_CAM       = PER_ID_I2S+1;       //6
-    localparam PER_ID_FILTER    = PER_ID_CAM+1;       //7
-    localparam PER_ID_FPGA      = PER_ID_FILTER+1;      //8
-    localparam PER_ID_EXT_PER   = PER_ID_FPGA+1;             //9
+    // PER_ID definitions
+    localparam PER_ID_UART      = 0;
+    localparam PER_ID_SPIM      = PER_ID_UART   + `N_UART;
+    localparam PER_ID_I2C       = PER_ID_SPIM   + `N_SPI;
+    localparam PER_ID_SDIO      = PER_ID_I2C    + `N_I2C;
+    localparam PER_ID_I2S       = PER_ID_SDIO   + `N_SDIO;
+    localparam PER_ID_CAM       = PER_ID_I2S    + `N_I2S;
+    localparam PER_ID_FILTER    = PER_ID_CAM    + `N_CAM;
+    localparam PER_ID_FPGA      = PER_ID_FILTER + `N_FILTER;
+    localparam PER_ID_EXT_PER   = PER_ID_FPGA   + `N_FPGA;
 
 
     localparam CH_ID_EXT_TX_FILTER = 0;
