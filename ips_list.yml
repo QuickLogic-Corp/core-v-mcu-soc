@@ -125,3 +125,8 @@ riscv-dbg:
 register_interface:
   commit: b1bc9c22e0c2a5801107070c022904498dbae34b
   domain: [soc]
+logint_dc_fifo_xbar:
+    commit: master
+    domain: null
+    group: null
+    server: null
