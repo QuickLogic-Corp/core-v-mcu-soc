@@ -144,9 +144,6 @@ module efpga_subsystem
 
 `endif
 
-
-    genvar i;
-
     XBAR_TCDM_BUS               l2_efpga_tcdm [`N_EFPGA_TCDM_PORTS-1:0]();
 
     logic                       fcb_apbs_penable_x;
@@ -235,35 +232,35 @@ module efpga_subsystem
     );
 */
     generate
-        for (i = 0; i < `N_EFPGA_TCDM_PORTS; i++) begin : DC_FIFO_TCDM_EFPGA
+        for (genvar g_tcdm = 0; g_tcdm < `N_EFPGA_TCDM_PORTS; g_tcdm++) begin : DC_FIFO_TCDM_EFPGA
 
              log_int_dc_slice_wrap logint_dc_efpga_tcdm
              (
                 .push_clk(efpga_clk_o),
                 .push_rst_n(rst_n),
-                .push_bus(l2_efpga_tcdm[i]),
+                .push_bus(l2_efpga_tcdm[g_tcdm]),
                 .pop_clk(asic_clk_i),
                 .pop_rst_n(rst_n),
                 .test_cgbypass_i('0),
-                .pop_bus(l2_asic_tcdm_o[i])
+                .pop_bus(l2_asic_tcdm_o[g_tcdm])
              );
 
              `ifndef SYNTHESIS
-             assign  #1 l2_efpga_tcdm[i].req   = tcdm_req_fpga_gated[i]   ;
-             assign  #1 l2_efpga_tcdm[i].add   = tcdm_addr_fpga[i]        ;
-             assign  #1 l2_efpga_tcdm[i].wen   = tcdm_wen_fpga[i]         ;
-             assign  #1 l2_efpga_tcdm[i].wdata = tcdm_wdata_fpga[i]       ;
-             assign  #1 l2_efpga_tcdm[i].be    = tcdm_be_fpga[i]          ;
+             assign  #1 l2_efpga_tcdm[g_tcdm].req   = tcdm_req_fpga_gated[g_tcdm]   ;
+             assign  #1 l2_efpga_tcdm[g_tcdm].add   = tcdm_addr_fpga[g_tcdm]        ;
+             assign  #1 l2_efpga_tcdm[g_tcdm].wen   = tcdm_wen_fpga[g_tcdm]         ;
+             assign  #1 l2_efpga_tcdm[g_tcdm].wdata = tcdm_wdata_fpga[g_tcdm]       ;
+             assign  #1 l2_efpga_tcdm[g_tcdm].be    = tcdm_be_fpga[g_tcdm]          ;
             `else
-             assign  l2_efpga_tcdm[i].req   = tcdm_req_fpga_gated[i]   ;
-             assign  l2_efpga_tcdm[i].add   = tcdm_addr_fpga[i]        ;
-             assign  l2_efpga_tcdm[i].wen   = tcdm_wen_fpga[i]         ;
-             assign  l2_efpga_tcdm[i].wdata = tcdm_wdata_fpga[i]       ;
-             assign  l2_efpga_tcdm[i].be    = tcdm_be_fpga[i]          ;
+             assign  l2_efpga_tcdm[g_tcdm].req   = tcdm_req_fpga_gated[g_tcdm]   ;
+             assign  l2_efpga_tcdm[g_tcdm].add   = tcdm_addr_fpga[g_tcdm]        ;
+             assign  l2_efpga_tcdm[g_tcdm].wen   = tcdm_wen_fpga[g_tcdm]         ;
+             assign  l2_efpga_tcdm[g_tcdm].wdata = tcdm_wdata_fpga[g_tcdm]       ;
+             assign  l2_efpga_tcdm[g_tcdm].be    = tcdm_be_fpga[g_tcdm]          ;
              `endif
-             assign  tcdm_gnt_fpga[i]       = l2_efpga_tcdm[i].gnt     ;
-             assign  tcdm_r_rdata_fpga[i]   = l2_efpga_tcdm[i].r_rdata ;
-             assign  tcdm_r_valid_fpga[i]   = l2_efpga_tcdm[i].r_valid ;
+             assign  tcdm_gnt_fpga[g_tcdm]       = l2_efpga_tcdm[g_tcdm].gnt     ;
+             assign  tcdm_r_rdata_fpga[g_tcdm]   = l2_efpga_tcdm[g_tcdm].r_rdata ;
+             assign  tcdm_r_valid_fpga[g_tcdm]   = l2_efpga_tcdm[g_tcdm].r_valid ;
          end
     endgenerate
 
@@ -397,29 +394,26 @@ module efpga_subsystem
     */
 
     generate
-
-    for(i=0;i<`N_EFPGA_EVENTS;i++)
-    begin
-        pulp_sync_wedge i_wedge_efpga
-        (
-            .clk_i(asic_clk_i),
-            .rstn_i(rst_n),
-            .en_i(1'b1),
-            .serial_i(event_edge[i]),
-            .serial_o(wedge_ack[i]),
-            .r_edge_o(efpga_event_o[i]),
-            .f_edge_o()
-        );
-        edge_propagator_tx i_prop_efpga
-        (
-         .clk_i(efpga_clk_o),
-         .rstn_i(rst_n),
-         .valid_i(event_fpga_gate[i]),
-         .ack_i(wedge_ack[i]),
-         .valid_o(event_edge[i])
-        );
-    end
-
+      for(genvar g_event=0;g_event<`N_EFPGA_EVENTS;g_event++) begin: event_wedge_edge
+          pulp_sync_wedge i_wedge_efpga
+          (
+              .clk_i(asic_clk_i),
+              .rstn_i(rst_n),
+              .en_i(1'b1),
+              .serial_i(event_edge[g_event]),
+              .serial_o(wedge_ack[g_event]),
+              .r_edge_o(efpga_event_o[g_event]),
+              .f_edge_o()
+          );
+          edge_propagator_tx i_prop_efpga
+          (
+           .clk_i(efpga_clk_o),
+           .rstn_i(rst_n),
+           .valid_i(event_fpga_gate[g_event]),
+           .ack_i(wedge_ack[g_event]),
+           .valid_o(event_edge[g_event])
+          );
+      end
     endgenerate
 
     //TODO enable_udma_efpga_i
