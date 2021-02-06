@@ -9,6 +9,7 @@
 // specific language governing permissions and limitations under the License.
 
 `include "pulp_soc_defines.sv"
+`include "pulp_periph_defines.svh"
 
 module udma_subsystem
 #(
@@ -128,6 +129,9 @@ module udma_subsystem
 
     localparam N_RX_CHANNELS =   `N_SPI + `N_HYPER + `N_MRAM + `N_JTAG + `N_SDIO + `N_UART + `N_I2C + `N_I2S + `N_CAM + 2*`N_CSI2 + `N_FPGA + N_EXT_PER;
     localparam N_TX_CHANNELS = 2*`N_SPI + `N_HYPER + `N_MRAM + `N_JTAG + `N_SDIO + `N_UART + `N_I2C + `N_I2S + `N_FPGA + N_EXT_PER;
+	
+	if (`N_RX_CHANNELS != N_RX_CHANNELS) $error("N_RX_CHANNELS mismatch")
+	if (`N_TX_CHANNELS != N_TX_CHANNELS) $error("N_TX_CHANNELS mismatch")
 
     localparam N_RX_EXT_CHANNELS =   `N_FILTER;
     localparam N_TX_EXT_CHANNELS = 2*`N_FILTER;
@@ -145,6 +149,7 @@ module udma_subsystem
     localparam CH_ID_TX_I2S     = CH_ID_TX_SDIO + `N_SDIO;
     localparam CH_ID_TX_FPGA    = CH_ID_TX_I2S  + `N_I2S;
     localparam CH_ID_TX_EXT_PER = CH_ID_TX_FPGA + `N_FPGA;
+	if (`CH_ID_TX_EXT_PER != CH_ID_TX_EXT_PER) $error("CH_ID_TX_EXT_PER mismatch")
 
     //RX Channels
     localparam CH_ID_RX_UART    = 0;
@@ -155,6 +160,7 @@ module udma_subsystem
     localparam CH_ID_RX_CAM     = CH_ID_RX_I2S  + `N_I2S;
     localparam CH_ID_RX_FPGA    = CH_ID_RX_CAM  + `N_CAM;
     localparam CH_ID_RX_EXT_PER = CH_ID_RX_FPGA + `N_FPGA;
+	if (`CH_ID_RX_EXT_PER != CH_ID_RX_EXT_PER) $error("CH_ID_RX_EXT_PER mismatch")
 
     // PER_ID definitions
     localparam PER_ID_UART      = 0;
@@ -166,6 +172,7 @@ module udma_subsystem
     localparam PER_ID_FILTER    = PER_ID_CAM    + `N_CAM;
     localparam PER_ID_FPGA      = PER_ID_FILTER + `N_FILTER;
     localparam PER_ID_EXT_PER   = PER_ID_FPGA   + `N_FPGA;
+	if (`PER_ID_EXT_PER != PER_ID_EXT_PER) $error("PER_ID_EXT_PER mismatch")
 
 
     localparam CH_ID_EXT_TX_FILTER = 0;
