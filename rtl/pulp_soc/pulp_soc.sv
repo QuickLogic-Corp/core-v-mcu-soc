@@ -169,59 +169,72 @@ module pulp_soc import dm::*; #(
     output logic                          dma_pe_irq_ack_o,
     input  logic                          dma_pe_irq_valid_i,
     output logic                          pf_evt_ack_o,
-    input  logic                          pf_evt_valid_i,
+    input  logic                          pf_evt_valid_i
     ///////////////////////////////////////////////////
     //      To I/O Controller and padframe           //
     ///////////////////////////////////////////////////
-    output logic [127:0]                  pad_mux_o,
-    output logic [383:0]                  pad_cfg_o,
-    input  logic [NGPIO-1:0]              gpio_in_i,
-    output logic [NGPIO-1:0]              gpio_out_o,
-    output logic [NGPIO-1:0]              gpio_dir_o,
+    output logic [`N_IO-1:0]               pad_mux_o,
+    output logic [`N_IO-1:0]               pad_cfg_o,
+	
+	// Signals to pad frame
+	input  logic [`N_PERIO-1:0]           perio_in_i,
+    output logic [`N_PERIO-1:0]           perio_out_o,
+    output logic [`N_PERIO-1:0]           perio_dir_o,
+	// Signals to gpio controller
+    input  logic [`N_GPIO-1:0]            gpio_in_i,
+    output logic [`N_GPIO-1:0]            gpio_out_o,
+    output logic [`N_GPIO-1:0]            gpio_dir_o,
+	// IO signals to efpga
     input  logic [`N_FPGAIO-1:0]          fpgaio_in_i,
     output logic [`N_FPGAIO-1:0]          fpgaio_out_o,
     output logic [`N_FPGAIO-1:0]          fpgaio_oe_o,
-    output logic [191:0]                  gpio_cfg_o,
-    output logic                          uart_tx_o,
-    input  logic                          uart_rx_i,
-    input  logic                          cam_clk_i,
-    input  logic [7:0]                    cam_data_i,
-    input  logic                          cam_hsync_i,
-    input  logic                          cam_vsync_i,
-    output logic [3:0]                    timer_ch0_o,
-    output logic [3:0]                    timer_ch1_o,
-    output logic [3:0]                    timer_ch2_o,
-    output logic [3:0]                    timer_ch3_o,
+	
+    // output logic [191:0]                  gpio_cfg_o,
+    // output logic                          uart_tx_o,
+    // input  logic                          uart_rx_i,
+    // input  logic                          cam_clk_i,
+    // input  logic [7:0]                    cam_data_i,
+    // input  logic                          cam_hsync_i,
+    // input  logic                          cam_vsync_i,
+    // output logic [3:0]                    timer_ch0_o,
+    // output logic [3:0]                    timer_ch1_o,
+    // output logic [3:0]                    timer_ch2_o,
+    // output logic [3:0]                    timer_ch3_o,
 
-    input  logic [N_I2C-1:0]              i2c_scl_i,
-    output logic [N_I2C-1:0]              i2c_scl_o,
-    output logic [N_I2C-1:0]              i2c_scl_oe_o,
-    input  logic [N_I2C-1:0]              i2c_sda_i,
-    output logic [N_I2C-1:0]              i2c_sda_o,
-    output logic [N_I2C-1:0]              i2c_sda_oe_o,
+    // input  logic [N_I2C-1:0]              i2c_scl_i,
+    // output logic [N_I2C-1:0]              i2c_scl_o,
+    // output logic [N_I2C-1:0]              i2c_scl_oe_o,
+    // input  logic [N_I2C-1:0]              i2c_sda_i,
+    // output logic [N_I2C-1:0]              i2c_sda_o,
+    // output logic [N_I2C-1:0]              i2c_sda_oe_o,
 
-    input  logic                          i2s_slave_sd0_i,
-    input  logic                          i2s_slave_sd1_i,
-    input  logic                          i2s_slave_ws_i,
-    output logic                          i2s_slave_ws_o,
-    output logic                          i2s_slave_ws_oe,
-    input  logic                          i2s_slave_sck_i,
-    output logic                          i2s_slave_sck_o,
-    output logic                          i2s_slave_sck_oe,
+    // input  logic                          i2s_slave_sd0_i,
+    // input  logic                          i2s_slave_sd1_i,
+    // input  logic                          i2s_slave_ws_i,
+    // output logic                          i2s_slave_ws_o,
+    // output logic                          i2s_slave_ws_oe,
+    // input  logic                          i2s_slave_sck_i,
+    // output logic                          i2s_slave_sck_o,
+    // output logic                          i2s_slave_sck_oe,
 
-    output logic [N_SPI-1:0]              spi_clk_o,
-    output logic [N_SPI-1:0][3:0]         spi_csn_o,
-    output logic [N_SPI-1:0][3:0]         spi_oen_o,
-    output logic [N_SPI-1:0][3:0]         spi_sdo_o,
-    input  logic [N_SPI-1:0][3:0]         spi_sdi_i,
+    // output logic [N_SPI-1:0]              spi_clk_o,
+    // output logic [N_SPI-1:0][3:0]         spi_csn_o,
+    // output logic [N_SPI-1:0][3:0]         spi_oen_o,
+    // output logic [N_SPI-1:0][3:0]         spi_sdo_o,
+    // input  logic [N_SPI-1:0][3:0]         spi_sdi_i,
 
-    output logic                          sdio_clk_o,
-    output logic                          sdio_cmd_o,
-    input  logic                          sdio_cmd_i,
-    output logic                          sdio_cmd_oen_o,
-    output logic                    [3:0] sdio_data_o,
-    input  logic                    [3:0] sdio_data_i,
-    output logic                    [3:0] sdio_data_oen_o,
+    // output logic                          sdio_clk_o,
+    // output logic                          sdio_cmd_o,
+    // input  logic                          sdio_cmd_i,
+    // output logic                          sdio_cmd_oen_o,
+    // output logic                    [3:0] sdio_data_o,
+    // input  logic                    [3:0] sdio_data_i,
+    // output logic                    [3:0] sdio_data_oen_o,
+	
+	
+	///////////////////////////////////////////////////
+    //      To EFPGA                                 //
+    ///////////////////////////////////////////////////
 input  logic [1:0]                    selected_mode_i,
     input  logic                          fpga_clk_1_i,
     input  logic                          fpga_clk_2_i,
@@ -664,62 +677,70 @@ input  logic [1:0]                    selected_mode_i,
         .per_fll_master         ( s_per_fll_master       ),
         .cluster_fll_master     ( s_cluster_fll_master   ),
 
+		// pad control signals
+		.pad_mux_o              ( s_pad_mux              ),
+		.pad_cfg_o              ( s_pad_cfg              ),
+		// Peripheral signals
+        .perio_in               ( perio_in_i             ),
+        .perio_out              ( perio_out_o            ),
+        .perio_dir              ( perio_dir_o            ),
+		// GPIO signals
         .gpio_in                ( gpio_in_i              ),
         .gpio_out               ( gpio_out_o             ),
         .gpio_dir               ( gpio_dir_o             ),
-        .gpio_padcfg            ( s_gpio_cfg             ),
+		// FPGAIO signals
         .fpgaio_out_o           ( fpgaio_out_o             ),
         .fpgaio_in_i           	( fpgaio_in_i              ),
         .fpgaio_oe_o           	( fpgaio_oe_o              ),
 
-        .pad_mux_o              ( s_pad_mux              ),
-        .pad_cfg_o              ( s_pad_cfg              ),
-
-        //CAMERA
-        .cam_clk_i              ( cam_clk_i              ),
-        .cam_data_i             ( cam_data_i             ),
-        .cam_hsync_i            ( cam_hsync_i            ),
-        .cam_vsync_i            ( cam_vsync_i            ),
-
-        //UART
-        .uart_tx                ( uart_tx_o              ),
-        .uart_rx                ( uart_rx_i              ),
-
-        //I2C
-        .i2c_scl_i              ( i2c_scl_i              ),
-        .i2c_scl_o              ( i2c_scl_o              ),
-        .i2c_scl_oe_o           ( i2c_scl_oe_o           ),
-        .i2c_sda_i              ( i2c_sda_i              ),
-        .i2c_sda_o              ( i2c_sda_o              ),
-        .i2c_sda_oe_o           ( i2c_sda_oe_o           ),
-
-        //I2S
-        .i2s_slave_sd0_i        ( i2s_slave_sd0_i        ),
-        .i2s_slave_sd1_i        ( i2s_slave_sd1_i        ),
-        .i2s_slave_ws_i         ( i2s_slave_ws_i         ),
-        .i2s_slave_ws_o         ( i2s_slave_ws_o         ),
-        .i2s_slave_ws_oe        ( i2s_slave_ws_oe        ),
-        .i2s_slave_sck_i        ( i2s_slave_sck_i        ),
-        .i2s_slave_sck_o        ( i2s_slave_sck_o        ),
-        .i2s_slave_sck_oe       ( i2s_slave_sck_oe       ),
-
-         //SPI
-        .spi_clk_o              ( spi_clk_o              ),
-        .spi_csn_o              ( spi_csn_o              ),
-        .spi_oen_o              ( spi_oen_o              ),
-        .spi_sdo_o              ( spi_sdo_o              ),
-        .spi_sdi_i              ( spi_sdi_i              ),
-
-        //SDIO
-        .sdclk_o                ( sdio_clk_o             ),
-        .sdcmd_o                ( sdio_cmd_o             ),
-        .sdcmd_i                ( sdio_cmd_i             ),
-        .sdcmd_oen_o            ( sdio_cmd_oen_o         ),
-        .sddata_o               ( sdio_data_o            ),
-        .sddata_i               ( sdio_data_i            ),
-        .sddata_oen_o           ( sdio_data_oen_o        ),
         
-        .selected_mode_i              ( selected_mode_i              ),
+
+
+        // //CAMERA
+        // .cam_clk_i              ( cam_clk_i              ),
+        // .cam_data_i             ( cam_data_i             ),
+        // .cam_hsync_i            ( cam_hsync_i            ),
+        // .cam_vsync_i            ( cam_vsync_i            ),
+
+        // //UART
+        // .uart_tx                ( uart_tx_o              ),
+        // .uart_rx                ( uart_rx_i              ),
+
+        // //I2C
+        // .i2c_scl_i              ( i2c_scl_i              ),
+        // .i2c_scl_o              ( i2c_scl_o              ),
+        // .i2c_scl_oe_o           ( i2c_scl_oe_o           ),
+        // .i2c_sda_i              ( i2c_sda_i              ),
+        // .i2c_sda_o              ( i2c_sda_o              ),
+        // .i2c_sda_oe_o           ( i2c_sda_oe_o           ),
+
+        // //I2S
+        // .i2s_slave_sd0_i        ( i2s_slave_sd0_i        ),
+        // .i2s_slave_sd1_i        ( i2s_slave_sd1_i        ),
+        // .i2s_slave_ws_i         ( i2s_slave_ws_i         ),
+        // .i2s_slave_ws_o         ( i2s_slave_ws_o         ),
+        // .i2s_slave_ws_oe        ( i2s_slave_ws_oe        ),
+        // .i2s_slave_sck_i        ( i2s_slave_sck_i        ),
+        // .i2s_slave_sck_o        ( i2s_slave_sck_o        ),
+        // .i2s_slave_sck_oe       ( i2s_slave_sck_oe       ),
+
+         // //SPI
+        // .spi_clk_o              ( spi_clk_o              ),
+        // .spi_csn_o              ( spi_csn_o              ),
+        // .spi_oen_o              ( spi_oen_o              ),
+        // .spi_sdo_o              ( spi_sdo_o              ),
+        // .spi_sdi_i              ( spi_sdi_i              ),
+
+        // //SDIO
+        // .sdclk_o                ( sdio_clk_o             ),
+        // .sdcmd_o                ( sdio_cmd_o             ),
+        // .sdcmd_i                ( sdio_cmd_i             ),
+        // .sdcmd_oen_o            ( sdio_cmd_oen_o         ),
+        // .sddata_o               ( sdio_data_o            ),
+        // .sddata_i               ( sdio_data_i            ),
+        // .sddata_oen_o           ( sdio_data_oen_o        ),
+        
+        // other FPGA signals
         .fpga_clk_1_i                 ( fpga_clk_1_i                 ),
         .fpga_clk_2_i                 ( fpga_clk_2_i                 ),
         .fpga_clk_3_i                 ( fpga_clk_3_i                 ),
