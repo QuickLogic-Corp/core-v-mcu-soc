@@ -481,8 +481,8 @@ module udma_subsystem
                 // .uart_rx_i           ( uart_rx_i[g_uart]                       ),
 				
 				// Signals to pads
-				.uart_tx_o			( perio_out_o[`PERIO_UART0_TX + `PERIO_UART_NPORT * g_uart]		),
-				.uart_rx_o			( perio_in_i[`PERIO_UART0_RX + `PERIO_UART_NPORT * g_uart]		)
+				.uart_tx_o			( perio_out_o[`PERIO_UART0_TX + `PERIO_UART_NPORTS * g_uart]		),
+				.uart_rx_o			( perio_in_i[`PERIO_UART0_RX + `PERIO_UART_NPORTS * g_uart]		)
             );
         end
     endgenerate
@@ -533,23 +533,23 @@ module udma_subsystem
                 // .spi_sdi3_i          ( spi_sdi[g_spi][3]                        ),
 				
 				// Signals to pads
-				.spi_clk_o           ( perio_out_o[`PERIO_QSPIM0_CLK + `PERIO_QSPIM_NPORT * g_spi]	),
-                .spi_csn0_o          ( perio_out_o[`PERIO_QSPIM0_CSN0 + `PERIO_QSPIM_NPORT * g_spi]	),
-                .spi_csn1_o          ( perio_out_o[`PERIO_QSPIM0_CSN1 + `PERIO_QSPIM_NPORT * g_spi]	),
-                .spi_csn2_o          ( perio_out_o[`PERIO_QSPIM0_CSN2 + `PERIO_QSPIM_NPORT * g_spi]	),
-                .spi_csn3_o          ( perio_out_o[`PERIO_QSPIM0_CSN3 + `PERIO_QSPIM_NPORT * g_spi]	),
-				.spi_sdi0_i          ( perio_in_i[`PERIO_QSPIM0_DATA0 + `PERIO_QSPIM_NPORT * g_spi]	),
-				.spi_sdo0_o          ( perio_out_o[`PERIO_QSPIM0_DATA0 + `PERIO_QSPIM_NPORT * g_spi]	),
-                .spi_oen0_o          ( perio_oe_o[`PERIO_QSPIM0_DATA0 + `PERIO_QSPIM_NPORT * g_spi]	),
-				.spi_sdi1_i          ( perio_in_i[`PERIO_QSPIM0_DATA1 + `PERIO_QSPIM_NPORT * g_spi]	),
-				.spi_sdo1_o          ( perio_out_o[`PERIO_QSPIM0_DATA1 + `PERIO_QSPIM_NPORT * g_spi]	),
-                .spi_oen1_o          ( perio_oe_o[`PERIO_QSPIM0_DATA1 + `PERIO_QSPIM_NPORT * g_spi]	),
-				.spi_sdi2_i          ( perio_in_i[`PERIO_QSPIM0_DATA2 + `PERIO_QSPIM_NPORT * g_spi]	),
-				.spi_sdo2_o          ( perio_out_o[`PERIO_QSPIM0_DATA2 + `PERIO_QSPIM_NPORT * g_spi]	),
-                .spi_oen2_o          ( perio_oe_o[`PERIO_QSPIM0_DATA2 + `PERIO_QSPIM_NPORT * g_spi]	),
-				.spi_sdi3_i          ( perio_in_i[`PERIO_QSPIM0_DATA3 + `PERIO_QSPIM_NPORT * g_spi]	),
-				.spi_sdo3_o          ( perio_out_o[`PERIO_QSPIM0_DATA3 + `PERIO_QSPIM_NPORT * g_spi]	),
-                .spi_oen3_o          ( perio_oe_o[`PERIO_QSPIM0_DATA3 + `PERIO_QSPIM_NPORT * g_spi]	),
+				.spi_clk_o           ( perio_out_o[`PERIO_QSPIM0_CLK + `PERIO_QSPIM_NPORTS * g_spi]	),
+                .spi_csn0_o          ( perio_out_o[`PERIO_QSPIM0_CSN0 + `PERIO_QSPIM_NPORTS * g_spi]	),
+                .spi_csn1_o          ( perio_out_o[`PERIO_QSPIM0_CSN1 + `PERIO_QSPIM_NPORTS * g_spi]	),
+                .spi_csn2_o          ( perio_out_o[`PERIO_QSPIM0_CSN2 + `PERIO_QSPIM_NPORTS * g_spi]	),
+                .spi_csn3_o          ( perio_out_o[`PERIO_QSPIM0_CSN3 + `PERIO_QSPIM_NPORTS * g_spi]	),
+				.spi_sdi0_i          ( perio_in_i[`PERIO_QSPIM0_DATA0 + `PERIO_QSPIM_NPORTS * g_spi]	),
+				.spi_sdo0_o          ( perio_out_o[`PERIO_QSPIM0_DATA0 + `PERIO_QSPIM_NPORTS * g_spi]	),
+                .spi_oen0_o          ( perio_oe_o[`PERIO_QSPIM0_DATA0 + `PERIO_QSPIM_NPORTS * g_spi]	),
+				.spi_sdi1_i          ( perio_in_i[`PERIO_QSPIM0_DATA1 + `PERIO_QSPIM_NPORTS * g_spi]	),
+				.spi_sdo1_o          ( perio_out_o[`PERIO_QSPIM0_DATA1 + `PERIO_QSPIM_NPORTS * g_spi]	),
+                .spi_oen1_o          ( perio_oe_o[`PERIO_QSPIM0_DATA1 + `PERIO_QSPIM_NPORTS * g_spi]	),
+				.spi_sdi2_i          ( perio_in_i[`PERIO_QSPIM0_DATA2 + `PERIO_QSPIM_NPORTS * g_spi]	),
+				.spi_sdo2_o          ( perio_out_o[`PERIO_QSPIM0_DATA2 + `PERIO_QSPIM_NPORTS * g_spi]	),
+                .spi_oen2_o          ( perio_oe_o[`PERIO_QSPIM0_DATA2 + `PERIO_QSPIM_NPORTS * g_spi]	),
+				.spi_sdi3_i          ( perio_in_i[`PERIO_QSPIM0_DATA3 + `PERIO_QSPIM_NPORTS * g_spi]	),
+				.spi_sdo3_o          ( perio_out_o[`PERIO_QSPIM0_DATA3 + `PERIO_QSPIM_NPORTS * g_spi]	),
+                .spi_oen3_o          ( perio_oe_o[`PERIO_QSPIM0_DATA3 + `PERIO_QSPIM_NPORTS * g_spi]	),
                
                 .cfg_data_i          ( s_periph_data_to                         ),
                 .cfg_addr_i          ( s_periph_addr                            ),
@@ -685,12 +685,12 @@ module udma_subsystem
                 // .sda_oe              ( i2c_sda_oe[g_i2c]                     ),
 				
 				// Signals to pads
-				.scl_i               ( perio_in_i[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORT * g_i2c]	),
-                .scl_o               ( perio_out_o[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORT * g_i2c]	),
-                .scl_oe              ( perio_oe_o[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORT * g_i2c]	),
-                .sda_i               ( perio_in_i[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORT * g_i2c]	),
-                .sda_o               ( perio_out_o[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORT * g_i2c]),
-                .sda_oe              ( perio_oe_o[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORT * g_i2c]),
+				.scl_i               ( perio_in_i[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
+                .scl_o               ( perio_out_o[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
+                .scl_oe              ( perio_oe_o[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
+                .sda_i               ( perio_in_i[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]	),
+                .sda_o               ( perio_out_o[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]),
+                .sda_oe              ( perio_oe_o[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]),
 				
                 .ext_events_i        ( s_trigger_events                  )
             );
@@ -728,12 +728,12 @@ module udma_subsystem
             .err_o               ( s_sdio_err      ),
             .eot_o               ( s_sdio_eot      ),
 
-            .sdclk_o             ( perio_out_o[`PERIO_SDIO_CLK + `PERIO_SDIO_NPORT * g_sdio] ),
-            .sdcmd_i             ( perio_in_i[`PERIO_SDIO_CMD + `PERIO_SDIO_NPORT * g_sdio] ),
-			.sdcmd_o             ( perio_out_o[`PERIO_SDIO_CMD + `PERIO_SDIO_NPORT * g_sdio] ),
-            .sdcmd_oen_o         ( perio_oe_o[`PERIO_SDIO_CMD + `PERIO_SDIO_NPORT * g_sdio] ),
-			.sddata_i            ( perio_in_i[`PERIO_SDIO_DATA0 + `PERIO_SDIO_NPORT * g_sdio : `PERIO_SDIO_DATA3 + `PERIO_SDIO_NPORT * g_sdio]     ),
-            .sddata_o            ( perio_out_o[`PERIO_SDIO_DATA0 + `PERIO_SDIO_NPORT * g_sdio : `PERIO_SDIO_DATA3 + `PERIO_SDIO_NPORT * g_sdio]     ),
+            .sdclk_o             ( perio_out_o[`PERIO_SDIO_CLK + `PERIO_SDIO_NPORTS * g_sdio] ),
+            .sdcmd_i             ( perio_in_i[`PERIO_SDIO_CMD + `PERIO_SDIO_NPORTS * g_sdio] ),
+			.sdcmd_o             ( perio_out_o[`PERIO_SDIO_CMD + `PERIO_SDIO_NPORTS * g_sdio] ),
+            .sdcmd_oen_o         ( perio_oe_o[`PERIO_SDIO_CMD + `PERIO_SDIO_NPORTS * g_sdio] ),
+			.sddata_i            ( perio_in_i[`PERIO_SDIO_DATA0 + `PERIO_SDIO_NPORTS * g_sdio : `PERIO_SDIO_DATA3 + `PERIO_SDIO_NPORTS * g_sdio]     ),
+            .sddata_o            ( perio_out_o[`PERIO_SDIO_DATA0 + `PERIO_SDIO_NPORTS * g_sdio : `PERIO_SDIO_DATA3 + `PERIO_SDIO_NPORTS * g_sdio]     ),
             .sddata_oen_o        ( s_sddata_oen     ),
 
             .cfg_data_i          ( s_periph_data_to                    ),
@@ -811,14 +811,14 @@ module udma_subsystem
             // .pad_slave_ws_o      ( i2s_slave_ws_o                  ),
             // .pad_slave_ws_oe     ( i2s_slave_ws_oe                 ),
 			// Pad signals
-			.pad_slave_sd0_i     ( perio_in_i[`PERIO_I2SS0_DATA0 + `PERIO_I2SS_NPORT * g_i2s]),
-            .pad_slave_sd1_i     ( perio_in_i[`PERIO_I2SS0_DATA1 + `PERIO_I2SS_NPORT * g_i2s]),
-            .pad_slave_sck_i     ( perio_in_i[`PERIO_I2SS0_SCK + `PERIO_I2SS_NPORT * g_i2s]),
-            .pad_slave_sck_o     ( perio_out_o[`PERIO_I2SS0_SCK + `PERIO_I2SS_NPORT * g_i2s]),
-            .pad_slave_sck_oe    ( perio_oe_o[`PERIO_I2SS0_SCK + `PERIO_I2SS_NPORT * g_i2s]),
-            .pad_slave_ws_i      ( perio_in_i[`PERIO_I2SS0_WS + `PERIO_I2SS_NPORT * g_i2s]),
-            .pad_slave_ws_o      ( perio_out_o[`PERIO_I2SS0_WS + `PERIO_I2SS_NPORT * g_i2s]),
-            .pad_slave_ws_oe     ( perio_oe_o[`PERIO_I2SS0_WS + `PERIO_I2SS_NPORT * g_i2s]),
+			.pad_slave_sd0_i     ( perio_in_i[`PERIO_I2SS0_DATA0 + `PERIO_I2SS_NPORTS * g_i2s]),
+            .pad_slave_sd1_i     ( perio_in_i[`PERIO_I2SS0_DATA1 + `PERIO_I2SS_NPORTS * g_i2s]),
+            .pad_slave_sck_i     ( perio_in_i[`PERIO_I2SS0_SCK + `PERIO_I2SS_NPORTS * g_i2s]),
+            .pad_slave_sck_o     ( perio_out_o[`PERIO_I2SS0_SCK + `PERIO_I2SS_NPORTS * g_i2s]),
+            .pad_slave_sck_oe    ( perio_oe_o[`PERIO_I2SS0_SCK + `PERIO_I2SS_NPORTS * g_i2s]),
+            .pad_slave_ws_i      ( perio_in_i[`PERIO_I2SS0_WS + `PERIO_I2SS_NPORTS * g_i2s]),
+            .pad_slave_ws_o      ( perio_out_o[`PERIO_I2SS0_WS + `PERIO_I2SS_NPORTS * g_i2s]),
+            .pad_slave_ws_oe     ( perio_oe_o[`PERIO_I2SS0_WS + `PERIO_I2SS_NPORTS * g_i2s]),
 
             .pad_master_sd0_o    (                                 ),
             .pad_master_sd1_o    (                                 ),
@@ -921,10 +921,10 @@ module udma_subsystem
             // .cam_hsync_i         ( cam_hsync_i                     ),
             // .cam_vsync_i         ( cam_vsync_i                     )
 			
-			.cam_clk_i           ( perio_in_i[`PERIO_CAM0_CLK + `PERIO_CAM_NPORT * g_cam]),
-            .cam_data_i          ( perio_in_i[`PERIO_CAM0_DATA0 + `PERIO_CAM_NPORT * g_cam : `PERIO_CAM0_DATA7 + `PERIO_CAM_NPORT * g_cam]),
-            .cam_hsync_i         ( perio_in_i[`PERIO_CAM0_HSYNC + `PERIO_CAM_NPORT * g_cam]),
-            .cam_vsync_i         ( perio_in_i[`PERIO_CAM0_VSYNC + `PERIO_CAM_NPORT * g_cam]),
+			.cam_clk_i           ( perio_in_i[`PERIO_CAM0_CLK + `PERIO_CAM_NPORTS * g_cam]),
+            .cam_data_i          ( perio_in_i[`PERIO_CAM0_DATA0 + `PERIO_CAM_NPORTS * g_cam : `PERIO_CAM0_DATA7 + `PERIO_CAM_NPORTS * g_cam]),
+            .cam_hsync_i         ( perio_in_i[`PERIO_CAM0_HSYNC + `PERIO_CAM_NPORTS * g_cam]),
+            .cam_vsync_i         ( perio_in_i[`PERIO_CAM0_VSYNC + `PERIO_CAM_NPORTS * g_cam])
         );
         assign s_rx_ch_data[CH_ID_RX_CAM + g_cam][31:16]='h0;
       end
