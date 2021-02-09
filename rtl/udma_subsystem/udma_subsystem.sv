@@ -76,44 +76,47 @@ module udma_subsystem
     input  logic               [31:0]  efpga_setup_i,
     output logic               [31:0]  efpga_setup_o,
 
+	input  logic [`N_PERIO-1:0]			perio_in_i,
+	output logic [`N_PERIO-1:0]			perio_out_o,
+	output logic [`N_PERIO-1:0]			perio_oe_o
+	
+    // output logic     [`N_SPI-1:0]       spi_clk,
+    // output logic     [`N_SPI-1:0] [3:0] spi_csn,
+    // output logic     [`N_SPI-1:0] [3:0] spi_oen,
+    // output logic     [`N_SPI-1:0] [3:0] spi_sdo,
+    // input  logic     [`N_SPI-1:0] [3:0] spi_sdi,
 
-    output logic     [`N_SPI-1:0]       spi_clk,
-    output logic     [`N_SPI-1:0] [3:0] spi_csn,
-    output logic     [`N_SPI-1:0] [3:0] spi_oen,
-    output logic     [`N_SPI-1:0] [3:0] spi_sdo,
-    input  logic     [`N_SPI-1:0] [3:0] spi_sdi,
+    // input  logic           [`N_I2C-1:0] i2c_scl_i,
+    // output logic           [`N_I2C-1:0] i2c_scl_o,
+    // output logic           [`N_I2C-1:0] i2c_scl_oe,
+    // input  logic           [`N_I2C-1:0] i2c_sda_i,
+    // output logic           [`N_I2C-1:0] i2c_sda_o,
+    // output logic           [`N_I2C-1:0] i2c_sda_oe,
 
-    input  logic           [`N_I2C-1:0] i2c_scl_i,
-    output logic           [`N_I2C-1:0] i2c_scl_o,
-    output logic           [`N_I2C-1:0] i2c_scl_oe,
-    input  logic           [`N_I2C-1:0] i2c_sda_i,
-    output logic           [`N_I2C-1:0] i2c_sda_o,
-    output logic           [`N_I2C-1:0] i2c_sda_oe,
+    // input  logic                       cam_clk_i,
+    // input  logic  [CAM_DATA_WIDTH-1:0] cam_data_i,
+    // input  logic                       cam_hsync_i,
+    // input  logic                       cam_vsync_i,
 
-    input  logic                       cam_clk_i,
-    input  logic  [CAM_DATA_WIDTH-1:0] cam_data_i,
-    input  logic                       cam_hsync_i,
-    input  logic                       cam_vsync_i,
+    // input  logic          [`N_UART-1:0] uart_rx_i,
+    // output logic          [`N_UART-1:0] uart_tx_o,
 
-    input  logic          [`N_UART-1:0] uart_rx_i,
-    output logic          [`N_UART-1:0] uart_tx_o,
+    // output logic                       sdio_clk_o,
+    // output logic                       sdio_cmd_o,
+    // input  logic                       sdio_cmd_i,
+    // output logic                       sdio_cmd_oen_o,
+    // output logic                 [3:0] sdio_data_o,
+    // input  logic                 [3:0] sdio_data_i,
+    // output logic                 [3:0] sdio_data_oen_o,
 
-    output logic                       sdio_clk_o,
-    output logic                       sdio_cmd_o,
-    input  logic                       sdio_cmd_i,
-    output logic                       sdio_cmd_oen_o,
-    output logic                 [3:0] sdio_data_o,
-    input  logic                 [3:0] sdio_data_i,
-    output logic                 [3:0] sdio_data_oen_o,
-
-    input  logic                       i2s_slave_sd0_i,
-    input  logic                       i2s_slave_sd1_i,
-    input  logic                       i2s_slave_ws_i,
-    output logic                       i2s_slave_ws_o,
-    output logic                       i2s_slave_ws_oe,
-    input  logic                       i2s_slave_sck_i,
-    output logic                       i2s_slave_sck_o,
-    output logic                       i2s_slave_sck_oe
+    // input  logic                       i2s_slave_sd0_i,
+    // input  logic                       i2s_slave_sd1_i,
+    // input  logic                       i2s_slave_ws_i,
+    // output logic                       i2s_slave_ws_o,
+    // output logic                       i2s_slave_ws_oe,
+    // input  logic                       i2s_slave_sck_i,
+    // output logic                       i2s_slave_sck_o,
+    // output logic                       i2s_slave_sck_oe
 );
 
     localparam DEST_SIZE = 2;
@@ -412,7 +415,8 @@ module udma_subsystem
 
     // UARTS
     generate
-        for (genvar g_uart=0;g_uart<`N_UART;g_uart++)
+        genvar g_uart;
+        for (g_uart=0;g_uart<`N_UART;g_uart++)
         begin : i_uart_gen
             assign s_events[4*(PER_ID_UART+g_uart)+0] = s_rx_ch_events[CH_ID_RX_UART+g_uart];
             assign s_events[4*(PER_ID_UART+g_uart)+1] = s_tx_ch_events[CH_ID_TX_UART+g_uart];

@@ -86,9 +86,9 @@ module soc_peripherals #(
 	output logic [`N_PERIO-1:0]        perio_out_o, 
     output logic [`N_PERIO-1:0]        perio_oe_o,
 	// GPIO signals
-    input  logic [`NGPIO-1:0]       	gpio_in_i,
-    output logic [`NGPIO-1:0]          	gpio_out_o,
-    output logic [`NGPIO-1:0]          	gpio_oe_O,
+    input  logic [`N_GPIO-1:0]       	gpio_in_i,
+    output logic [`N_GPIO-1:0]          	gpio_out_o,
+    output logic [`N_GPIO-1:0]          	gpio_oe_O,
 	// FPGAIO signals
 	input  logic [`N_FPGAIO-1:0]        fpgaio_in_i,
     output logic [`N_FPGAIO-1:0]        fpgaio_out_o,
@@ -469,7 +469,7 @@ module soc_peripherals #(
 
         .gpio_in         ( gpio_in            ),
         .gpio_out        ( gpio_out           ),
-        .gpio_oe        ( gpio_oe           ),
+        .gpio_dir        ( gpio_oe           ),
         .gpio_padcfg     ( gpio_padcfg        ),
         .interrupt       ( s_gpio_event       )
     );
@@ -536,44 +536,48 @@ module soc_peripherals #(
         .efpga_data_rx_ready_o   ( efpga_udma_rx_lin_ready  ),
         .efpga_setup_i           ( efpga2udma_cfg_data      ),
         .efpga_setup_o           ( udma2efpga_cfg_data      ),
+		
+		.perio_in_i			(perio_in_i),
+		.perio_out_o		(perio_out_o),
+		.perio_oe_o			(perio_oe_o)
 
-        .spi_clk          ( spi_clk_o            ),
-        .spi_csn          ( spi_csn_o            ),
-        .spi_oen          ( spi_oen_o            ),
-        .spi_sdo          ( spi_sdo_o            ),
-        .spi_sdi          ( spi_sdi_i            ),
+        // .spi_clk          ( spi_clk_o            ),
+        // .spi_csn          ( spi_csn_o            ),
+        // .spi_oen          ( spi_oen_o            ),
+        // .spi_sdo          ( spi_sdo_o            ),
+        // .spi_sdi          ( spi_sdi_i            ),
 
-        .sdio_clk_o       ( sdclk_o              ),
-        .sdio_cmd_o       ( sdcmd_o              ),
-        .sdio_cmd_i       ( sdcmd_i              ),
-        .sdio_cmd_oen_o   ( sdcmd_oen_o          ),
-        .sdio_data_o      ( sddata_o             ),
-        .sdio_data_i      ( sddata_i             ),
-        .sdio_data_oen_o  ( sddata_oen_o         ),
+        // .sdio_clk_o       ( sdclk_o              ),
+        // .sdio_cmd_o       ( sdcmd_o              ),
+        // .sdio_cmd_i       ( sdcmd_i              ),
+        // .sdio_cmd_oen_o   ( sdcmd_oen_o          ),
+        // .sdio_data_o      ( sddata_o             ),
+        // .sdio_data_i      ( sddata_i             ),
+        // .sdio_data_oen_o  ( sddata_oen_o         ),
 
-        .cam_clk_i        ( cam_clk_i            ),
-        .cam_data_i       ( cam_data_i           ),
-        .cam_hsync_i      ( cam_hsync_i          ),
-        .cam_vsync_i      ( cam_vsync_i          ),
+        // .cam_clk_i        ( cam_clk_i            ),
+        // .cam_data_i       ( cam_data_i           ),
+        // .cam_hsync_i      ( cam_hsync_i          ),
+        // .cam_vsync_i      ( cam_vsync_i          ),
 
-        .i2s_slave_sd0_i  ( i2s_slave_sd0_i      ),
-        .i2s_slave_sd1_i  ( i2s_slave_sd1_i      ),
-        .i2s_slave_ws_i   ( i2s_slave_ws_i       ),
-        .i2s_slave_ws_o   ( i2s_slave_ws_o       ),
-        .i2s_slave_ws_oe  ( i2s_slave_ws_oe      ),
-        .i2s_slave_sck_i  ( i2s_slave_sck_i      ),
-        .i2s_slave_sck_o  ( i2s_slave_sck_o      ),
-        .i2s_slave_sck_oe ( i2s_slave_sck_oe     ),
+        // .i2s_slave_sd0_i  ( i2s_slave_sd0_i      ),
+        // .i2s_slave_sd1_i  ( i2s_slave_sd1_i      ),
+        // .i2s_slave_ws_i   ( i2s_slave_ws_i       ),
+        // .i2s_slave_ws_o   ( i2s_slave_ws_o       ),
+        // .i2s_slave_ws_oe  ( i2s_slave_ws_oe      ),
+        // .i2s_slave_sck_i  ( i2s_slave_sck_i      ),
+        // .i2s_slave_sck_o  ( i2s_slave_sck_o      ),
+        // .i2s_slave_sck_oe ( i2s_slave_sck_oe     ),
 
-        .uart_rx_i        ( uart_rx              ),
-        .uart_tx_o        ( uart_tx              ),
+        // .uart_rx_i        ( uart_rx              ),
+        // .uart_tx_o        ( uart_tx              ),
 
-        .i2c_scl_i        ( i2c_scl_i            ),
-        .i2c_scl_o        ( i2c_scl_o            ),
-        .i2c_scl_oe       ( i2c_scl_oe_o         ),
-        .i2c_sda_i        ( i2c_sda_i            ),
-        .i2c_sda_o        ( i2c_sda_o            ),
-        .i2c_sda_oe       ( i2c_sda_oe_o         )
+        // .i2c_scl_i        ( i2c_scl_i            ),
+        // .i2c_scl_o        ( i2c_scl_o            ),
+        // .i2c_scl_oe       ( i2c_scl_oe_o         ),
+        // .i2c_sda_i        ( i2c_sda_i            ),
+        // .i2c_sda_o        ( i2c_sda_o            ),
+        // .i2c_sda_oe       ( i2c_sda_oe_o         )
 
     );
 
