@@ -435,6 +435,16 @@ module udma_subsystem
                 .sys_clk_i           ( s_clk_periphs_core[PER_ID_UART+g_uart]  ),
                 .periph_clk_i        ( s_clk_periphs_per[PER_ID_UART+g_uart]   ),
                 .rstn_i              ( sys_resetn_i                            ),
+				
+				// .uart_tx_o           ( uart_tx_o[g_uart]                       ),
+                // .uart_rx_i           ( uart_rx_i[g_uart]                       ),
+				
+				// Signals to pads
+				.uart_tx_o			( perio_out_o[`PERIO_UART0_TX + `PERIO_UART_NPORTS * g_uart]),
+				.uart_rx_i			( perio_in_i[`PERIO_UART0_RX + `PERIO_UART_NPORTS * g_uart]),
+				
+				.rx_char_event_o	(),
+				.err_event_o		(),
 
                 .cfg_data_i          ( s_periph_data_to                        ),
                 .cfg_addr_i          ( s_periph_addr                           ),
@@ -475,14 +485,7 @@ module udma_subsystem
                 .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_UART+g_uart]    ),
                 .data_rx_o           ( s_rx_ch_data[CH_ID_RX_UART+g_uart]        ),
                 .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_UART+g_uart]       ),
-                .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_UART+g_uart]       ),
-				
-				// .uart_tx_o           ( uart_tx_o[g_uart]                       ),
-                // .uart_rx_i           ( uart_rx_i[g_uart]                       ),
-				
-				// Signals to pads
-				.uart_tx_o			( perio_out_o[`PERIO_UART0_TX + `PERIO_UART_NPORTS * g_uart]		),
-				.uart_rx_o			( perio_in_i[`PERIO_UART0_RX + `PERIO_UART_NPORTS * g_uart]		)
+                .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_UART+g_uart]       )	
             );
         end
     endgenerate
@@ -875,6 +878,8 @@ module udma_subsystem
     generate
       for (genvar g_cam = 0; g_cam < `N_CAM; g_cam++)
       begin: i_cam_gen
+		logic [7:0]		s_cam_data;
+		assign s_cam_data = perio_in_i[`PERIO_CAM0_DATA7 + `PERIO_CAM_NPORTS * g_cam : `PERIO_CAM0_DATA0 + `PERIO_CAM_NPORTS * g_cam];
         assign s_events[4*(PER_ID_CAM + g_cam)+0]    = s_rx_ch_events[CH_ID_RX_CAM + g_cam];
         assign s_events[4*(PER_ID_CAM + g_cam)+1]  = 1'b0;
         assign s_events[4*(PER_ID_CAM + g_cam)+2]  = 1'b0;
@@ -922,7 +927,7 @@ module udma_subsystem
             // .cam_vsync_i         ( cam_vsync_i                     )
 			
 			.cam_clk_i           ( perio_in_i[`PERIO_CAM0_CLK + `PERIO_CAM_NPORTS * g_cam]),
-            .cam_data_i          ( perio_in_i[`PERIO_CAM0_DATA0 + `PERIO_CAM_NPORTS * g_cam : `PERIO_CAM0_DATA7 + `PERIO_CAM_NPORTS * g_cam]),
+            .cam_data_i          ( perio_in_i[`PERIO_CAM0_DATA7 + `PERIO_CAM_NPORTS * g_cam : `PERIO_CAM0_DATA0 + `PERIO_CAM_NPORTS * g_cam]),
             .cam_hsync_i         ( perio_in_i[`PERIO_CAM0_HSYNC + `PERIO_CAM_NPORTS * g_cam]),
             .cam_vsync_i         ( perio_in_i[`PERIO_CAM0_VSYNC + `PERIO_CAM_NPORTS * g_cam])
         );

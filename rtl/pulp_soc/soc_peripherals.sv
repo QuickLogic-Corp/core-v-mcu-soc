@@ -9,6 +9,7 @@
 // specific language governing permissions and limitations under the License.
 
 `include "pulp_soc_defines.sv"
+`include "pulp_peripheral_defines.svh"
 
 module soc_peripherals #(
     parameter MEM_ADDR_WIDTH = 13,
@@ -87,8 +88,8 @@ module soc_peripherals #(
     output logic [`N_PERIO-1:0]        perio_oe_o,
 	// GPIO signals
     input  logic [`N_GPIO-1:0]       	gpio_in_i,
-    output logic [`N_GPIO-1:0]          	gpio_out_o,
-    output logic [`N_GPIO-1:0]          	gpio_oe_O,
+    output logic [`N_GPIO-1:0]         	gpio_out_o,
+    output logic [`N_GPIO-1:0]          gpio_oe_o,
 	// FPGAIO signals
 	input  logic [`N_FPGAIO-1:0]        fpgaio_in_i,
     output logic [`N_FPGAIO-1:0]        fpgaio_out_o,

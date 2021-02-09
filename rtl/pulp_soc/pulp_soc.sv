@@ -174,13 +174,13 @@ module pulp_soc import dm::*; #(
     ///////////////////////////////////////////////////
     //      To I/O Controller and padframe           //
     ///////////////////////////////////////////////////
-    output logic [`N_IO-1:0]               pad_mux_o,
-    output logic [`N_IO-1:0]               pad_cfg_o,
+    output logic [`N_IO-1:0][`NBIT_PADMUX-1:0]	pad_mux_o,
+    output logic [`N_IO-1:0][`NBIT_PADCFG-1:0]	pad_cfg_o,
 	
 	// Signals to pad frame
 	input  logic [`N_PERIO-1:0]           perio_in_i,
     output logic [`N_PERIO-1:0]           perio_out_o,
-    output logic [`N_PERIO-1:0]           perio_dir_o,
+    output logic [`N_PERIO-1:0]           perio_oe_o,
 	// Signals to gpio controller
     input  logic [`N_GPIO-1:0]            gpio_in_i,
     output logic [`N_GPIO-1:0]            gpio_out_o,
@@ -189,6 +189,11 @@ module pulp_soc import dm::*; #(
     input  logic [`N_FPGAIO-1:0]          fpgaio_in_i,
     output logic [`N_FPGAIO-1:0]          fpgaio_out_o,
     output logic [`N_FPGAIO-1:0]          fpgaio_oe_o,
+	// Timers
+	output logic [3:0]                    timer_ch0_o,
+    output logic [3:0]                    timer_ch1_o,
+    output logic [3:0]                    timer_ch2_o,
+    output logic [3:0]                    timer_ch3_o,
 	
     // output logic [191:0]                  gpio_cfg_o,
     // output logic                          uart_tx_o,
@@ -395,9 +400,8 @@ input  logic [1:0]                    selected_mode_i,
 
     logic [31:0]           s_fc_bootaddr;
 
-    logic [NGPIO-1:0][NBIT_PADCFG-1:0] s_gpio_cfg;
-    logic [63:0][1:0]      s_pad_mux;
-    logic [63:0][5:0]      s_pad_cfg;
+    logic [`N_IO-1:0][`NBIT_PADMUX-1:0]      s_pad_mux;
+    logic [`N_IO-1:0][`NBIT_PADCFG-1:0]      s_pad_cfg;
 
     logic                  s_periph_clk;
     logic                  s_periph_rstn;
@@ -1121,17 +1125,17 @@ input  logic [1:0]                    selected_mode_i,
         // end
     // end
 
-    for (genvar i = 0; i < 64; i++) begin : gen_pad_mux_outer
-        for (genvar j = 0; j < 2; j++) begin : gen_pad_mux_innter
-            assign pad_mux_o[j+2*i] = s_pad_mux[i][j];
-        end
-    end
+    // for (genvar i = 0; i < 64; i++) begin : gen_pad_mux_outer
+        // for (genvar j = 0; j < 2; j++) begin : gen_pad_mux_innter
+            // assign pad_mux_o[j+2*i] = s_pad_mux[i][j];
+        // end
+    // end
 
-    for (genvar i = 0; i < 64; i++) begin : gen_pad_cfg_outer
-        for (genvar j = 0; j < 6; j++) begin : gen_pad_cfg_inner
-            assign pad_cfg_o[j+6*i] = s_pad_cfg[i][j];
-        end
-    end
+    // for (genvar i = 0; i < 64; i++) begin : gen_pad_cfg_outer
+        // for (genvar j = 0; j < 6; j++) begin : gen_pad_cfg_inner
+            // assign pad_cfg_o[j+6*i] = s_pad_cfg[i][j];
+        // end
+    // end
 
     //********************************************************
     //*** AXI DATA SLAVE INTERFACE UNPACK ********************
