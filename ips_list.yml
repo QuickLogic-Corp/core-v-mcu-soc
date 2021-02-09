@@ -61,6 +61,7 @@ axi/axi_slice_dc:
   domain: [cluster, soc]
 timer_unit:
   commit: v1.0.2
+  group: QuickLogic-Corp
   domain: [cluster, soc]
 fpnew:
   commit: v0.6.5
