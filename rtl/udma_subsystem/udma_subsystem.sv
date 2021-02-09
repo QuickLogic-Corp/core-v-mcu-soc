@@ -436,9 +436,6 @@ module udma_subsystem
                 .periph_clk_i        ( s_clk_periphs_per[PER_ID_UART+g_uart]   ),
                 .rstn_i              ( sys_resetn_i                            ),
 
-                .uart_tx_o           ( uart_tx_o[g_uart]                       ),
-                .uart_rx_i           ( uart_rx_i[g_uart]                       ),
-
                 .cfg_data_i          ( s_periph_data_to                        ),
                 .cfg_addr_i          ( s_periph_addr                           ),
                 .cfg_valid_i         ( s_periph_valid[PER_ID_UART+g_uart]      ),
@@ -478,7 +475,14 @@ module udma_subsystem
                 .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_UART+g_uart]    ),
                 .data_rx_o           ( s_rx_ch_data[CH_ID_RX_UART+g_uart]        ),
                 .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_UART+g_uart]       ),
-                .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_UART+g_uart]       )
+                .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_UART+g_uart]       ),
+				
+				// .uart_tx_o           ( uart_tx_o[g_uart]                       ),
+                // .uart_rx_i           ( uart_rx_i[g_uart]                       ),
+				
+				// Signals to pads
+				.uart_tx_o			( perio_out_o[`PERIO_UART0_TX + g_uart]		),
+				.uart_rx_o			( perio_in_i[`PERIO_UART0_RX + g_uart]		)
             );
         end
     endgenerate
@@ -509,24 +513,44 @@ module udma_subsystem
                 .dft_cg_enable_i     ( dft_cg_enable_i                          ),
                 .spi_eot_o           ( s_spi_eot[g_spi]                         ),
                 .spi_event_i         ( s_trigger_events                         ),
-                .spi_clk_o           ( spi_clk[g_spi]                           ),
-                .spi_csn0_o          ( spi_csn[g_spi][0]                        ),
-                .spi_csn1_o          ( spi_csn[g_spi][1]                        ),
-                .spi_csn2_o          ( spi_csn[g_spi][2]                        ),
-                .spi_csn3_o          ( spi_csn[g_spi][3]                        ),
-                .spi_oen0_o          ( spi_oen[g_spi][0]                        ),
-                .spi_oen1_o          ( spi_oen[g_spi][1]                        ),
-                .spi_oen2_o          ( spi_oen[g_spi][2]                        ),
-                .spi_oen3_o          ( spi_oen[g_spi][3]                        ),
-                .spi_sdo0_o          ( spi_sdo[g_spi][0]                        ),
-                .spi_sdo1_o          ( spi_sdo[g_spi][1]                        ),
-                .spi_sdo2_o          ( spi_sdo[g_spi][2]                        ),
-                .spi_sdo3_o          ( spi_sdo[g_spi][3]                        ),
-                .spi_sdi0_i          ( spi_sdi[g_spi][0]                        ),
-                .spi_sdi1_i          ( spi_sdi[g_spi][1]                        ),
-                .spi_sdi2_i          ( spi_sdi[g_spi][2]                        ),
-                .spi_sdi3_i          ( spi_sdi[g_spi][3]                        ),
-
+				
+                // .spi_clk_o           ( spi_clk[g_spi]                           ),
+                // .spi_csn0_o          ( spi_csn[g_spi][0]                        ),
+                // .spi_csn1_o          ( spi_csn[g_spi][1]                        ),
+                // .spi_csn2_o          ( spi_csn[g_spi][2]                        ),
+                // .spi_csn3_o          ( spi_csn[g_spi][3]                        ),
+                // .spi_oen0_o          ( spi_oen[g_spi][0]                        ),
+                // .spi_oen1_o          ( spi_oen[g_spi][1]                        ),
+                // .spi_oen2_o          ( spi_oen[g_spi][2]                        ),
+                // .spi_oen3_o          ( spi_oen[g_spi][3]                        ),
+                // .spi_sdo0_o          ( spi_sdo[g_spi][0]                        ),
+                // .spi_sdo1_o          ( spi_sdo[g_spi][1]                        ),
+                // .spi_sdo2_o          ( spi_sdo[g_spi][2]                        ),
+                // .spi_sdo3_o          ( spi_sdo[g_spi][3]                        ),
+                // .spi_sdi0_i          ( spi_sdi[g_spi][0]                        ),
+                // .spi_sdi1_i          ( spi_sdi[g_spi][1]                        ),
+                // .spi_sdi2_i          ( spi_sdi[g_spi][2]                        ),
+                // .spi_sdi3_i          ( spi_sdi[g_spi][3]                        ),
+				
+				// Signals to pads
+				.spi_clk_o           ( perio_out_o[`PERIO_QSPIM0_CLK + 9 * g_spi]	),
+                .spi_csn0_o          ( perio_out_o[`PERIO_QSPIM0_CSN0 + 9 * g_spi]	),
+                .spi_csn1_o          ( perio_out_o[`PERIO_QSPIM0_CSN1 + 9 * g_spi]	),
+                .spi_csn2_o          ( perio_out_o[`PERIO_QSPIM0_CSN2 + 9 * g_spi]	),
+                .spi_csn3_o          ( perio_out_o[`PERIO_QSPIM0_CSN3 + 9 * g_spi]	),
+				.spi_sdi0_i          ( perio_in_i[`PERIO_QSPIM0_DATA0 + 9 * g_spi]	),
+				.spi_sdo0_o          ( perio_out_o[`PERIO_QSPIM0_DATA0 + 9 * g_spi]	),
+                .spi_oen0_o          ( perio_oe_o[`PERIO_QSPIM0_DATA0 + 9 * g_spi]	),
+				.spi_sdi1_i          ( perio_in_i[`PERIO_QSPIM0_DATA1 + 9 * g_spi]	),
+				.spi_sdo1_o          ( perio_out_o[`PERIO_QSPIM0_DATA1 + 9 * g_spi]	),
+                .spi_oen1_o          ( perio_oe_o[`PERIO_QSPIM0_DATA1 + 9 * g_spi]	),
+				.spi_sdi2_i          ( perio_in_i[`PERIO_QSPIM0_DATA2 + 9 * g_spi]	),
+				.spi_sdo2_o          ( perio_out_o[`PERIO_QSPIM0_DATA2 + 9 * g_spi]	),
+                .spi_oen2_o          ( perio_oe_o[`PERIO_QSPIM0_DATA2 + 9 * g_spi]	),
+				.spi_sdi3_i          ( perio_in_i[`PERIO_QSPIM0_DATA3 + 9 * g_spi]	),
+				.spi_sdo3_o          ( perio_out_o[`PERIO_QSPIM0_DATA3 + 9 * g_spi]	),
+                .spi_oen3_o          ( perio_oe_o[`PERIO_QSPIM0_DATA3 + 9 * g_spi]	),
+               
                 .cfg_data_i          ( s_periph_data_to                         ),
                 .cfg_addr_i          ( s_periph_addr                            ),
                 .cfg_valid_i         ( s_periph_valid[PER_ID_SPIM+g_spi]        ),
@@ -653,12 +677,21 @@ module udma_subsystem
 
                 .err_o               ( s_i2c_evt[g_i2c]                        ),
 
-                .scl_i               ( i2c_scl_i[g_i2c]                      ),
-                .scl_o               ( i2c_scl_o[g_i2c]                      ),
-                .scl_oe              ( i2c_scl_oe[g_i2c]                     ),
-                .sda_i               ( i2c_sda_i[g_i2c]                      ),
-                .sda_o               ( i2c_sda_o[g_i2c]                      ),
-                .sda_oe              ( i2c_sda_oe[g_i2c]                     ),
+                // .scl_i               ( i2c_scl_i[g_i2c]                      ),
+                // .scl_o               ( i2c_scl_o[g_i2c]                      ),
+                // .scl_oe              ( i2c_scl_oe[g_i2c]                     ),
+                // .sda_i               ( i2c_sda_i[g_i2c]                      ),
+                // .sda_o               ( i2c_sda_o[g_i2c]                      ),
+                // .sda_oe              ( i2c_sda_oe[g_i2c]                     ),
+				
+				// Signals to pads
+				.scl_i               ( perio_in_i[`PERIO_I2CM0_SCL + 2 * g_i2c]	),
+                .scl_o               ( perio_out_o[`PERIO_I2CM0_SCL + 2 * g_i2c]	),
+                .scl_oe              ( perio_oe_o[`PERIO_I2CM0_SCL + 2 * g_i2c]	),
+                .sda_i               ( perio_in_i[`PERIO_I2CM0_SDA + 2 * g_i2c]	),
+                .sda_o               ( perio_out_o[`PERIO_I2CM0_SDA + 2 * g_i2c]),
+                .sda_oe              ( perio_oe_o[`PERIO_I2CM0_SDA + 2 * g_i2c]),
+				
                 .ext_events_i        ( s_trigger_events                  )
             );
             assign s_rx_ch_data[CH_ID_RX_I2C+g_i2c][31:8]= 'h0;
@@ -671,6 +704,7 @@ module udma_subsystem
       begin: i_sdio_gen
         logic                        s_sdio_eot;
         logic                        s_sdio_err;
+		logic [3:0]					s_sddata_oen;
 
         assign s_events[4*(PER_ID_SDIO + g_sdio)+0]    = s_rx_ch_events[CH_ID_RX_SDIO + g_sdio];
         assign s_events[4*(PER_ID_SDIO + g_sdio)+1]  = s_tx_ch_events[CH_ID_TX_SDIO + g_sdio];
@@ -680,6 +714,9 @@ module udma_subsystem
         assign s_rx_cfg_stream_id[CH_ID_RX_SDIO + g_sdio] = 'h0;
         assign s_rx_ch_destination[CH_ID_RX_SDIO + g_sdio] = 'h0;
         assign s_tx_ch_destination[CH_ID_TX_SDIO + g_sdio] = 'h0;
+		
+		assign perio_oe_o[`PERIO_SDIO_DATA0 + 6 * g_sdio : `PERIO_SDIO_DATA0 + 6 * g_sdio + 3] = ~ s_sddata_oen;
+		
         udma_sdio_top #(
             .L2_AWIDTH_NOAL ( L2_AWIDTH_NOAL ),
             .TRANS_SIZE     ( TRANS_SIZE     )
@@ -691,13 +728,13 @@ module udma_subsystem
             .err_o               ( s_sdio_err      ),
             .eot_o               ( s_sdio_eot      ),
 
-            .sdclk_o             ( sdio_clk_o      ),
-            .sdcmd_o             ( sdio_cmd_o      ),
-            .sdcmd_i             ( sdio_cmd_i      ),
-            .sdcmd_oen_o         ( sdio_cmd_oen_o  ),
-            .sddata_o            ( sdio_data_o     ),
-            .sddata_i            ( sdio_data_i     ),
-            .sddata_oen_o        ( sdio_data_oen_o ),
+            .sdclk_o             ( perio_out_o[`PERIO_SDIO_CLK + 6 * g_sdio] ),
+            .sdcmd_i             ( perio_in_i[`PERIO_SDIO_CMD + 6 * g_sdio] ),
+			.sdcmd_o             ( perio_out_o[`PERIO_SDIO_CMD + 6 * g_sdio] ),
+            .sdcmd_oen_o         ( perio_oe_o[`PERIO_SDIO_CMD + 6 * g_sdio] ),
+			.sddata_i            ( perio_in_i[`PERIO_SDIO_DATA0 + 6 * g_sdio : `PERIO_SDIO_DATA3 + 6 * g_sdio]     ),
+            .sddata_o            ( perio_out_o[`PERIO_SDIO_DATA0 + 6 * g_sdio : `PERIO_SDIO_DATA3 + 6 * g_sdio]     ),
+            .sddata_oen_o        ( s_sddata_oen     ),
 
             .cfg_data_i          ( s_periph_data_to                    ),
             .cfg_addr_i          ( s_periph_addr                       ),
@@ -765,14 +802,23 @@ module udma_subsystem
             .dft_test_mode_i     ( dft_test_mode_i                 ),
             .dft_cg_enable_i     ( dft_cg_enable_i                 ),
 
-            .pad_slave_sd0_i     ( i2s_slave_sd0_i                 ),
-            .pad_slave_sd1_i     ( i2s_slave_sd1_i                 ),
-            .pad_slave_sck_i     ( i2s_slave_sck_i                 ),
-            .pad_slave_sck_o     ( i2s_slave_sck_o                 ),
-            .pad_slave_sck_oe    ( i2s_slave_sck_oe                ),
-            .pad_slave_ws_i      ( i2s_slave_ws_i                  ),
-            .pad_slave_ws_o      ( i2s_slave_ws_o                  ),
-            .pad_slave_ws_oe     ( i2s_slave_ws_oe                 ),
+            // .pad_slave_sd0_i     ( i2s_slave_sd0_i                 ),
+            // .pad_slave_sd1_i     ( i2s_slave_sd1_i                 ),
+            // .pad_slave_sck_i     ( i2s_slave_sck_i                 ),
+            // .pad_slave_sck_o     ( i2s_slave_sck_o                 ),
+            // .pad_slave_sck_oe    ( i2s_slave_sck_oe                ),
+            // .pad_slave_ws_i      ( i2s_slave_ws_i                  ),
+            // .pad_slave_ws_o      ( i2s_slave_ws_o                  ),
+            // .pad_slave_ws_oe     ( i2s_slave_ws_oe                 ),
+			// Pad signals
+			.pad_slave_sd0_i     ( perio_in_i[`PERIO_I2SS_DATA0 + `PERIO_I2SS_NPORT * g_i2s]),
+            .pad_slave_sd1_i     ( perio_in_i[`PERIO_I2SS_DATA1 + `PERIO_I2SS_NPORT * g_i2s]),
+            .pad_slave_sck_i     ( perio_in_i[`PERIO_I2SS_SCK + `PERIO_I2SS_NPORT * g_i2s]),
+            .pad_slave_sck_o     ( perio_out_o[`PERIO_I2SS_SCK + `PERIO_I2SS_NPORT * g_i2s]),
+            .pad_slave_sck_oe    ( perio_oe_o[`PERIO_I2SS_SCK + `PERIO_I2SS_NPORT * g_i2s]),
+            .pad_slave_ws_i      ( perio_in_i[`PERIO_I2SS_WS + `PERIO_I2SS_NPORT * g_i2s]),
+            .pad_slave_ws_o      ( perio_out_o[`PERIO_I2SS_WS + `PERIO_I2SS_NPORT * g_i2s]),
+            .pad_slave_ws_oe     ( perio_oe_o[`PERIO_I2SS_WS + `PERIO_I2SS_NPORT * g_i2s]),
 
             .pad_master_sd0_o    (                                 ),
             .pad_master_sd1_o    (                                 ),
@@ -868,11 +914,17 @@ module udma_subsystem
             .data_rx_data_o      ( s_rx_ch_data[CH_ID_RX_CAM + g_cam][15:0]  ),
             .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_CAM + g_cam]       ),
             .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_CAM + g_cam]       ),
-
-            .cam_clk_i           ( cam_clk_i                       ),
-            .cam_data_i          ( cam_data_i                      ),
-            .cam_hsync_i         ( cam_hsync_i                     ),
-            .cam_vsync_i         ( cam_vsync_i                     )
+			
+			// Pad signals
+            // .cam_clk_i           ( cam_clk_i                       ),
+            // .cam_data_i          ( cam_data_i                      ),
+            // .cam_hsync_i         ( cam_hsync_i                     ),
+            // .cam_vsync_i         ( cam_vsync_i                     )
+			
+			.cam_clk_i           ( perio_in_i[`PERIO_CAM0_CLK + `PERIO_CAM_NPORT * g_cam]),
+            .cam_data_i          ( perio_in_i[`PERIO_CAM0_DATA0 + `PERIO_CAM_NPORT * g_cam : `PERIO_CAM0_DATA7 + `PERIO_CAM_NPORT * g_cam]),
+            .cam_hsync_i         ( perio_in_i[`PERIO_CAM0_HSYNC + `PERIO_CAM_NPORT * g_cam]),
+            .cam_vsync_i         ( perio_in_i[`PERIO_CAM0_VSYNC + `PERIO_CAM_NPORT * g_cam]),
         );
         assign s_rx_ch_data[CH_ID_RX_CAM + g_cam][31:16]='h0;
       end
