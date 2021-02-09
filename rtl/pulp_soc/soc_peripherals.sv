@@ -16,15 +16,7 @@ module soc_peripherals #(
     parameter APB_DATA_WIDTH = 32,
     parameter NB_CORES       = 4,
     parameter NB_CLUSTERS    = 0,
-    parameter EVNT_WIDTH     = 8,
-    parameter NGPIO          = 64,
-    parameter N_FPGAIO        = 43,
-    parameter NPAD           = 64,
-    parameter NBIT_PADCFG    = 4,
-    parameter NBIT_PADMUX    = 2,
-    parameter N_UART         = 1,
-    parameter N_SPI          = 1,
-    parameter N_I2C          = 2
+    parameter EVNT_WIDTH     = 8
 ) (
     input  logic                       clk_i,
     input  logic                       periph_clk_i,
@@ -86,71 +78,74 @@ module soc_peripherals #(
     input  logic [1:0]                 fc_hwpe_events_i,
     output logic [31:0]                fc_events_o,
 
-    input  logic [NGPIO-1:0]                  gpio_in,
-    output logic [NGPIO-1:0]                  gpio_out,
-    output logic [NGPIO-1:0]                  gpio_dir,
-    output logic [NGPIO-1:0][NBIT_PADCFG-1:0] gpio_padcfg,
-
+	// Pad control signals
+	output logic [`N_IO-1:0][`NBIT_PADMUX-1:0] pad_mux_o,
+    output logic [`N_IO-1:0][`NBIT_PADCFG-1:0] pad_cfg_o,
+	// PERIO signals
+	input  logic [`N_PERIO-1:0]        perio_in_i,
+	output logic [`N_PERIO-1:0]        perio_out_o, 
+    output logic [`N_PERIO-1:0]        perio_oe_o,
+	// GPIO signals
+    input  logic [`NGPIO-1:0]       	gpio_in_i,
+    output logic [`NGPIO-1:0]          	gpio_out_o,
+    output logic [`NGPIO-1:0]          	gpio_oe_O,
+	// FPGAIO signals
+	input  logic [`N_FPGAIO-1:0]        fpgaio_in_i,
     output logic [`N_FPGAIO-1:0]        fpgaio_out_o,
-    input  logic [`N_FPGAIO-1:0]        fpgaio_in_i,
     output logic [`N_FPGAIO-1:0]        fpgaio_oe_o,
-
-    output logic [NPAD-1:0][NBIT_PADMUX-1:0] pad_mux_o,
-    output logic [NPAD-1:0][NBIT_PADCFG-1:0] pad_cfg_o,
-
+	// Timer signals
     output logic [3:0]                 timer_ch0_o,
     output logic [3:0]                 timer_ch1_o,
     output logic [3:0]                 timer_ch2_o,
     output logic [3:0]                 timer_ch3_o,
 
-    //CAMERA
-    input  logic                       cam_clk_i,
-    input  logic [7:0]                 cam_data_i,
-    input  logic                       cam_hsync_i,
-    input  logic                       cam_vsync_i,
+    // //CAMERA
+    // input  logic                       cam_clk_i,
+    // input  logic [7:0]                 cam_data_i,
+    // input  logic                       cam_hsync_i,
+    // input  logic                       cam_vsync_i,
 
-    //UART
-    // output logic [N_UART-1:0]          uart_tx,
-    // input  logic [N_UART-1:0]          uart_rx,
-    output logic           uart_tx,
-    input  logic           uart_rx,
+    // //UART
+    // // output logic [N_UART-1:0]          uart_tx,
+    // // input  logic [N_UART-1:0]          uart_rx,
+    // output logic           uart_tx,
+    // input  logic           uart_rx,
 
 
-    //I2C
-    input  logic [N_I2C-1:0]           i2c_scl_i,
-    output logic [N_I2C-1:0]           i2c_scl_o,
-    output logic [N_I2C-1:0]           i2c_scl_oe_o,
-    input  logic [N_I2C-1:0]           i2c_sda_i,
-    output logic [N_I2C-1:0]           i2c_sda_o,
-    output logic [N_I2C-1:0]           i2c_sda_oe_o,
+    // //I2C
+    // input  logic [N_I2C-1:0]           i2c_scl_i,
+    // output logic [N_I2C-1:0]           i2c_scl_o,
+    // output logic [N_I2C-1:0]           i2c_scl_oe_o,
+    // input  logic [N_I2C-1:0]           i2c_sda_i,
+    // output logic [N_I2C-1:0]           i2c_sda_o,
+    // output logic [N_I2C-1:0]           i2c_sda_oe_o,
 
-    //I2S
-    input  logic                       i2s_slave_sd0_i,
-    input  logic                       i2s_slave_sd1_i,
-    input  logic                       i2s_slave_ws_i,
-    output logic                       i2s_slave_ws_o,
-    output logic                       i2s_slave_ws_oe,
-    input  logic                       i2s_slave_sck_i,
-    output logic                       i2s_slave_sck_o,
-    output logic                       i2s_slave_sck_oe,
+    // //I2S
+    // input  logic                       i2s_slave_sd0_i,
+    // input  logic                       i2s_slave_sd1_i,
+    // input  logic                       i2s_slave_ws_i,
+    // output logic                       i2s_slave_ws_o,
+    // output logic                       i2s_slave_ws_oe,
+    // input  logic                       i2s_slave_sck_i,
+    // output logic                       i2s_slave_sck_o,
+    // output logic                       i2s_slave_sck_oe,
 
-    //SPI
-    output logic [N_SPI-1:0]           spi_clk_o,
-    output logic [N_SPI-1:0][3:0]      spi_csn_o,
-    output logic [N_SPI-1:0][3:0]      spi_oen_o,
-    output logic [N_SPI-1:0][3:0]      spi_sdo_o,
-    input  logic [N_SPI-1:0][3:0]      spi_sdi_i,
+    // //SPI
+    // output logic [N_SPI-1:0]           spi_clk_o,
+    // output logic [N_SPI-1:0][3:0]      spi_csn_o,
+    // output logic [N_SPI-1:0][3:0]      spi_oen_o,
+    // output logic [N_SPI-1:0][3:0]      spi_sdo_o,
+    // input  logic [N_SPI-1:0][3:0]      spi_sdi_i,
 
-    //SDIO
-    output logic                       sdclk_o,
-    output logic                       sdcmd_o,
-    input  logic                       sdcmd_i,
-    output logic                       sdcmd_oen_o,
-    output logic                 [3:0] sddata_o,
-    input  logic                 [3:0] sddata_i,
-    output logic                 [3:0] sddata_oen_o,
+    // //SDIO
+    // output logic                       sdclk_o,
+    // output logic                       sdcmd_o,
+    // input  logic                       sdcmd_i,
+    // output logic                       sdcmd_oen_o,
+    // output logic                 [3:0] sddata_o,
+    // input  logic                 [3:0] sddata_i,
+    // output logic                 [3:0] sddata_oen_o,
 
-input  logic [1:0]                 selected_mode_i,
     input  logic                       fpga_clk_1_i,
     input  logic                       fpga_clk_2_i,
     input  logic                       fpga_clk_3_i,
@@ -453,8 +448,8 @@ input  logic [1:0]                 selected_mode_i,
 
     apb_gpio #(
         .APB_ADDR_WIDTH (APB_ADDR_WIDTH),
-        .PAD_NUM        (NGPIO),
-        .NBIT_PADCFG    (NBIT_PADCFG)
+        .PAD_NUM        (`N_GPIO),
+        .NBIT_PADCFG    (`NBIT_PADCFG)
     ) i_apb_gpio (
         .HCLK            ( clk_i              ),
         .HRESETn         ( rst_ni             ),
@@ -474,7 +469,7 @@ input  logic [1:0]                 selected_mode_i,
 
         .gpio_in         ( gpio_in            ),
         .gpio_out        ( gpio_out           ),
-        .gpio_dir        ( gpio_dir           ),
+        .gpio_oe        ( gpio_oe           ),
         .gpio_padcfg     ( gpio_padcfg        ),
         .interrupt       ( s_gpio_event       )
     );
@@ -590,14 +585,15 @@ input  logic [1:0]                 selected_mode_i,
     // ██║  ██║██║     ██████╔╝    ███████║╚██████╔╝╚██████╗    ╚██████╗   ██║   ██║  ██║███████╗ //
     // ╚═╝  ╚═╝╚═╝     ╚═════╝     ╚══════╝ ╚═════╝  ╚═════╝     ╚═════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝ //
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    if (NPAD != 64)
+    if (`N_IO > 64)
         $error("apb_soc_ctrl doesn't support any other value than NPAD=64");
-
+	logic [63:0][`NBIT_PADMUX-1:0]	s_pad_mux_local;
+	logic [63:0][`NBIT_PADCFG-1:0]	s_pad_cfg_local;
     apb_soc_ctrl #(
         .NB_CORES       ( NB_CORES       ),
         .NB_CLUSTERS    ( NB_CLUSTERS    ),
         .APB_ADDR_WIDTH ( APB_ADDR_WIDTH ),
-        .NBIT_PADCFG    ( NBIT_PADCFG    )
+        .NBIT_PADCFG    ( `NBIT_PADCFG    )
     ) i_apb_soc_ctrl (
         .HCLK                ( clk_i                  ),
         .HRESETn             ( rst_ni                 ),
@@ -635,8 +631,8 @@ input  logic [1:0]                 selected_mode_i,
         .soc_jtag_reg_i      ( soc_jtag_reg_i         ),
         .soc_jtag_reg_o      ( soc_jtag_reg_o         ),
 
-        .pad_mux             ( pad_mux_o              ),
-        .pad_cfg             ( pad_cfg_o              ),
+        .pad_mux             ( s_pad_mux_local              ),
+        .pad_cfg             ( s_pad_cfg_local              ),
         .cluster_pow_o       ( cluster_pow_o          ),
         .sel_hyper_axi_o     ( s_sel_hyper_axi        ),
 
@@ -646,7 +642,18 @@ input  logic [1:0]                 selected_mode_i,
         .cluster_rstn_o           ( cluster_rstn_o         ),
         .cluster_irq_o            ( cluster_irq_o          )
     );
+	for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_mux_outer
+        for (genvar j = 0; j < `NBIT_PADMUX; j++) begin : gen_pad_mux_innter
+            assign pad_mux_o[i][j] = s_pad_mux_local[i][j];
+        end
+    end
 
+    for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_cfg_outer
+        for (genvar j = 0; j < `NBIT_PADCFG; j++) begin : gen_pad_cfg_inner
+            assign pad_cfg_o[i][j] = s_pad_cfg_local[i][j];
+        end
+    end
+	
     apb_adv_timer #(
         .APB_ADDR_WIDTH ( APB_ADDR_WIDTH ),
         .EXTSIG_NUM     ( 32             )

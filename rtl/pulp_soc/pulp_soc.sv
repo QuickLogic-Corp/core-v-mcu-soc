@@ -10,6 +10,7 @@
 
 
 `include "pulp_soc_defines.sv"
+`include "pulp_peripheral_defines.svh"
 
 module pulp_soc import dm::*; #(
     parameter logic [1:0] CORE_TYPE   = 0,
@@ -169,7 +170,7 @@ module pulp_soc import dm::*; #(
     output logic                          dma_pe_irq_ack_o,
     input  logic                          dma_pe_irq_valid_i,
     output logic                          pf_evt_ack_o,
-    input  logic                          pf_evt_valid_i
+    input  logic                          pf_evt_valid_i,
     ///////////////////////////////////////////////////
     //      To I/O Controller and padframe           //
     ///////////////////////////////////////////////////
@@ -183,7 +184,7 @@ module pulp_soc import dm::*; #(
 	// Signals to gpio controller
     input  logic [`N_GPIO-1:0]            gpio_in_i,
     output logic [`N_GPIO-1:0]            gpio_out_o,
-    output logic [`N_GPIO-1:0]            gpio_dir_o,
+    output logic [`N_GPIO-1:0]            gpio_oe_o,
 	// IO signals to efpga
     input  logic [`N_FPGAIO-1:0]          fpgaio_in_i,
     output logic [`N_FPGAIO-1:0]          fpgaio_out_o,
@@ -619,14 +620,7 @@ input  logic [1:0]                    selected_mode_i,
         .APB_DATA_WIDTH     ( 32                                    ),
         .NB_CORES           ( NB_CORES                              ),
         .NB_CLUSTERS        ( `NB_CLUSTERS                          ),
-        .EVNT_WIDTH         ( EVNT_WIDTH                            ),
-        .NGPIO              ( NGPIO                                 ),
-        .NPAD               ( NPAD                                  ),
-        .NBIT_PADCFG        ( NBIT_PADCFG                           ),
-        .NBIT_PADMUX        ( NBIT_PADMUX                           ),
-        .N_UART             ( N_UART                                ),
-        .N_SPI              ( N_SPI                                 ),
-        .N_I2C              ( N_I2C                                 )
+        .EVNT_WIDTH         ( EVNT_WIDTH                            )
     ) soc_peripherals_i (
 
         .clk_i                  ( s_soc_clk              ),
@@ -681,13 +675,13 @@ input  logic [1:0]                    selected_mode_i,
 		.pad_mux_o              ( s_pad_mux              ),
 		.pad_cfg_o              ( s_pad_cfg              ),
 		// Peripheral signals
-        .perio_in               ( perio_in_i             ),
-        .perio_out              ( perio_out_o            ),
-        .perio_dir              ( perio_dir_o            ),
+        .perio_in_i               ( perio_in_i             ),
+        .perio_out_o              ( perio_out_o            ),
+        .perio_oe_o              ( perio_dir_o            ),
 		// GPIO signals
-        .gpio_in                ( gpio_in_i              ),
-        .gpio_out               ( gpio_out_o             ),
-        .gpio_dir               ( gpio_dir_o             ),
+        .gpio_in_i               ( gpio_in_i              ),
+        .gpio_out_o               ( gpio_out_o             ),
+        .gpio_oe_o              ( gpio_oe_o             ),
 		// FPGAIO signals
         .fpgaio_out_o           ( fpgaio_out_o             ),
         .fpgaio_in_i           	( fpgaio_in_i              ),
@@ -1121,11 +1115,11 @@ input  logic [1:0]                    selected_mode_i,
     //*** PAD AND GPIO CONFIGURATION SIGNALS PACK ************
     //********************************************************
 
-    for (genvar i = 0; i < 32; i++) begin : gen_gpio_cfg_outer
-        for (genvar j = 0; j < 6; j++) begin : gen_gpip_cfg_inner
-            assign gpio_cfg_o[j+6*i] = s_gpio_cfg[i][j];
-        end
-    end
+    // for (genvar i = 0; i < 32; i++) begin : gen_gpio_cfg_outer
+        // for (genvar j = 0; j < 6; j++) begin : gen_gpip_cfg_inner
+            // assign gpio_cfg_o[j+6*i] = s_gpio_cfg[i][j];
+        // end
+    // end
 
     for (genvar i = 0; i < 64; i++) begin : gen_pad_mux_outer
         for (genvar j = 0; j < 2; j++) begin : gen_pad_mux_innter
