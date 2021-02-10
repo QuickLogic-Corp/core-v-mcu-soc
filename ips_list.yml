@@ -78,8 +78,8 @@ jtag_pulp:
 #  group: lowRISC
 #  domain: [soc]
 cv32e40p:
-  commit: master
-  group: QuickLogic-Corp
+  commit: cv32e40p_v1.0.0
+  group: Openhwgroup
   domain: [soc]
 scm:
   commit: v1.0.1

@@ -12,7 +12,7 @@
 `include "pulp_soc_defines.sv"
 
 module pulp_soc import dm::*; #(
-    parameter CORE_TYPE               = 0,
+    parameter logic [1:0] CORE_TYPE   = 0,
     parameter USE_FPU                 = 1,
     parameter USE_HWPE                = 1,
     parameter USE_CLUSTER_EVENT       = 1,
@@ -244,7 +244,7 @@ module pulp_soc import dm::*; #(
 
     localparam ROM_ADDR_WIDTH        = 13;
 
-    localparam FC_CORE_CLUSTER_ID    = 6'd31;
+    localparam FC_CORE_CLUSTER_ID    = CORE_TYPE != 3 ? 6'd31 : 6'd0;
     localparam CL_CORE_CLUSTER_ID    = 6'd0;
 
     localparam FC_CORE_CORE_ID       = 4'd0;
@@ -718,8 +718,8 @@ module pulp_soc import dm::*; #(
         .USE_FPU    ( USE_FPU            ),
         .CORE_ID    ( FC_CORE_CORE_ID    ),
         .CLUSTER_ID ( FC_CORE_CLUSTER_ID ),
-        .USE_HWPE   ( USE_HWPE           )
-//        .USE_ZFINX  ( USE_ZFINX          )
+        .USE_HWPE   ( USE_HWPE           ),
+        .USE_ZFINX  ( USE_ZFINX          )
     ) fc_subsystem_i (
         .clk_i               ( s_soc_clk           ),
         .rst_ni              ( s_soc_rstn          ),
