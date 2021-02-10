@@ -39,7 +39,7 @@ module soc_peripherals #(
     output logic                       fc_fetchen_o,
     input  logic [7:0]                 soc_jtag_reg_i,
     output logic [7:0]                 soc_jtag_reg_o,
-
+    input logic 			      stoptimer,
     input  logic                       boot_l2_i,
     input  logic                       bootsel_i,
     // fc fetch enable can be controlled through this signal or through an APB
@@ -194,7 +194,7 @@ module soc_peripherals #(
 
     logic s_timer_in_lo_event;
     logic s_timer_in_hi_event;
-
+/*  old pulp interrupts
     assign s_events[UDMA_EVENTS-1:0]  = s_udma_events;
     assign s_events[135]              = s_adv_timer_events[0];
     assign s_events[136]              = s_adv_timer_events[1];
@@ -229,6 +229,37 @@ module soc_peripherals #(
                                     // this interrupt. A user that gets such an
                                     // interrupt has to check the event unit's
                                     // registers to see what happened)
+*/
+
+    assign s_events[UDMA_EVENTS-1:0]  = s_udma_events;
+    assign s_events[135]              = s_adv_timer_events[0];
+    assign s_events[136]              = s_adv_timer_events[1];
+    assign s_events[137]              = s_adv_timer_events[2];
+    assign s_events[138]              = s_adv_timer_events[3];
+    assign s_events[139]              = s_gpio_event;
+    assign s_events[140]              = fc_hwpe_events_i[0];
+    assign s_events[141]              = fc_hwpe_events_i[1];
+    assign s_events[159:142]          = '0;
+
+    assign fc_events_o[6:0] = 7'h0; //RESERVED for sw events all routed to irq3
+    assign fc_events_o[7]  = s_timer_lo_event; // MTIME irq
+    assign fc_events_o[8]   = 0; //dma_pe_evt_i; // unused core-v-mcu
+    assign fc_events_o[9]   = 0; //dma_pe_irq_i; // unused core-v-mcu
+    assign fc_events_o[10]  = 0; //pf_evt_i;  // unused core-v-mcu
+    assign fc_events_o[11]  =  1'b0 ; // Machine irq - from event_fifo
+    assign fc_events_o[15:12]  = 4'b0000;
+
+    assign fc_events_o[16]  = s_timer_lo_event;
+    assign fc_events_o[17]  = s_timer_hi_event;
+    assign fc_events_o[18]  = s_gpio_event;
+    assign fc_events_o[19]  = s_adv_timer_events[0];
+    assign fc_events_o[20]  = s_adv_timer_events[1];
+    assign fc_events_o[21]  = s_adv_timer_events[2];
+    assign fc_events_o[22]  = s_adv_timer_events[3];
+    assign fc_events_o[23]  = s_ref_rise_event | s_ref_fall_event;
+    assign fc_events_o[24]  = 1'b0;
+    assign fc_events_o[25]  = 1'b0;
+    assign fc_events_o[26]  = 1'b0;
     assign fc_events_o[27]  = 1'b0;
     assign fc_events_o[28]  = 1'b0;
     assign fc_events_o[29]  = s_fc_err_events;
@@ -607,6 +638,7 @@ module soc_peripherals #(
         .event_hi_i ( s_timer_in_hi_event     ),
         .irq_lo_o   ( s_timer_lo_event        ),
         .irq_hi_o   ( s_timer_hi_event        ),
+	.stoptimer_i( stoptimer),
         .busy_o     (                         )
     );
 

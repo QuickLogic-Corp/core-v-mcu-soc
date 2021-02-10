@@ -45,7 +45,8 @@ apb/apb_node:
   commit: v0.1.1
   domain: [soc]
 apb_interrupt_cntrl:
-  commit: v0.0.1
+  commit: cv32int
+  group: QuickLogic-Corp  
   domain: [soc]
 axi/axi:
   commit: v0.24.1
@@ -60,7 +61,8 @@ axi/axi_slice_dc:
   commit: v1.1.3
   domain: [cluster, soc]
 timer_unit:
-  commit: v1.0.2
+  commit: stoptimer
+  group: QuickLogic-Corp  
   domain: [cluster, soc]
 fpnew:
   commit: v0.6.5

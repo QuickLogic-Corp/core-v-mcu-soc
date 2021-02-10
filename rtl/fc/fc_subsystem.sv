@@ -49,14 +49,14 @@ module fc_subsystem #(
     input  logic [EVENT_ID_WIDTH-1:0] event_fifo_data_i, // goes indirectly to core interrupt
     input  logic [31:0]               events_i, // goes directly to core interrupt, should be called irqs
     output logic [1:0]                hwpe_events_o,
-
+    output logic stoptimer,
     output logic                      supervisor_mode_o
 );
 
     localparam USE_IBEX   = CORE_TYPE == 1 || CORE_TYPE == 2;
     localparam IBEX_RV32M = CORE_TYPE == 1;
     localparam IBEX_RV32E = CORE_TYPE == 2;
-
+    
 
     // Interrupt signals
     logic        core_irq_req   ;
@@ -66,6 +66,8 @@ module fc_subsystem #(
     logic        core_irq_ack   ;
     logic [15:0] core_irq_fast  ;
     logic [31:0] core_irq_x;
+    logic [31:0]  irq_o;
+   
     logic	 core_irq_external ;
     logic	 core_irq_software ;
     logic	 core_irq_timer ;
@@ -200,6 +202,7 @@ module fc_subsystem #(
 //        .SHARED_FP           ( 0                   ), //not used in cv32
 //        .SHARED_FP_DIVSQRT   ( 2                   ) //not used in cv32
     ) lFC_CORE (
+        .debug_halted_o (stoptimer),
         .clk_i                 ( clk_i             ), //riscy=cv32
         .rst_ni                ( rst_ni            ),//riscy=cv32
         .pulp_clock_en_i       ( core_clock_en     ), //clock_en_i in riscy
@@ -242,7 +245,7 @@ module fc_subsystem #(
 //        .apu_master_result_i   ( '0                ), //riscy=cv32
 //        .apu_master_flags_i    ( '0                ), //riscy=cv32
 
-        .irq_i                 ( core_irq_x ), //only single bit wide in riscy
+        .irq_i                 ( irq_o), //only single bit wide in riscy
  //       .irq_id_i              ( core_irq_id       ), //not used in cv32
         .irq_ack_o             ( core_irq_ack      ), //riscy=cv32
         .irq_id_o              ( core_irq_ack_id   ), //riscy=cv32
@@ -329,7 +332,7 @@ module fc_subsystem #(
     end
     endgenerate
    
-    apb_interrupt_cntrl #(.PER_ID_WIDTH(PER_ID_WIDTH)) fc_eu_i (
+    apb_interrupt_cntrl #(.PER_ID_WIDTH(PER_ID_WIDTH), .FIFO_PIN(11)) fc_eu_i (
         .clk_i              ( clk_i              ),
         .rst_ni             ( rst_ni             ),
         .test_mode_i        ( test_en_i          ),
@@ -345,7 +348,8 @@ module fc_subsystem #(
         .core_irq_sec_o     ( /* SECURE IRQ */   ),
         .core_clock_en_o    ( core_clock_en      ),
         .fetch_en_o         ( fetch_en_eu        ),
-        .apb_slave          ( apb_slave_eu       )
+        .apb_slave          ( apb_slave_eu       ),
+	.irq_o (irq_o)
     );
 
 
