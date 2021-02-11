@@ -27,27 +27,27 @@ module fc_subsystem #(
     parameter USE_ZFINX             = 1
 )
 (
-    input  logic                      clk_i,
-    input  logic                      rst_ni,
-    input  logic                      test_en_i,
+    input logic 		     clk_i,
+    input logic 		     rst_ni,
+    input logic 		     test_en_i,
+				     
+				     XBAR_TCDM_BUS.Master l2_data_master,
+				     XBAR_TCDM_BUS.Master l2_instr_master,
+				     XBAR_TCDM_BUS.Master l2_hwpe_master [NB_HWPE_PORTS-1:0],
+				     APB_BUS.Slave apb_slave_eu,
+				     APB_BUS.Slave apb_slave_hwpe,
 
-    XBAR_TCDM_BUS.Master              l2_data_master,
-    XBAR_TCDM_BUS.Master              l2_instr_master,
-    XBAR_TCDM_BUS.Master              l2_hwpe_master [NB_HWPE_PORTS-1:0],
-    APB_BUS.Slave                     apb_slave_eu,
-    APB_BUS.Slave                     apb_slave_hwpe,
+    input logic 		     fetch_en_i,
+    input logic [31:0] 		     boot_addr_i,
+    input logic 		     debug_req_i,
 
-    input  logic                      fetch_en_i,
-    input  logic [31:0]               boot_addr_i,
-    input  logic                      debug_req_i,
-
-    input  logic                      event_fifo_valid_i,
-    output logic                      event_fifo_fulln_o,
-    input  logic [EVENT_ID_WIDTH-1:0] event_fifo_data_i, // goes indirectly to core interrupt
-    input  logic [31:0]               events_i, // goes directly to core interrupt, should be called irqs
-    output logic [1:0]                hwpe_events_o,
-    output logic stoptimer,
-    output logic                      supervisor_mode_o
+    input logic 		     event_fifo_valid_i,
+    output logic 		     event_fifo_fulln_o,
+    input logic [EVENT_ID_WIDTH-1:0] event_fifo_data_i, // goes indirectly to core interrupt
+    input logic [31:0] 		     events_i, // goes directly to core interrupt, should be called irqs
+    output logic [1:0] 		     hwpe_events_o,
+    output logic 		     stoptimer,
+    output logic 		     supervisor_mode_o
 );
 
     typedef enum logic [1:0] {
@@ -267,7 +267,7 @@ module fc_subsystem #(
              .debug_req_i           ( debug_req_i       ),
              .debug_havereset_o     (                   ),
              .debug_running_o       (                   ),
-             .debug_halted_o        (                   ),
+             .debug_halted_o        ( stoptimer         ),
              .fetch_enable_i        ( fetch_en_int      ),
              .core_sleep_o          (                   )
          );
