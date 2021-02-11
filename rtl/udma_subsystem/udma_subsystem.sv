@@ -718,7 +718,7 @@ module udma_subsystem
         assign s_rx_ch_destination[CH_ID_RX_SDIO + g_sdio] = 'h0;
         assign s_tx_ch_destination[CH_ID_TX_SDIO + g_sdio] = 'h0;
 		
-		assign perio_oe_o[`PERIO_SDIO_DATA0 + 6 * g_sdio : `PERIO_SDIO_DATA0 + 6 * g_sdio + 3] = ~ s_sddata_oen;
+        assign perio_oe_o[`PERIO_SDIO0_DATA0 + `PERIO_SDIO_NPORTS * g_sdio : `PERIO_SDIO_DATA0 + `PERIO_SDIO_NPORTS * g_sdio + 3] = ~s_sddata_oen;
 		
         udma_sdio_top #(
             .L2_AWIDTH_NOAL ( L2_AWIDTH_NOAL ),
@@ -733,9 +733,9 @@ module udma_subsystem
 
             .sdclk_o             ( perio_out_o[`PERIO_SDIO0_CLK + `PERIO_SDIO_NPORTS * g_sdio] ),
             .sdcmd_i             ( perio_in_i[`PERIO_SDIO0_CMD + `PERIO_SDIO_NPORTS * g_sdio] ),
-			.sdcmd_o             ( perio_out_o[`PERIO_SDIO0_CMD + `PERIO_SDIO_NPORTS * g_sdio] ),
+            .sdcmd_o             ( perio_out_o[`PERIO_SDIO0_CMD + `PERIO_SDIO_NPORTS * g_sdio] ),
             .sdcmd_oen_o         ( perio_oe_o[`PERIO_SDIO0_CMD + `PERIO_SDIO_NPORTS * g_sdio] ),
-			.sddata_i            ( perio_in_i[`PERIO_SDIO0_DATA3 + `PERIO_SDIO_NPORTS * g_sdio : `PERIO_SDIO0_DATA0 + `PERIO_SDIO_NPORTS * g_sdio]     ),
+            .sddata_i            ( perio_in_i[`PERIO_SDIO0_DATA3 + `PERIO_SDIO_NPORTS * g_sdio : `PERIO_SDIO0_DATA0 + `PERIO_SDIO_NPORTS * g_sdio]     ),
             .sddata_o            ( perio_out_o[`PERIO_SDIO0_DATA3 + `PERIO_SDIO_NPORTS * g_sdio : `PERIO_SDIO0_DATA0 + `PERIO_SDIO_NPORTS * g_sdio]     ),
             .sddata_oen_o        ( s_sddata_oen     ),
 
