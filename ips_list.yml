@@ -78,7 +78,7 @@ jtag_pulp:
 #  group: lowRISC
 #  domain: [soc]
 cv32e40p:
-  commit: cv32e40p_v1.0.0
+  commit: master
   group: Openhwgroup
   domain: [soc]
 scm:
