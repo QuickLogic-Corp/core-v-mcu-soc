@@ -468,10 +468,10 @@ module soc_peripherals #(
 
         .gpio_in_sync    ( s_gpio_sync        ),
 
-        .gpio_in         ( gpio_in            ),
-        .gpio_out        ( gpio_out           ),
-        .gpio_dir        ( gpio_oe           ),
-        .gpio_padcfg     ( gpio_padcfg        ),
+        .gpio_in         ( gpio_in_i          ),
+        .gpio_out        ( gpio_out_o         ),
+        .gpio_dir        ( gpio_oe_o          ),
+        .gpio_padcfg     (                    ),
         .interrupt       ( s_gpio_event       )
     );
 
@@ -592,6 +592,8 @@ module soc_peripherals #(
     ////////////////////////////////////////////////////////////////////////////////////////////////
     if (`N_IO > 64)
         $error("apb_soc_ctrl doesn't support any other value than NPAD=64");
+    if (`NBIT_PADMUX != 2)
+        $error("apb_soc_ctrl doesn't support any other value than NBIT_PADMUX=2");
 	logic [63:0][`NBIT_PADMUX-1:0]	s_pad_mux_local;
 	logic [63:0][`NBIT_PADCFG-1:0]	s_pad_cfg_local;
     apb_soc_ctrl #(
