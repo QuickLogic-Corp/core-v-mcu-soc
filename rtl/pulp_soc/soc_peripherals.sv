@@ -79,22 +79,22 @@ module soc_peripherals #(
     input  logic [1:0]                 fc_hwpe_events_i,
     output logic [31:0]                fc_events_o,
 
-	// Pad control signals
-	output logic [`N_IO-1:0][`NBIT_PADMUX-1:0] pad_mux_o,
+    // Pad control signals
+    output logic [`N_IO-1:0][`NBIT_PADMUX-1:0] pad_mux_o,
     output logic [`N_IO-1:0][`NBIT_PADCFG-1:0] pad_cfg_o,
-	// PERIO signals
-	input  logic [`N_PERIO-1:0]        perio_in_i,
-	output logic [`N_PERIO-1:0]        perio_out_o, 
+    // PERIO signals
+    input  logic [`N_PERIO-1:0]        perio_in_i,
+    output logic [`N_PERIO-1:0]        perio_out_o, 
     output logic [`N_PERIO-1:0]        perio_oe_o,
-	// GPIO signals
+    // GPIO signals
     input  logic [`N_GPIO-1:0]       	gpio_in_i,
     output logic [`N_GPIO-1:0]         	gpio_out_o,
     output logic [`N_GPIO-1:0]          gpio_oe_o,
-	// FPGAIO signals
-	input  logic [`N_FPGAIO-1:0]        fpgaio_in_i,
+    // FPGAIO signals
+    input  logic [`N_FPGAIO-1:0]        fpgaio_in_i,
     output logic [`N_FPGAIO-1:0]        fpgaio_out_o,
     output logic [`N_FPGAIO-1:0]        fpgaio_oe_o,
-	// Timer signals
+    // Timer signals
     output logic [3:0]                 timer_ch0_o,
     output logic [3:0]                 timer_ch1_o,
     output logic [3:0]                 timer_ch2_o,
@@ -594,8 +594,8 @@ module soc_peripherals #(
         $error("apb_soc_ctrl doesn't support any other value than NPAD=64");
     if (`NBIT_PADMUX != 2)
         $error("apb_soc_ctrl doesn't support any other value than NBIT_PADMUX=2");
-	logic [63:0][`NBIT_PADMUX-1:0]	s_pad_mux_local;
-	logic [63:0][`NBIT_PADCFG-1:0]	s_pad_cfg_local;
+	logic [63:0][`NBIT_PADMUX-1:0]  s_pad_mux_local;
+	logic [63:0][`NBIT_PADCFG-1:0]  s_pad_cfg_local;
     apb_soc_ctrl #(
         .NB_CORES       ( NB_CORES       ),
         .NB_CLUSTERS    ( NB_CLUSTERS    ),
@@ -638,8 +638,8 @@ module soc_peripherals #(
         .soc_jtag_reg_i      ( soc_jtag_reg_i         ),
         .soc_jtag_reg_o      ( soc_jtag_reg_o         ),
 
-        .pad_mux             ( s_pad_mux_local              ),
-        .pad_cfg             ( s_pad_cfg_local              ),
+        .pad_mux_o           ( s_pad_mux_local              ),
+        .pad_cfg_o           ( s_pad_cfg_local              ),
         .cluster_pow_o       ( cluster_pow_o          ),
         .sel_hyper_axi_o     ( s_sel_hyper_axi        ),
 
@@ -649,7 +649,7 @@ module soc_peripherals #(
         .cluster_rstn_o           ( cluster_rstn_o         ),
         .cluster_irq_o            ( cluster_irq_o          )
     );
-	for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_mux_outer
+    for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_mux_outer
         for (genvar j = 0; j < `NBIT_PADMUX; j++) begin : gen_pad_mux_innter
             assign pad_mux_o[i][j] = s_pad_mux_local[i][j];
         end

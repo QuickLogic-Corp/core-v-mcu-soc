@@ -400,9 +400,6 @@ input  logic [1:0]                    selected_mode_i,
 
     logic [31:0]           s_fc_bootaddr;
 
-    logic [`N_IO-1:0][`NBIT_PADMUX-1:0]      s_pad_mux;
-    logic [`N_IO-1:0][`NBIT_PADCFG-1:0]      s_pad_cfg;
-
     logic                  s_periph_clk;
     logic                  s_periph_rstn;
     logic                  s_soc_clk;
@@ -675,18 +672,18 @@ input  logic [1:0]                    selected_mode_i,
         .per_fll_master         ( s_per_fll_master       ),
         .cluster_fll_master     ( s_cluster_fll_master   ),
 
-		// pad control signals
-		.pad_mux_o              ( s_pad_mux              ),
-		.pad_cfg_o              ( s_pad_cfg              ),
-		// Peripheral signals
+        // pad control signals
+        .pad_mux_o              ( pad_mux_o              ),
+        .pad_cfg_o              ( pad_cfg_o              ),
+        // Peripheral signals
         .perio_in_i               ( perio_in_i             ),
         .perio_out_o              ( perio_out_o            ),
         .perio_oe_o              ( perio_dir_o            ),
-		// GPIO signals
+        // GPIO signals
         .gpio_in_i               ( gpio_in_i              ),
         .gpio_out_o               ( gpio_out_o             ),
         .gpio_oe_o              ( gpio_oe_o             ),
-		// FPGAIO signals
+        // FPGAIO signals
         .fpgaio_out_o           ( fpgaio_out_o             ),
         .fpgaio_in_i           	( fpgaio_in_i              ),
         .fpgaio_oe_o           	( fpgaio_oe_o              ),
