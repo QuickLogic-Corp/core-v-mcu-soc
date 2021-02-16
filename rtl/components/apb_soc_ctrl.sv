@@ -604,11 +604,11 @@ module apb_soc_ctrl #(
    always_ff @(posedge HCLK, negedge HRESETn)
     begin
       if(~HRESETn) begin
-        r_bootsel <= 2'b00;
+        r_bootsel <= {1'b0,bootsel_i};
       end
       else
       begin
-        r_bootsel <= {r_bootsel[0],bootsel_i};
+        r_bootsel <= r_bootsel;
       end
     end
 
