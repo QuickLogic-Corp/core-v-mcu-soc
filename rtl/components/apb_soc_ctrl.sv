@@ -49,6 +49,12 @@
 `define REG_BOOTSEL     7'b0110001 //BASEADDR+0xC4 bootsel
 `define REG_CLKSEL      7'b0110010 //BASEADDR+0xC8 clocksel
 
+`define REG_CLK_DIV_CLU           7'b0110110 //BASEADDR+0xD8
+`define SEL_CLK_DC_FIFO_EFPGA     7'b0111000 //BASEADDR+0xE0
+`define CLK_GATING_DC_FIFO_EFPGA  7'b0111001 //BASEADDR+0xE4
+`define RESET_TYPE1_EFPGA         7'b0111010 //BASEADDR+0xE8
+`define ENABLE_IN_OUT_EFPGA       7'b0111011 //BASEADDR+0xEC
+
 `define REG_CLUSTER_CTRL 7'b0011100 //BASEADDR+0x70 CLUSTER Ctrl
 `define REG_CTRL_PER     7'b0011110
 `define REG_CLUSTER_IRQ  7'b0011111
@@ -83,14 +89,24 @@ module apb_soc_ctrl #(
     input  logic                      fc_fetch_en_valid_i,
     input  logic                      fc_fetch_en_i,
 
-    output logic         [63:0] [NBIT_PADCFG-1:0] pad_cfg,
-    output logic         [63:0] [1:0] pad_mux,
+    output logic         [63:0] [NBIT_PADCFG-1:0] pad_cfg_o,
+    output logic         [63:0] [1:0] pad_mux_o,
 
     input  logic                [JTAG_REG_SIZE-1:0] soc_jtag_reg_i,
     output logic                [JTAG_REG_SIZE-1:0] soc_jtag_reg_o,
 
     output logic               [31:0] fc_bootaddr_o,
 
+    output logic                [2:0] sel_clk_dc_fifo_efpga_o,
+    output logic                      clk_gating_dc_fifo_o,
+    output logic                [3:0] reset_type1_efpga_o,
+    output logic                      enable_udma_efpga_o,
+    output logic                      enable_events_efpga_o,
+    output logic                      enable_apb_efpga_o,
+    output logic                      enable_tcdm3_efpga_o,
+    output logic                      enable_tcdm2_efpga_o,
+    output logic                      enable_tcdm1_efpga_o,
+    output logic                      enable_tcdm0_efpga_o,                                                          
     output logic                      fc_fetchen_o,
     output logic                      sel_hyper_axi_o,
     output logic                      cluster_pow_o, // power cluster
@@ -129,7 +145,15 @@ module apb_soc_ctrl #(
 
    logic            r_sel_hyper_axi;
    logic      [1:0] r_bootsel;
+   
+   logic [7:0]      r_clk_div_cluster;
+   logic            s_div_cluster_valid, s_div_cluster_sel;
 
+   logic [5:0]      r_sel_clk_dc_fifo_onehot;
+   logic            r_clk_gating_dc_fifo;
+   logic [3:0]      r_reset_type1_efpga;
+   logic [5:0]      r_enable_inout_efpga;
+                                          
    logic s_apb_write;
 
    // sanity check on NBIT_PADCFG
@@ -153,11 +177,40 @@ module apb_soc_ctrl #(
    assign cluster_byp_o = r_cluster_byp;
    assign cluster_irq_o = r_cluster_irq;
 
+    assign clk_div_cluster_data_o = r_clk_div_cluster;
+
+   edge_propagator_tx i_edgeprop_clu
+   (
+     .clk_i(HCLK),
+     .rstn_i(HRESETn),
+     .valid_i(s_div_cluster_valid),
+     .ack_i(clk_div_cluster_ack_i),
+     .valid_o(clk_div_cluster_valid_o)
+   );
+
+   assign s_div_cluster_valid = s_apb_write & s_div_cluster_sel;
+   assign s_div_cluster_sel   = s_apb_addr == `REG_CLK_DIV_CLU;
+
+  always_comb begin : proc_id
+    sel_clk_dc_fifo_efpga_o = '0;
+    for(int unsigned i=0;i<6;i++)
+    begin
+      if (r_sel_clk_dc_fifo_onehot[i])
+        sel_clk_dc_fifo_efpga_o = i;
+    end
+  end
+
+  assign clk_gating_dc_fifo_o = r_clk_gating_dc_fifo;
+
+  assign reset_type1_efpga_o  = r_reset_type1_efpga;
+
+  assign {enable_udma_efpga_o, enable_events_efpga_o, enable_apb_efpga_o, enable_tcdm3_efpga_o, enable_tcdm2_efpga_o, enable_tcdm1_efpga_o, enable_tcdm0_efpga_o} = r_enable_inout_efpga[5:0];
+                                                  
    always_comb begin
      for (int i=0;i<64;i++)
      begin
-       pad_mux[i][0]  = r_pad_fun0[i];
-       pad_mux[i][1]  = r_pad_fun1[i];
+       pad_mux_o[i][0]  = r_pad_fun0[i];
+       pad_mux_o[i][1]  = r_pad_fun1[i];
      end
    end
 
@@ -179,12 +232,17 @@ module apb_soc_ctrl #(
         r_cluster_pow          <= 1'b0;
         r_cluster_byp          <= 1'b1;
         //pad_cfg                <= '{default: 6'b111111};
-        pad_cfg                <= '1;
+        pad_cfg_o              <= '1;
         r_sel_hyper_axi        <= 1'b0;
         r_cluster_fetch_enable <= 1'b0;
         r_cluster_boot         <= '0;
         r_cluster_rstn         <= 1'b1;
         r_cluster_irq          <= 1'b0;
+        r_clk_div_cluster        <= 'h0;
+        r_sel_clk_dc_fifo_onehot <= '0;
+        r_clk_gating_dc_fifo     <= 1'b1;
+        r_reset_type1_efpga      <= '0;
+        r_enable_inout_efpga     <= '0;                                
       end
       else
       begin
@@ -233,115 +291,115 @@ module apb_soc_ctrl #(
                 end
                 `REG_PADCFG0:
                 begin
-                  pad_cfg[0]         <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_rf_miso
-                  pad_cfg[1]         <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_rf_mosi
-                  pad_cfg[2]         <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_rf_cs
-                  pad_cfg[3]         <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_rf_sck
+                  pad_cfg_o[0]         <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_rf_miso
+                  pad_cfg_o[1]         <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_rf_mosi
+                  pad_cfg_o[2]         <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_rf_cs
+                  pad_cfg_o[3]         <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_rf_sck
                 end
                 `REG_PADCFG1:
                 begin
-                  pad_cfg[4]         <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_rf_pactrl0
-                  pad_cfg[5]         <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_rf_pactrl1
-                  pad_cfg[6]         <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_rf_pactrl2
-                  pad_cfg[7]         <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_rf_pactrl3
+                  pad_cfg_o[4]         <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_rf_pactrl0
+                  pad_cfg_o[5]         <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_rf_pactrl1
+                  pad_cfg_o[6]         <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_rf_pactrl2
+                  pad_cfg_o[7]         <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_rf_pactrl3
                 end
                 `REG_PADCFG2:
                 begin
-                  pad_cfg[8]         <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_cam_pclk
-                  pad_cfg[9]         <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_cam_valid
-                  pad_cfg[10]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_cam_data0
-                  pad_cfg[11]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_cam_data1
+                  pad_cfg_o[8]         <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_cam_pclk
+                  pad_cfg_o[9]         <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_cam_valid
+                  pad_cfg_o[10]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_cam_data0
+                  pad_cfg_o[11]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_cam_data1
                 end
                 `REG_PADCFG3:
                 begin
-                  pad_cfg[12]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_cam_data2
-                  pad_cfg[13]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_cam_data3
-                  pad_cfg[14]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_cam_data4
-                  pad_cfg[15]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_cam_data5
+                  pad_cfg_o[12]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_cam_data2
+                  pad_cfg_o[13]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_cam_data3
+                  pad_cfg_o[14]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_cam_data4
+                  pad_cfg_o[15]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_cam_data5
                 end
                 `REG_PADCFG4:
                 begin
-                  pad_cfg[16]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_cam_data6
-                  pad_cfg[17]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_cam_data7
-                  pad_cfg[18]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_cam_hsync
-                  pad_cfg[19]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_cam_vsync
+                  pad_cfg_o[16]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_cam_data6
+                  pad_cfg_o[17]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_cam_data7
+                  pad_cfg_o[18]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_cam_hsync
+                  pad_cfg_o[19]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_cam_vsync
                 end
                 `REG_PADCFG5:
                 begin
-                  pad_cfg[20]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_cam_miso
-                  pad_cfg[21]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_cam_mosi
-                  pad_cfg[22]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_cam_cs
-                  pad_cfg[23]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_cam_sck
+                  pad_cfg_o[20]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_cam_miso
+                  pad_cfg_o[21]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_cam_mosi
+                  pad_cfg_o[22]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_cam_cs
+                  pad_cfg_o[23]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_cam_sck
                 end
                 `REG_PADCFG6:
                 begin
-                  pad_cfg[24]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_i2c0_sda
-                  pad_cfg[25]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_i2c0_scl
-                  pad_cfg[26]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_i2c1_sda
-                  pad_cfg[27]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_i2c1_scl
+                  pad_cfg_o[24]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_i2c0_sda
+                  pad_cfg_o[25]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_i2c0_scl
+                  pad_cfg_o[26]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_i2c1_sda
+                  pad_cfg_o[27]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_i2c1_scl
                 end
                 `REG_PADCFG7:
                 begin
-                  pad_cfg[28]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_timer0_ch0
-                  pad_cfg[29]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_timer0_ch1
-                  pad_cfg[30]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_timer0_ch2
-                  pad_cfg[31]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_timer0_ch3
+                  pad_cfg_o[28]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_timer0_ch0
+                  pad_cfg_o[29]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_timer0_ch1
+                  pad_cfg_o[30]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_timer0_ch2
+                  pad_cfg_o[31]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_timer0_ch3
                 end
                 `REG_PADCFG8:
                 begin
-                  pad_cfg[32]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_i2s0_sck
-                  pad_cfg[33]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_i2s0_ws
-                  pad_cfg[34]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_i2s0_sdi
-                  pad_cfg[35]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_i2s1_sck
+                  pad_cfg_o[32]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_i2s0_sck
+                  pad_cfg_o[33]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_i2s0_ws
+                  pad_cfg_o[34]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_i2s0_sdi
+                  pad_cfg_o[35]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_i2s1_sck
                 end
                 `REG_PADCFG9:
                 begin
-                  pad_cfg[36]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_i2s1_ws
-                  pad_cfg[37]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_i2s1_sdi
-                  pad_cfg[38]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_uart_rx
-                  pad_cfg[39]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_uart_tx
+                  pad_cfg_o[36]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_i2s1_ws
+                  pad_cfg_o[37]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_i2s1_sdi
+                  pad_cfg_o[38]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_uart_rx
+                  pad_cfg_o[39]        <= PWDATA[24 +: NBIT_PADCFG-1]; //pad_uart_tx
                 end
                 `REG_PADCFG10:
                 begin
-                  pad_cfg[40]        <= PWDATA[0   +: NBIT_PADCFG-1]; //pad_spim_sdio0
-                  pad_cfg[41]        <= PWDATA[8   +: NBIT_PADCFG-1]; //pad_spim_sdio1
-                  pad_cfg[42]        <= PWDATA[16  +: NBIT_PADCFG-1]; //pad_spim_sdio2
-                  pad_cfg[43]        <= PWDATA[24  +: NBIT_PADCFG-1]; //pad_spim_sdio3
+                  pad_cfg_o[40]        <= PWDATA[0   +: NBIT_PADCFG-1]; //pad_spim_sdio0
+                  pad_cfg_o[41]        <= PWDATA[8   +: NBIT_PADCFG-1]; //pad_spim_sdio1
+                  pad_cfg_o[42]        <= PWDATA[16  +: NBIT_PADCFG-1]; //pad_spim_sdio2
+                  pad_cfg_o[43]        <= PWDATA[24  +: NBIT_PADCFG-1]; //pad_spim_sdio3
                 end
                 `REG_PADCFG11:
                 begin
-                  pad_cfg[44]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_spim_csn0
-                  pad_cfg[45]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_spim_csn1
-                  pad_cfg[46]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_spim_sck
-                  pad_cfg[47]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[44]        <= PWDATA[0  +: NBIT_PADCFG-1]; //pad_spim_csn0
+                  pad_cfg_o[45]        <= PWDATA[8  +: NBIT_PADCFG-1]; //pad_spim_csn1
+                  pad_cfg_o[46]        <= PWDATA[16 +: NBIT_PADCFG-1]; //pad_spim_sck
+                  pad_cfg_o[47]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
                 end
                 `REG_PADCFG12:
                 begin
-                  pad_cfg[48]        <= PWDATA[0  +: NBIT_PADCFG-1]; //
-                  pad_cfg[49]        <= PWDATA[8  +: NBIT_PADCFG-1]; //
-                  pad_cfg[50]        <= PWDATA[16 +: NBIT_PADCFG-1]; //
-                  pad_cfg[51]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[48]        <= PWDATA[0  +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[49]        <= PWDATA[8  +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[50]        <= PWDATA[16 +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[51]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
                 end
                 `REG_PADCFG13:
                 begin
-                  pad_cfg[52]        <= PWDATA[0   +: NBIT_PADCFG-1]; //
-                  pad_cfg[53]        <= PWDATA[8   +: NBIT_PADCFG-1]; //
-                  pad_cfg[54]        <= PWDATA[16  +: NBIT_PADCFG-1]; //
-                  pad_cfg[55]        <= PWDATA[24  +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[52]        <= PWDATA[0   +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[53]        <= PWDATA[8   +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[54]        <= PWDATA[16  +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[55]        <= PWDATA[24  +: NBIT_PADCFG-1]; //
                 end
                 `REG_PADCFG14:
                 begin
-                  pad_cfg[56]        <= PWDATA[0  +: NBIT_PADCFG-1]; //
-                  pad_cfg[57]        <= PWDATA[8  +: NBIT_PADCFG-1]; //
-                  pad_cfg[58]        <= PWDATA[16 +: NBIT_PADCFG-1]; //
-                  pad_cfg[59]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[56]        <= PWDATA[0  +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[57]        <= PWDATA[8  +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[58]        <= PWDATA[16 +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[59]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
                 end
                 `REG_PADCFG15:
                 begin
-                  pad_cfg[60]        <= PWDATA[0  +: NBIT_PADCFG-1]; //
-                  pad_cfg[61]        <= PWDATA[8  +: NBIT_PADCFG-1]; //
-                  pad_cfg[62]        <= PWDATA[16 +: NBIT_PADCFG-1]; //
-                  pad_cfg[63]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[60]        <= PWDATA[0  +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[61]        <= PWDATA[8  +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[62]        <= PWDATA[16 +: NBIT_PADCFG-1]; //
+                  pad_cfg_o[63]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
                 end
                 `REG_JTAGREG:
                 begin
@@ -369,6 +427,24 @@ module apb_soc_ctrl #(
                     r_cluster_boot[31:0] <= PWDATA;
                 `REG_CLUSTER_BOOT_ADDR1:
                     r_cluster_boot[63:32] <= PWDATA;
+                `REG_CLK_DIV_CLU:
+                    r_clk_div_cluster  <= PWDATA[7:0];
+                `SEL_CLK_DC_FIFO_EFPGA:
+                    r_sel_clk_dc_fifo_onehot <= PWDATA[5:0];
+                `CLK_GATING_DC_FIFO_EFPGA:
+                    r_clk_gating_dc_fifo     <= PWDATA[0];
+                `RESET_TYPE1_EFPGA:
+                    r_reset_type1_efpga      <= PWDATA[3:0];
+                `ENABLE_IN_OUT_EFPGA:
+                    //0: TCDM0
+                    //1: TCDM1
+                    //2: TCDM2
+                    //3: TCDM3:
+                    //4: APB
+                    //5: EVENTS
+                    //6: uDMA
+                    r_enable_inout_efpga     <= PWDATA[5:0];
+                
                 default: begin
                 `ifndef SYNTHESIS
                   `ifdef MSG_VERBOSE
@@ -412,67 +488,67 @@ module apb_soc_ctrl #(
               end
           `REG_PADCFG0:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i];
               end
           `REG_PADCFG1:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+4];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+4];
               end
           `REG_PADCFG2:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+8];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+8];
               end
           `REG_PADCFG3:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+12];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+12];
               end
           `REG_PADCFG4:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+16];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+16];
               end
           `REG_PADCFG5:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+20];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+20];
               end
           `REG_PADCFG6:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+24];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+24];
               end
           `REG_PADCFG7:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+28];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+28];
               end
           `REG_PADCFG8:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+32];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+32];
               end
           `REG_PADCFG9:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+36];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+36];
               end
           `REG_PADCFG10:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+40];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+40];
               end
           `REG_PADCFG11:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+44];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+44];
               end
           `REG_PADCFG12:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+48];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+48];
               end
           `REG_PADCFG13:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+52];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+52];
               end
           `REG_PADCFG14:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+56];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+56];
               end
           `REG_PADCFG15:
               for (int i=0; i<4; i++) begin
-                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg[i+60];
+                  PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+60];
               end
           `REG_FCBOOT:
             PRDATA = r_bootaddr;
@@ -503,6 +579,16 @@ module apb_soc_ctrl #(
             PRDATA = r_cluster_boot[31:0];
           `REG_CLUSTER_BOOT_ADDR1:
             PRDATA = r_cluster_boot[63:32];
+          `REG_CLK_DIV_CLU:
+            PRDATA = {24'h0,r_clk_div_cluster};
+          `SEL_CLK_DC_FIFO_EFPGA:
+            PRDATA = {26'h0, r_sel_clk_dc_fifo_onehot};
+          `CLK_GATING_DC_FIFO_EFPGA:
+            PRDATA = {31'b0, r_clk_gating_dc_fifo};
+          `RESET_TYPE1_EFPGA:
+            PRDATA = {28'b0, r_reset_type1_efpga};
+          `ENABLE_IN_OUT_EFPGA:
+            PRDATA = {26'b0, r_enable_inout_efpga};                 
           default:
             begin
             PRDATA = 'h0;
@@ -518,11 +604,11 @@ module apb_soc_ctrl #(
    always_ff @(posedge HCLK, negedge HRESETn)
     begin
       if(~HRESETn) begin
-        r_bootsel <= 2'b00;
+        r_bootsel <= {1'b0,bootsel_i};
       end
       else
       begin
-        r_bootsel <= {r_bootsel[0],bootsel_i};
+        r_bootsel <= r_bootsel;
       end
     end
 

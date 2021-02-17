@@ -21,6 +21,7 @@
 // specific language governing permissions and limitations under the License.
 //-----------------------------------------------------------------------------
 
+`include "pulp_soc_defines.sv"
 `include "soc_mem_map.svh"
 `include "tcdm_macros.svh"
 `include "axi/assign.svh"
@@ -42,21 +43,24 @@ module soc_interconnect_wrap
       localparam int AXI_OUT_DATA_WIDTH = 32  // The internal TCDM->AXI protocol converter does not support any other
                                               // datawidths than 32-bit
     ) (
-       input logic clk_i,
-       input logic rst_ni,
-       input logic test_en_i,
-       XBAR_TCDM_BUS.Slave      tcdm_fc_data, //Data Port of the Fabric Controller
-       XBAR_TCDM_BUS.Slave      tcdm_fc_instr, //Instruction Port of the Fabric Controller
-       XBAR_TCDM_BUS.Slave      tcdm_udma_tx, //TX Channel for the uDMA
-       XBAR_TCDM_BUS.Slave      tcdm_udma_rx, //RX Channel for the uDMA
-       XBAR_TCDM_BUS.Slave      tcdm_debug, //Debug access port from either the legacy or the riscv-debug unit
-       XBAR_TCDM_BUS.Slave      tcdm_hwpe[NR_HWPE_PORTS], //Hardware Processing Element ports
-       AXI_BUS.Slave            axi_master_plug, // Normaly used for cluster -> SoC communication
-       AXI_BUS.Master           axi_slave_plug, // Normaly used for SoC -> cluster communication
-       APB_BUS.Master           apb_peripheral_bus, // Connects to all the SoC Peripherals
-       XBAR_TCDM_BUS.Master     l2_interleaved_slaves[NR_L2_PORTS], // Connects to the interleaved memory banks
-       XBAR_TCDM_BUS.Master     l2_private_slaves[2], // Connects to core-private memory banks
-       XBAR_TCDM_BUS.Master     boot_rom_slave //Connects to the bootrom
+        input logic clk_i,
+        input logic rst_ni,
+        input logic test_en_i,
+        XBAR_TCDM_BUS.Slave      tcdm_fc_data, //Data Port of the Fabric Controller
+        XBAR_TCDM_BUS.Slave      tcdm_fc_instr, //Instruction Port of the Fabric Controller
+        XBAR_TCDM_BUS.Slave      tcdm_udma_tx, //TX Channel for the uDMA
+        XBAR_TCDM_BUS.Slave      tcdm_udma_rx, //RX Channel for the uDMA
+        XBAR_TCDM_BUS.Slave      tcdm_debug, //Debug access port from either the legacy or the riscv-debug unit
+        XBAR_TCDM_BUS.Slave      tcdm_hwpe[NR_HWPE_PORTS], //Hardware Processing Element ports
+        XBAR_TCDM_BUS.Slave      tcdm_efpga[`N_EFPGA_TCDM_PORTS-1:0],  // EFPGA ports
+        AXI_BUS.Slave            axi_master_plug,                     // Normally used for cluster -> SoC communication
+        AXI_BUS.Master           axi_slave_plug,                      // Normally used for SoC -> cluster communication
+        APB_BUS.Master           apb_peripheral_bus,                  // Connects to all the SoC Peripherals
+        XBAR_TCDM_BUS.Master     tcdm_efpga_apbprogram,
+        XBAR_TCDM_BUS.Master     tcdm_efpga_apbt1,
+        XBAR_TCDM_BUS.Master     l2_interleaved_slaves[NR_L2_PORTS], // Connects to the interleaved memory banks
+        XBAR_TCDM_BUS.Master     l2_private_slaves[2], // Connects to core-private memory banks
+        XBAR_TCDM_BUS.Master     boot_rom_slave //Connects to the bootrom
      );
 
     //**Do not change these values unles you verified that all downstream IPs are properly parametrized and support it**
@@ -155,13 +159,17 @@ module soc_interconnect_wrap
     `TCDM_ASSIGN_INTF(master_ports[2], tcdm_udma_tx)
     `TCDM_ASSIGN_INTF(master_ports[3], tcdm_udma_rx)
     `TCDM_ASSIGN_INTF(master_ports[4], tcdm_debug)
+    `TCDM_ASSIGN_INTF(master_ports[5], tcdm_efpga[0])
+    `TCDM_ASSIGN_INTF(master_ports[6], tcdm_efpga[1])
+    `TCDM_ASSIGN_INTF(master_ports[7], tcdm_efpga[2])
+    `TCDM_ASSIGN_INTF(master_ports[8], tcdm_efpga[3])
 
     //Assign the 4 master ports from the AXI plug to the interface array
 
     //Synopsys 2019.3 has a bug; It doesn't handle expressions for array indices on the left-hand side of assignments.
     // Using a macro instead of a package parameter is an ugly but necessary workaround.
     // E.g. assign a[param+i] = b[i] doesn't work, but assign a[i] = b[i-param] does.
-    `define NR_SOC_TCDM_MASTER_PORTS 5
+    `define NR_SOC_TCDM_MASTER_PORTS 9  // 5 orig + 4xeFPGA
     for (genvar i = 0; i < 4; i++) begin
         `TCDM_ASSIGN_INTF(master_ports[`NR_SOC_TCDM_MASTER_PORTS + i], axi_bridge_2_interconnect[i])
     end
@@ -181,7 +189,7 @@ module soc_interconnect_wrap
 
     //Interconnect instantiation
     soc_interconnect #(
-                       .NR_MASTER_PORTS(pkg_soc_interconnect::NR_TCDM_MASTER_PORTS), // FC instructions, FC data, uDMA RX, uDMA TX, debug access, 4 four 64-bit
+                       .NR_MASTER_PORTS(pkg_soc_interconnect::NR_TCDM_MASTER_PORTS), // FC instructions, FC data, uDMA RX, uDMA TX, debug access, 4xeFPGA, 4 four 64-bit
                                               // axi plug
                        .NR_MASTER_PORTS_INTERLEAVED_ONLY(NR_HWPE_PORTS), // HWPEs (PULP accelerators) only have access
                                                                          // to the interleaved memory region

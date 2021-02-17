@@ -63,6 +63,7 @@ components:
     rtl/components/scm_2048x32.sv,
     rtl/components/scm_512x32.sv,
     rtl/components/tcdm_arbiter_2x1.sv,
+    rtl/components/obi_pulp_adapter.sv,
   ]
 
 components_rtl:
@@ -90,4 +91,16 @@ components_behav:
   ]
   flags: [
     skip_synthesis,
+  ]
+
+efpga_subsystem:
+  incdirs: [
+    ../includes,
+    .,
+  ]
+  files: [
+    rtl/efpga_subsystem/efpga_subsystem.sv,
+    rtl/efpga_subsystem/apb_efpga_hwce.sv,
+    rtl/efpga_subsystem/dc_accelerator_fsm.sv,
+    rtl/efpga_subsystem/efpga_sel_clk_dc_fifo.sv,
   ]

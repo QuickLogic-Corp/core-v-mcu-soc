@@ -10,9 +10,10 @@
 
 
 `include "pulp_soc_defines.sv"
+`include "pulp_peripheral_defines.svh"
 
 module pulp_soc import dm::*; #(
-    parameter CORE_TYPE               = 0,
+    parameter logic [1:0] CORE_TYPE   = 0,
     parameter USE_FPU                 = 1,
     parameter USE_HWPE                = 1,
     parameter USE_CLUSTER_EVENT       = 1,
@@ -173,52 +174,128 @@ module pulp_soc import dm::*; #(
     ///////////////////////////////////////////////////
     //      To I/O Controller and padframe           //
     ///////////////////////////////////////////////////
-    output logic [127:0]                  pad_mux_o,
-    output logic [383:0]                  pad_cfg_o,
-    input  logic [NGPIO-1:0]              gpio_in_i,
-    output logic [NGPIO-1:0]              gpio_out_o,
-    output logic [NGPIO-1:0]              gpio_dir_o,
-    output logic [191:0]                  gpio_cfg_o,
-    output logic                          uart_tx_o,
-    input  logic                          uart_rx_i,
-    input  logic                          cam_clk_i,
-    input  logic [7:0]                    cam_data_i,
-    input  logic                          cam_hsync_i,
-    input  logic                          cam_vsync_i,
-    output logic [3:0]                    timer_ch0_o,
+    output logic [`N_IO-1:0][`NBIT_PADMUX-1:0]	pad_mux_o,
+    output logic [`N_IO-1:0][`NBIT_PADCFG-1:0]	pad_cfg_o,
+	
+	// Signals to pad frame
+	input  logic [`N_PERIO-1:0]           perio_in_i,
+    output logic [`N_PERIO-1:0]           perio_out_o,
+    output logic [`N_PERIO-1:0]           perio_oe_o,
+	// Signals to gpio controller
+    input  logic [`N_GPIO-1:0]            gpio_in_i,
+    output logic [`N_GPIO-1:0]            gpio_out_o,
+    output logic [`N_GPIO-1:0]            gpio_oe_o,
+	// IO signals to efpga
+    input  logic [`N_FPGAIO-1:0]          fpgaio_in_i,
+    output logic [`N_FPGAIO-1:0]          fpgaio_out_o,
+    output logic [`N_FPGAIO-1:0]          fpgaio_oe_o,
+	// Timers
+	output logic [3:0]                    timer_ch0_o,
     output logic [3:0]                    timer_ch1_o,
     output logic [3:0]                    timer_ch2_o,
     output logic [3:0]                    timer_ch3_o,
+	
+    // output logic [191:0]                  gpio_cfg_o,
+    // output logic                          uart_tx_o,
+    // input  logic                          uart_rx_i,
+    // input  logic                          cam_clk_i,
+    // input  logic [7:0]                    cam_data_i,
+    // input  logic                          cam_hsync_i,
+    // input  logic                          cam_vsync_i,
+    // output logic [3:0]                    timer_ch0_o,
+    // output logic [3:0]                    timer_ch1_o,
+    // output logic [3:0]                    timer_ch2_o,
+    // output logic [3:0]                    timer_ch3_o,
 
-    input  logic [N_I2C-1:0]              i2c_scl_i,
-    output logic [N_I2C-1:0]              i2c_scl_o,
-    output logic [N_I2C-1:0]              i2c_scl_oe_o,
-    input  logic [N_I2C-1:0]              i2c_sda_i,
-    output logic [N_I2C-1:0]              i2c_sda_o,
-    output logic [N_I2C-1:0]              i2c_sda_oe_o,
+    // input  logic [N_I2C-1:0]              i2c_scl_i,
+    // output logic [N_I2C-1:0]              i2c_scl_o,
+    // output logic [N_I2C-1:0]              i2c_scl_oe_o,
+    // input  logic [N_I2C-1:0]              i2c_sda_i,
+    // output logic [N_I2C-1:0]              i2c_sda_o,
+    // output logic [N_I2C-1:0]              i2c_sda_oe_o,
 
-    input  logic                          i2s_slave_sd0_i,
-    input  logic                          i2s_slave_sd1_i,
-    input  logic                          i2s_slave_ws_i,
-    output logic                          i2s_slave_ws_o,
-    output logic                          i2s_slave_ws_oe,
-    input  logic                          i2s_slave_sck_i,
-    output logic                          i2s_slave_sck_o,
-    output logic                          i2s_slave_sck_oe,
+    // input  logic                          i2s_slave_sd0_i,
+    // input  logic                          i2s_slave_sd1_i,
+    // input  logic                          i2s_slave_ws_i,
+    // output logic                          i2s_slave_ws_o,
+    // output logic                          i2s_slave_ws_oe,
+    // input  logic                          i2s_slave_sck_i,
+    // output logic                          i2s_slave_sck_o,
+    // output logic                          i2s_slave_sck_oe,
 
-    output logic [N_SPI-1:0]              spi_clk_o,
-    output logic [N_SPI-1:0][3:0]         spi_csn_o,
-    output logic [N_SPI-1:0][3:0]         spi_oen_o,
-    output logic [N_SPI-1:0][3:0]         spi_sdo_o,
-    input  logic [N_SPI-1:0][3:0]         spi_sdi_i,
+    // output logic [N_SPI-1:0]              spi_clk_o,
+    // output logic [N_SPI-1:0][3:0]         spi_csn_o,
+    // output logic [N_SPI-1:0][3:0]         spi_oen_o,
+    // output logic [N_SPI-1:0][3:0]         spi_sdo_o,
+    // input  logic [N_SPI-1:0][3:0]         spi_sdi_i,
 
-    output logic                          sdio_clk_o,
-    output logic                          sdio_cmd_o,
-    input  logic                          sdio_cmd_i,
-    output logic                          sdio_cmd_oen_o,
-    output logic                    [3:0] sdio_data_o,
-    input  logic                    [3:0] sdio_data_i,
-    output logic                    [3:0] sdio_data_oen_o,
+    // output logic                          sdio_clk_o,
+    // output logic                          sdio_cmd_o,
+    // input  logic                          sdio_cmd_i,
+    // output logic                          sdio_cmd_oen_o,
+    // output logic                    [3:0] sdio_data_o,
+    // input  logic                    [3:0] sdio_data_i,
+    // output logic                    [3:0] sdio_data_oen_o,
+	
+	
+	///////////////////////////////////////////////////
+    //      To EFPGA                                 //
+    ///////////////////////////////////////////////////
+input  logic [1:0]                    selected_mode_i,
+    input  logic                          fpga_clk_1_i,
+    input  logic                          fpga_clk_2_i,
+    input  logic                          fpga_clk_3_i,
+    input  logic                          fpga_clk_4_i,
+    input  logic                          fpga_clk_5_i,
+
+    //eFPGA SPIS
+    input  logic                          efpga_fcb_spis_rst_n_i    ,
+    input  logic                          efpga_fcb_spis_mosi_i     ,
+    input  logic                          efpga_fcb_spis_cs_n_i     ,
+    input  logic                          efpga_fcb_spis_clk_i      ,
+    input  logic                          efpga_fcb_spi_mode_en_bo_i,
+    output logic                          efpga_fcb_spis_miso_en_o  ,
+    output logic                          efpga_fcb_spis_miso_o     ,
+
+
+    //eFPGA TEST MODE
+    input  logic                          efpga_STM_i                  ,
+    output logic                          efpga_test_fcb_pif_vldo_en_o ,
+    output logic                          efpga_test_fcb_pif_vldo_o    ,
+    output logic                          efpga_test_fcb_pif_do_l_en_o ,
+    output logic                          efpga_test_fcb_pif_do_l_0_o  ,
+    output logic                          efpga_test_fcb_pif_do_l_1_o  ,
+    output logic                          efpga_test_fcb_pif_do_l_2_o  ,
+    output logic                          efpga_test_fcb_pif_do_l_3_o  ,
+    output logic                          efpga_test_fcb_pif_do_h_en_o ,
+    output logic                          efpga_test_fcb_pif_do_h_0_o  ,
+    output logic                          efpga_test_fcb_pif_do_h_1_o  ,
+    output logic                          efpga_test_fcb_pif_do_h_2_o  ,
+    output logic                          efpga_test_fcb_pif_do_h_3_o  ,
+    output logic                          efpga_test_FB_SPE_OUT_0_o    ,
+    output logic                          efpga_test_FB_SPE_OUT_1_o    ,
+    output logic                          efpga_test_FB_SPE_OUT_2_o    ,
+    output logic                          efpga_test_FB_SPE_OUT_3_o    ,
+    input  logic                          efpga_test_fcb_pif_vldi_i    ,
+    input  logic                          efpga_test_fcb_pif_di_l_0_i  ,
+    input  logic                          efpga_test_fcb_pif_di_l_1_i  ,
+    input  logic                          efpga_test_fcb_pif_di_l_2_i  ,
+    input  logic                          efpga_test_fcb_pif_di_l_3_i  ,
+    input  logic                          efpga_test_fcb_pif_di_h_0_i  ,
+    input  logic                          efpga_test_fcb_pif_di_h_1_i  ,
+    input  logic                          efpga_test_fcb_pif_di_h_2_i  ,
+    input  logic                          efpga_test_fcb_pif_di_h_3_i  ,
+    input  logic                          efpga_test_FB_SPE_IN_0_i     ,
+    input  logic                          efpga_test_FB_SPE_IN_1_i     ,
+    input  logic                          efpga_test_FB_SPE_IN_2_i     ,
+    input  logic                          efpga_test_FB_SPE_IN_3_i     ,
+    input  logic                          efpga_test_M_0_i             ,
+    input  logic                          efpga_test_M_1_i             ,
+    input  logic                          efpga_test_M_2_i             ,
+    input  logic                          efpga_test_M_3_i             ,
+    input  logic                          efpga_test_M_4_i             ,
+    input  logic                          efpga_test_M_5_i             ,
+    input  logic                          efpga_test_MLATCH_i          ,
 
     ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////
@@ -244,11 +321,13 @@ module pulp_soc import dm::*; #(
 
     localparam ROM_ADDR_WIDTH        = 13;
 
-    localparam FC_CORE_CLUSTER_ID    = 6'd31;
+    localparam FC_CORE_CLUSTER_ID    = CORE_TYPE != 3 ? 6'd31 : 6'd0;
     localparam CL_CORE_CLUSTER_ID    = 6'd0;
 
     localparam FC_CORE_CORE_ID       = 4'd0;
     localparam FC_CORE_MHARTID       = {FC_CORE_CLUSTER_ID, 1'b0, FC_CORE_CORE_ID};
+    
+    localparam N_EFPGA_TCDM_PORTS    = `N_EFPGA_TCDM_PORTS;
 
 
     //  PULP RISC-V cores have not continguos MHARTID.
@@ -299,6 +378,9 @@ module pulp_soc import dm::*; #(
     //********************************************************
     //***************** SIGNALS DECLARATION ******************
     //********************************************************
+
+   logic stoptimer;
+   
     logic [ 1:0]           s_fc_hwpe_events;
     logic [31:0]           s_fc_events;
 
@@ -320,10 +402,6 @@ module pulp_soc import dm::*; #(
     logic                  s_supervisor_mode;
 
     logic [31:0]           s_fc_bootaddr;
-
-    logic [NGPIO-1:0][NBIT_PADCFG-1:0] s_gpio_cfg;
-    logic [63:0][1:0]      s_pad_mux;
-    logic [63:0][5:0]      s_pad_cfg;
 
     logic                  s_periph_clk;
     logic                  s_periph_rstn;
@@ -446,6 +524,10 @@ module pulp_soc import dm::*; #(
     XBAR_TCDM_BUS s_lint_fc_instr_bus ();
     XBAR_TCDM_BUS s_lint_hwpe_bus[NB_HWPE_PORTS-1:0]();
 
+    XBAR_TCDM_BUS s_lint_efpga_bus[`N_EFPGA_TCDM_PORTS-1:0]();
+    XBAR_TCDM_BUS s_lint_efpga_apbprogram_bus();
+    XBAR_TCDM_BUS s_lint_efpga_apbt1_bus();
+
     `ifdef REMAP_ADDRESS
         logic [3:0] base_addr_int;
         assign base_addr_int = 4'b0001; //FIXME attach this signal somewhere in the soc peripherals --> IGOR
@@ -542,14 +624,7 @@ module pulp_soc import dm::*; #(
         .APB_DATA_WIDTH     ( 32                                    ),
         .NB_CORES           ( NB_CORES                              ),
         .NB_CLUSTERS        ( `NB_CLUSTERS                          ),
-        .EVNT_WIDTH         ( EVNT_WIDTH                            ),
-        .NGPIO              ( NGPIO                                 ),
-        .NPAD               ( NPAD                                  ),
-        .NBIT_PADCFG        ( NBIT_PADCFG                           ),
-        .NBIT_PADMUX        ( NBIT_PADMUX                           ),
-        .N_UART             ( N_UART                                ),
-        .N_SPI              ( N_SPI                                 ),
-        .N_I2C              ( N_I2C                                 )
+        .EVNT_WIDTH         ( EVNT_WIDTH                            )
     ) soc_peripherals_i (
 
         .clk_i                  ( s_soc_clk              ),
@@ -562,6 +637,7 @@ module pulp_soc import dm::*; #(
         .dft_test_mode_i        ( dft_test_mode_i        ),
         .dft_cg_enable_i        ( 1'b0                   ),
 
+	.stoptimer (stoptimer),		 
         .boot_l2_i              ( boot_l2_i              ),
         .bootsel_i              ( bootsel_i              ),
 
@@ -579,6 +655,10 @@ module pulp_soc import dm::*; #(
 
         .l2_rx_master           ( s_lint_udma_rx_bus     ),
         .l2_tx_master           ( s_lint_udma_tx_bus     ),
+        
+        .l2_efpga_tcdm_master    ( s_lint_efpga_bus       ),
+        .efpga_apbprogram_slave  ( s_lint_efpga_apbprogram_bus 	),
+        .efpga_apbt1_slave       ( s_lint_efpga_apbt1_bus      	),
 
         .soc_jtag_reg_i         ( soc_jtag_reg_tap       ),
         .soc_jtag_reg_o         ( soc_jtag_reg_soc       ),
@@ -594,57 +674,123 @@ module pulp_soc import dm::*; #(
         .per_fll_master         ( s_per_fll_master       ),
         .cluster_fll_master     ( s_cluster_fll_master   ),
 
-        .gpio_in                ( gpio_in_i              ),
-        .gpio_out               ( gpio_out_o             ),
-        .gpio_dir               ( gpio_dir_o             ),
-        .gpio_padcfg            ( s_gpio_cfg             ),
+        // pad control signals
+        .pad_mux_o              ( pad_mux_o              ),
+        .pad_cfg_o              ( pad_cfg_o              ),
+        // Peripheral signals
+        .perio_in_i               ( perio_in_i             ),
+        .perio_out_o              ( perio_out_o            ),
+        .perio_oe_o              ( perio_oe_o            ),
+        // GPIO signals
+        .gpio_in_i               ( gpio_in_i              ),
+        .gpio_out_o               ( gpio_out_o             ),
+        .gpio_oe_o              ( gpio_oe_o             ),
+        // FPGAIO signals
+        .fpgaio_out_o           ( fpgaio_out_o             ),
+        .fpgaio_in_i           	( fpgaio_in_i              ),
+        .fpgaio_oe_o           	( fpgaio_oe_o              ),
 
-        .pad_mux_o              ( s_pad_mux              ),
-        .pad_cfg_o              ( s_pad_cfg              ),
+        
 
-        //CAMERA
-        .cam_clk_i              ( cam_clk_i              ),
-        .cam_data_i             ( cam_data_i             ),
-        .cam_hsync_i            ( cam_hsync_i            ),
-        .cam_vsync_i            ( cam_vsync_i            ),
 
-        //UART
-        .uart_tx                ( uart_tx_o              ),
-        .uart_rx                ( uart_rx_i              ),
+        // //CAMERA
+        // .cam_clk_i              ( cam_clk_i              ),
+        // .cam_data_i             ( cam_data_i             ),
+        // .cam_hsync_i            ( cam_hsync_i            ),
+        // .cam_vsync_i            ( cam_vsync_i            ),
 
-        //I2C
-        .i2c_scl_i              ( i2c_scl_i              ),
-        .i2c_scl_o              ( i2c_scl_o              ),
-        .i2c_scl_oe_o           ( i2c_scl_oe_o           ),
-        .i2c_sda_i              ( i2c_sda_i              ),
-        .i2c_sda_o              ( i2c_sda_o              ),
-        .i2c_sda_oe_o           ( i2c_sda_oe_o           ),
+        // //UART
+        // .uart_tx                ( uart_tx_o              ),
+        // .uart_rx                ( uart_rx_i              ),
 
-        //I2S
-        .i2s_slave_sd0_i        ( i2s_slave_sd0_i        ),
-        .i2s_slave_sd1_i        ( i2s_slave_sd1_i        ),
-        .i2s_slave_ws_i         ( i2s_slave_ws_i         ),
-        .i2s_slave_ws_o         ( i2s_slave_ws_o         ),
-        .i2s_slave_ws_oe        ( i2s_slave_ws_oe        ),
-        .i2s_slave_sck_i        ( i2s_slave_sck_i        ),
-        .i2s_slave_sck_o        ( i2s_slave_sck_o        ),
-        .i2s_slave_sck_oe       ( i2s_slave_sck_oe       ),
+        // //I2C
+        // .i2c_scl_i              ( i2c_scl_i              ),
+        // .i2c_scl_o              ( i2c_scl_o              ),
+        // .i2c_scl_oe_o           ( i2c_scl_oe_o           ),
+        // .i2c_sda_i              ( i2c_sda_i              ),
+        // .i2c_sda_o              ( i2c_sda_o              ),
+        // .i2c_sda_oe_o           ( i2c_sda_oe_o           ),
 
-         //SPI
-        .spi_clk_o              ( spi_clk_o              ),
-        .spi_csn_o              ( spi_csn_o              ),
-        .spi_oen_o              ( spi_oen_o              ),
-        .spi_sdo_o              ( spi_sdo_o              ),
-        .spi_sdi_i              ( spi_sdi_i              ),
+        // //I2S
+        // .i2s_slave_sd0_i        ( i2s_slave_sd0_i        ),
+        // .i2s_slave_sd1_i        ( i2s_slave_sd1_i        ),
+        // .i2s_slave_ws_i         ( i2s_slave_ws_i         ),
+        // .i2s_slave_ws_o         ( i2s_slave_ws_o         ),
+        // .i2s_slave_ws_oe        ( i2s_slave_ws_oe        ),
+        // .i2s_slave_sck_i        ( i2s_slave_sck_i        ),
+        // .i2s_slave_sck_o        ( i2s_slave_sck_o        ),
+        // .i2s_slave_sck_oe       ( i2s_slave_sck_oe       ),
 
-        //SDIO
-        .sdclk_o                ( sdio_clk_o             ),
-        .sdcmd_o                ( sdio_cmd_o             ),
-        .sdcmd_i                ( sdio_cmd_i             ),
-        .sdcmd_oen_o            ( sdio_cmd_oen_o         ),
-        .sddata_o               ( sdio_data_o            ),
-        .sddata_i               ( sdio_data_i            ),
-        .sddata_oen_o           ( sdio_data_oen_o        ),
+         // //SPI
+        // .spi_clk_o              ( spi_clk_o              ),
+        // .spi_csn_o              ( spi_csn_o              ),
+        // .spi_oen_o              ( spi_oen_o              ),
+        // .spi_sdo_o              ( spi_sdo_o              ),
+        // .spi_sdi_i              ( spi_sdi_i              ),
+
+        // //SDIO
+        // .sdclk_o                ( sdio_clk_o             ),
+        // .sdcmd_o                ( sdio_cmd_o             ),
+        // .sdcmd_i                ( sdio_cmd_i             ),
+        // .sdcmd_oen_o            ( sdio_cmd_oen_o         ),
+        // .sddata_o               ( sdio_data_o            ),
+        // .sddata_i               ( sdio_data_i            ),
+        // .sddata_oen_o           ( sdio_data_oen_o        ),
+        
+        // other FPGA signals
+        .fpga_clk_1_i                 ( fpga_clk_1_i                 ),
+        .fpga_clk_2_i                 ( fpga_clk_2_i                 ),
+        .fpga_clk_3_i                 ( fpga_clk_3_i                 ),
+        .fpga_clk_4_i                 ( fpga_clk_4_i                 ),
+        .fpga_clk_5_i                 ( fpga_clk_5_i                 ),
+
+         //eFPGA SPIS
+        .efpga_fcb_spis_rst_n_i       ( efpga_fcb_spis_rst_n_i       ),
+        .efpga_fcb_spis_mosi_i        ( efpga_fcb_spis_mosi_i        ),
+        .efpga_fcb_spis_cs_n_i        ( efpga_fcb_spis_cs_n_i        ),
+        .efpga_fcb_spis_clk_i         ( efpga_fcb_spis_clk_i         ),
+        .efpga_fcb_spi_mode_en_bo_i   ( efpga_fcb_spi_mode_en_bo_i   ),
+        .efpga_fcb_spis_miso_en_o     ( efpga_fcb_spis_miso_en_o     ),
+        .efpga_fcb_spis_miso_o        ( efpga_fcb_spis_miso_o        ),
+
+         //eFPGA TEST MODE
+        .efpga_STM_i                  ( efpga_STM_i                  ),
+        .efpga_test_fcb_pif_vldo_en_o ( efpga_test_fcb_pif_vldo_en_o ),
+        .efpga_test_fcb_pif_vldo_o    ( efpga_test_fcb_pif_vldo_o    ),
+        .efpga_test_fcb_pif_do_l_en_o ( efpga_test_fcb_pif_do_l_en_o ),
+        .efpga_test_fcb_pif_do_l_0_o  ( efpga_test_fcb_pif_do_l_0_o  ),
+        .efpga_test_fcb_pif_do_l_1_o  ( efpga_test_fcb_pif_do_l_1_o  ),
+        .efpga_test_fcb_pif_do_l_2_o  ( efpga_test_fcb_pif_do_l_2_o  ),
+        .efpga_test_fcb_pif_do_l_3_o  ( efpga_test_fcb_pif_do_l_3_o  ),
+        .efpga_test_fcb_pif_do_h_en_o ( efpga_test_fcb_pif_do_h_en_o ),
+        .efpga_test_fcb_pif_do_h_0_o  ( efpga_test_fcb_pif_do_h_0_o  ),
+        .efpga_test_fcb_pif_do_h_1_o  ( efpga_test_fcb_pif_do_h_1_o  ),
+        .efpga_test_fcb_pif_do_h_2_o  ( efpga_test_fcb_pif_do_h_2_o  ),
+        .efpga_test_fcb_pif_do_h_3_o  ( efpga_test_fcb_pif_do_h_3_o  ),
+        .efpga_test_FB_SPE_OUT_0_o    ( efpga_test_FB_SPE_OUT_0_o    ),
+        .efpga_test_FB_SPE_OUT_1_o    ( efpga_test_FB_SPE_OUT_1_o    ),
+        .efpga_test_FB_SPE_OUT_2_o    ( efpga_test_FB_SPE_OUT_2_o    ),
+        .efpga_test_FB_SPE_OUT_3_o    ( efpga_test_FB_SPE_OUT_3_o    ),
+        .efpga_test_fcb_pif_vldi_i    ( efpga_test_fcb_pif_vldi_i    ),
+        .efpga_test_fcb_pif_di_l_0_i  ( efpga_test_fcb_pif_di_l_0_i  ),
+        .efpga_test_fcb_pif_di_l_1_i  ( efpga_test_fcb_pif_di_l_1_i  ),
+        .efpga_test_fcb_pif_di_l_2_i  ( efpga_test_fcb_pif_di_l_2_i  ),
+        .efpga_test_fcb_pif_di_l_3_i  ( efpga_test_fcb_pif_di_l_3_i  ),
+        .efpga_test_fcb_pif_di_h_0_i  ( efpga_test_fcb_pif_di_h_0_i  ),
+        .efpga_test_fcb_pif_di_h_1_i  ( efpga_test_fcb_pif_di_h_1_i  ),
+        .efpga_test_fcb_pif_di_h_2_i  ( efpga_test_fcb_pif_di_h_2_i  ),
+        .efpga_test_fcb_pif_di_h_3_i  ( efpga_test_fcb_pif_di_h_3_i  ),
+        .efpga_test_FB_SPE_IN_0_i     ( efpga_test_FB_SPE_IN_0_i     ),
+        .efpga_test_FB_SPE_IN_1_i     ( efpga_test_FB_SPE_IN_1_i     ),
+        .efpga_test_FB_SPE_IN_2_i     ( efpga_test_FB_SPE_IN_2_i     ),
+        .efpga_test_FB_SPE_IN_3_i     ( efpga_test_FB_SPE_IN_3_i     ),
+        .efpga_test_M_0_i             ( efpga_test_M_0_i             ),
+        .efpga_test_M_1_i             ( efpga_test_M_1_i             ),
+        .efpga_test_M_2_i             ( efpga_test_M_2_i             ),
+        .efpga_test_M_3_i             ( efpga_test_M_3_i             ),
+        .efpga_test_M_4_i             ( efpga_test_M_4_i             ),
+        .efpga_test_M_5_i             ( efpga_test_M_5_i             ),
+        .efpga_test_MLATCH_i          ( efpga_test_MLATCH_i          ),
 
         .timer_ch0_o            ( timer_ch0_o            ),
         .timer_ch1_o            ( timer_ch1_o            ),
@@ -714,8 +860,8 @@ module pulp_soc import dm::*; #(
         .USE_FPU    ( USE_FPU            ),
         .CORE_ID    ( FC_CORE_CORE_ID    ),
         .CLUSTER_ID ( FC_CORE_CLUSTER_ID ),
-        .USE_HWPE   ( USE_HWPE           )
-//        .USE_ZFINX  ( USE_ZFINX          )
+        .USE_HWPE   ( USE_HWPE           ),
+        .USE_ZFINX  ( USE_ZFINX          )
     ) fc_subsystem_i (
         .clk_i               ( s_soc_clk           ),
         .rst_ni              ( s_soc_rstn          ),
@@ -732,7 +878,7 @@ module pulp_soc import dm::*; #(
         .apb_slave_eu        ( s_apb_eu_bus        ),
         .apb_slave_hwpe      ( s_apb_hwpe_bus      ),
         .debug_req_i         ( dm_debug_req[FC_CORE_MHARTID] ),
-
+	.stoptimer (stoptimer),
         .event_fifo_valid_i  ( s_fc_event_valid    ),
         .event_fifo_fulln_o  ( s_fc_event_ready    ),
         .event_fifo_data_i   ( s_fc_event_data     ),
@@ -789,21 +935,24 @@ module pulp_soc import dm::*; #(
       .AXI_IN_ID_WIDTH(AXI_ID_IN_WIDTH),
       .AXI_USER_WIDTH(AXI_USER_WIDTH)
     ) i_soc_interconnect_wrap (
-        .clk_i                 ( s_soc_clk           ),
-        .rst_ni                ( s_soc_rstn          ),
-        .test_en_i             ( dft_test_mode_i     ),
-        .tcdm_fc_data          ( s_lint_fc_data_bus  ),
-        .tcdm_fc_instr         ( s_lint_fc_instr_bus ),
-        .tcdm_udma_rx          ( s_lint_udma_rx_bus  ),
-        .tcdm_udma_tx          ( s_lint_udma_tx_bus  ),
-        .tcdm_debug            ( s_lint_debug_bus    ),
-        .tcdm_hwpe             ( s_lint_hwpe_bus     ),
-        .axi_master_plug       ( s_data_in_bus       ),
-        .axi_slave_plug        ( s_data_out_bus      ),
-        .apb_peripheral_bus    ( s_apb_periph_bus    ),
-        .l2_interleaved_slaves ( s_mem_l2_bus        ),
-        .l2_private_slaves     ( s_mem_l2_pri_bus    ),
-        .boot_rom_slave        ( s_mem_rom_bus       )
+        .clk_i                  ( s_soc_clk           ),
+        .rst_ni                 ( s_soc_rstn          ),
+        .test_en_i              ( dft_test_mode_i     ),
+        .tcdm_fc_data           ( s_lint_fc_data_bus  ),
+        .tcdm_fc_instr          ( s_lint_fc_instr_bus ),
+        .tcdm_udma_rx           ( s_lint_udma_rx_bus  ),
+        .tcdm_udma_tx           ( s_lint_udma_tx_bus  ),
+        .tcdm_debug             ( s_lint_debug_bus    ),
+        .tcdm_hwpe              ( s_lint_hwpe_bus     ),
+        .tcdm_efpga             ( s_lint_efpga_bus    ),
+        .axi_master_plug        ( s_data_in_bus       ),
+        .axi_slave_plug         ( s_data_out_bus      ),
+        .apb_peripheral_bus     ( s_apb_periph_bus    ),
+        .tcdm_efpga_apbprogram  ( s_lint_efpga_apbprogram_bus ),
+        .tcdm_efpga_apbt1       ( s_lint_efpga_apbt1_bus      ),
+        .l2_interleaved_slaves  ( s_mem_l2_bus        ),
+        .l2_private_slaves      ( s_mem_l2_pri_bus    ),
+        .boot_rom_slave         ( s_mem_rom_bus       )
         );
 
     /* Debug Subsystem */
@@ -969,23 +1118,23 @@ module pulp_soc import dm::*; #(
     //*** PAD AND GPIO CONFIGURATION SIGNALS PACK ************
     //********************************************************
 
-    for (genvar i = 0; i < 32; i++) begin : gen_gpio_cfg_outer
-        for (genvar j = 0; j < 6; j++) begin : gen_gpip_cfg_inner
-            assign gpio_cfg_o[j+6*i] = s_gpio_cfg[i][j];
-        end
-    end
+    // for (genvar i = 0; i < 32; i++) begin : gen_gpio_cfg_outer
+        // for (genvar j = 0; j < 6; j++) begin : gen_gpip_cfg_inner
+            // assign gpio_cfg_o[j+6*i] = s_gpio_cfg[i][j];
+        // end
+    // end
 
-    for (genvar i = 0; i < 64; i++) begin : gen_pad_mux_outer
-        for (genvar j = 0; j < 2; j++) begin : gen_pad_mux_innter
-            assign pad_mux_o[j+2*i] = s_pad_mux[i][j];
-        end
-    end
+    // for (genvar i = 0; i < 64; i++) begin : gen_pad_mux_outer
+        // for (genvar j = 0; j < 2; j++) begin : gen_pad_mux_innter
+            // assign pad_mux_o[j+2*i] = s_pad_mux[i][j];
+        // end
+    // end
 
-    for (genvar i = 0; i < 64; i++) begin : gen_pad_cfg_outer
-        for (genvar j = 0; j < 6; j++) begin : gen_pad_cfg_inner
-            assign pad_cfg_o[j+6*i] = s_pad_cfg[i][j];
-        end
-    end
+    // for (genvar i = 0; i < 64; i++) begin : gen_pad_cfg_outer
+        // for (genvar j = 0; j < 6; j++) begin : gen_pad_cfg_inner
+            // assign pad_cfg_o[j+6*i] = s_pad_cfg[i][j];
+        // end
+    // end
 
     //********************************************************
     //*** AXI DATA SLAVE INTERFACE UNPACK ********************

@@ -44,6 +44,11 @@ apb/apb_gpio:
 apb/apb_node:
   commit: v0.1.1
   domain: [soc]
+apb/apb2apbcomp:
+    commit: master
+    domain: null
+    group: null
+    server: null
 apb_interrupt_cntrl:
   commit: master
   group: Quicklogic-Corp
@@ -79,7 +84,7 @@ jtag_pulp:
 #  domain: [soc]
 cv32e40p:
   commit: master
-  group: QuickLogic-Corp
+  group: Openhwgroup
   domain: [soc]
 scm:
   commit: v1.0.1
@@ -127,3 +132,8 @@ riscv-dbg:
 register_interface:
   commit: b1bc9c22e0c2a5801107070c022904498dbae34b
   domain: [soc]
+logint_dc_fifo_xbar:
+    commit: master
+    domain: null
+    group: null
+    server: null

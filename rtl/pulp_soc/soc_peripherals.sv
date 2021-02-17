@@ -9,6 +9,7 @@
 // specific language governing permissions and limitations under the License.
 
 `include "pulp_soc_defines.sv"
+`include "pulp_peripheral_defines.svh"
 
 module soc_peripherals #(
     parameter MEM_ADDR_WIDTH = 13,
@@ -16,17 +17,12 @@ module soc_peripherals #(
     parameter APB_DATA_WIDTH = 32,
     parameter NB_CORES       = 4,
     parameter NB_CLUSTERS    = 0,
-    parameter EVNT_WIDTH     = 8,
-    parameter NGPIO          = 64,
-    parameter NPAD           = 64,
-    parameter NBIT_PADCFG    = 4,
-    parameter NBIT_PADMUX    = 2,
-    parameter N_UART         = 1,
-    parameter N_SPI          = 1,
-    parameter N_I2C          = 2
+    parameter EVNT_WIDTH     = 8
 ) (
     input  logic                       clk_i,
     input  logic                       periph_clk_i,
+    input  logic                       efpga_clk_i,
+    input  logic                       efpga_div_clk_i,
     input  logic                       rst_ni,
     //check the reset
     input  logic                       ref_clk_i,
@@ -39,7 +35,7 @@ module soc_peripherals #(
     output logic                       fc_fetchen_o,
     input  logic [7:0]                 soc_jtag_reg_i,
     output logic [7:0]                 soc_jtag_reg_o,
-
+    input logic 			      stoptimer,
     input  logic                       boot_l2_i,
     input  logic                       bootsel_i,
     // fc fetch enable can be controlled through this signal or through an APB
@@ -63,6 +59,10 @@ module soc_peripherals #(
     FLL_BUS.Master                     per_fll_master,
     // MASTER PORT TO CLUSTER FLL
     FLL_BUS.Master                     cluster_fll_master,
+    // MASTER PORT TO L2 from eFPGA
+    XBAR_TCDM_BUS.Master               l2_efpga_tcdm_master[`N_EFPGA_TCDM_PORTS-1:0],
+    XBAR_TCDM_BUS.Slave                efpga_apbprogram_slave,
+    XBAR_TCDM_BUS.Slave                efpga_apbt1_slave,
 /*
     input  logic                       jtag_req_valid_i,
     output logic                       debug_req_ready_o,
@@ -79,66 +79,127 @@ module soc_peripherals #(
     input  logic [1:0]                 fc_hwpe_events_i,
     output logic [31:0]                fc_events_o,
 
-    input  logic [NGPIO-1:0]           gpio_in,
-    output logic [NGPIO-1:0]           gpio_out,
-    output logic [NGPIO-1:0]           gpio_dir,
-    output logic [NGPIO-1:0][NBIT_PADCFG-1:0] gpio_padcfg,
-
-    output logic [NPAD-1:0][NBIT_PADMUX-1:0] pad_mux_o,
-    output logic [NPAD-1:0][NBIT_PADCFG-1:0] pad_cfg_o,
-
+    // Pad control signals
+    output logic [`N_IO-1:0][`NBIT_PADMUX-1:0] pad_mux_o,
+    output logic [`N_IO-1:0][`NBIT_PADCFG-1:0] pad_cfg_o,
+    // PERIO signals
+    input  logic [`N_PERIO-1:0]        perio_in_i,
+    output logic [`N_PERIO-1:0]        perio_out_o, 
+    output logic [`N_PERIO-1:0]        perio_oe_o,
+    // GPIO signals
+    input  logic [`N_GPIO-1:0]       	gpio_in_i,
+    output logic [`N_GPIO-1:0]         	gpio_out_o,
+    output logic [`N_GPIO-1:0]          gpio_oe_o,
+    // FPGAIO signals
+    input  logic [`N_FPGAIO-1:0]        fpgaio_in_i,
+    output logic [`N_FPGAIO-1:0]        fpgaio_out_o,
+    output logic [`N_FPGAIO-1:0]        fpgaio_oe_o,
+    // Timer signals
     output logic [3:0]                 timer_ch0_o,
     output logic [3:0]                 timer_ch1_o,
     output logic [3:0]                 timer_ch2_o,
     output logic [3:0]                 timer_ch3_o,
 
-    //CAMERA
-    input  logic                       cam_clk_i,
-    input  logic [7:0]                 cam_data_i,
-    input  logic                       cam_hsync_i,
-    input  logic                       cam_vsync_i,
+    // //CAMERA
+    // input  logic                       cam_clk_i,
+    // input  logic [7:0]                 cam_data_i,
+    // input  logic                       cam_hsync_i,
+    // input  logic                       cam_vsync_i,
 
-    //UART
-    // output logic [N_UART-1:0]          uart_tx,
-    // input  logic [N_UART-1:0]          uart_rx,
-    output logic           uart_tx,
-    input  logic           uart_rx,
+    // //UART
+    // // output logic [N_UART-1:0]          uart_tx,
+    // // input  logic [N_UART-1:0]          uart_rx,
+    // output logic           uart_tx,
+    // input  logic           uart_rx,
 
 
-    //I2C
-    input  logic [N_I2C-1:0]           i2c_scl_i,
-    output logic [N_I2C-1:0]           i2c_scl_o,
-    output logic [N_I2C-1:0]           i2c_scl_oe_o,
-    input  logic [N_I2C-1:0]           i2c_sda_i,
-    output logic [N_I2C-1:0]           i2c_sda_o,
-    output logic [N_I2C-1:0]           i2c_sda_oe_o,
+    // //I2C
+    // input  logic [N_I2C-1:0]           i2c_scl_i,
+    // output logic [N_I2C-1:0]           i2c_scl_o,
+    // output logic [N_I2C-1:0]           i2c_scl_oe_o,
+    // input  logic [N_I2C-1:0]           i2c_sda_i,
+    // output logic [N_I2C-1:0]           i2c_sda_o,
+    // output logic [N_I2C-1:0]           i2c_sda_oe_o,
 
-    //I2S
-    input  logic                       i2s_slave_sd0_i,
-    input  logic                       i2s_slave_sd1_i,
-    input  logic                       i2s_slave_ws_i,
-    output logic                       i2s_slave_ws_o,
-    output logic                       i2s_slave_ws_oe,
-    input  logic                       i2s_slave_sck_i,
-    output logic                       i2s_slave_sck_o,
-    output logic                       i2s_slave_sck_oe,
+    // //I2S
+    // input  logic                       i2s_slave_sd0_i,
+    // input  logic                       i2s_slave_sd1_i,
+    // input  logic                       i2s_slave_ws_i,
+    // output logic                       i2s_slave_ws_o,
+    // output logic                       i2s_slave_ws_oe,
+    // input  logic                       i2s_slave_sck_i,
+    // output logic                       i2s_slave_sck_o,
+    // output logic                       i2s_slave_sck_oe,
 
-    //SPI
-    output logic [N_SPI-1:0]           spi_clk_o,
-    output logic [N_SPI-1:0][3:0]      spi_csn_o,
-    output logic [N_SPI-1:0][3:0]      spi_oen_o,
-    output logic [N_SPI-1:0][3:0]      spi_sdo_o,
-    input  logic [N_SPI-1:0][3:0]      spi_sdi_i,
+    // //SPI
+    // output logic [N_SPI-1:0]           spi_clk_o,
+    // output logic [N_SPI-1:0][3:0]      spi_csn_o,
+    // output logic [N_SPI-1:0][3:0]      spi_oen_o,
+    // output logic [N_SPI-1:0][3:0]      spi_sdo_o,
+    // input  logic [N_SPI-1:0][3:0]      spi_sdi_i,
 
-    //SDIO
-    output logic                       sdclk_o,
-    output logic                       sdcmd_o,
-    input  logic                       sdcmd_i,
-    output logic                       sdcmd_oen_o,
-    output logic                 [3:0] sddata_o,
-    input  logic                 [3:0] sddata_i,
-    output logic                 [3:0] sddata_oen_o,
+    // //SDIO
+    // output logic                       sdclk_o,
+    // output logic                       sdcmd_o,
+    // input  logic                       sdcmd_i,
+    // output logic                       sdcmd_oen_o,
+    // output logic                 [3:0] sddata_o,
+    // input  logic                 [3:0] sddata_i,
+    // output logic                 [3:0] sddata_oen_o,
 
+    input  logic                       fpga_clk_1_i,
+    input  logic                       fpga_clk_2_i,
+    input  logic                       fpga_clk_3_i,
+    input  logic                       fpga_clk_4_i,
+    input  logic                       fpga_clk_5_i,
+
+    //eFPGA SPIS
+    input  logic                       efpga_fcb_spis_rst_n_i       ,
+    input  logic                       efpga_fcb_spis_mosi_i        ,
+    input  logic                       efpga_fcb_spis_cs_n_i        ,
+    input  logic                       efpga_fcb_spis_clk_i         ,
+    input  logic                       efpga_fcb_spi_mode_en_bo_i   ,
+    output logic                       efpga_fcb_spis_miso_en_o     ,
+    output logic                       efpga_fcb_spis_miso_o        ,
+
+    //eFPGA TEST MODE
+    input  logic                       efpga_STM_i                  ,
+    output logic                       efpga_test_fcb_pif_vldo_en_o ,
+    output logic                       efpga_test_fcb_pif_vldo_o    ,
+    output logic                       efpga_test_fcb_pif_do_l_en_o ,
+    output logic                       efpga_test_fcb_pif_do_l_0_o  ,
+    output logic                       efpga_test_fcb_pif_do_l_1_o  ,
+    output logic                       efpga_test_fcb_pif_do_l_2_o  ,
+    output logic                       efpga_test_fcb_pif_do_l_3_o  ,
+    output logic                       efpga_test_fcb_pif_do_h_en_o ,
+    output logic                       efpga_test_fcb_pif_do_h_0_o  ,
+    output logic                       efpga_test_fcb_pif_do_h_1_o  ,
+    output logic                       efpga_test_fcb_pif_do_h_2_o  ,
+    output logic                       efpga_test_fcb_pif_do_h_3_o  ,
+    output logic                       efpga_test_FB_SPE_OUT_0_o    ,
+    output logic                       efpga_test_FB_SPE_OUT_1_o    ,
+    output logic                       efpga_test_FB_SPE_OUT_2_o    ,
+    output logic                       efpga_test_FB_SPE_OUT_3_o    ,
+    input  logic                       efpga_test_fcb_pif_vldi_i    ,
+    input  logic                       efpga_test_fcb_pif_di_l_0_i  ,
+    input  logic                       efpga_test_fcb_pif_di_l_1_i  ,
+    input  logic                       efpga_test_fcb_pif_di_l_2_i  ,
+    input  logic                       efpga_test_fcb_pif_di_l_3_i  ,
+    input  logic                       efpga_test_fcb_pif_di_h_0_i  ,
+    input  logic                       efpga_test_fcb_pif_di_h_1_i  ,
+    input  logic                       efpga_test_fcb_pif_di_h_2_i  ,
+    input  logic                       efpga_test_fcb_pif_di_h_3_i  ,
+    input  logic                       efpga_test_FB_SPE_IN_0_i     ,
+    input  logic                       efpga_test_FB_SPE_IN_1_i     ,
+    input  logic                       efpga_test_FB_SPE_IN_2_i     ,
+    input  logic                       efpga_test_FB_SPE_IN_3_i     ,
+    input  logic                       efpga_test_M_0_i             ,
+    input  logic                       efpga_test_M_1_i             ,
+    input  logic                       efpga_test_M_2_i             ,
+    input  logic                       efpga_test_M_3_i             ,
+    input  logic                       efpga_test_M_4_i             ,
+    input  logic                       efpga_test_M_5_i             ,
+    input  logic                       efpga_test_MLATCH_i          ,
 
     output logic [EVNT_WIDTH-1:0]      cl_event_data_o,
     output logic                       cl_event_valid_o,
@@ -155,6 +216,18 @@ module soc_peripherals #(
     output logic                       cluster_irq_o
 );
 
+
+    //eFPGA parameters
+    localparam APB_EFPGA_HWCE_ADDR_WIDTH = 32;
+    localparam TCDM_EFPGA_ADDR_WIDTH     = 32;
+    localparam N_EFPGA_EVENTS            = 16;
+
+    localparam UDMA_EVENTS = 16*8;
+    localparam SOC_EVENTS  = 3 ;
+
+    genvar i;
+
+
     APB_BUS s_fll_bus ();
 
     APB_BUS s_gpio_bus ();
@@ -164,8 +237,6 @@ module soc_peripherals #(
     APB_BUS s_soc_evnt_gen_bus ();
     APB_BUS s_stdout_bus ();
     APB_BUS s_apb_timer_bus ();
-
-    localparam UDMA_EVENTS = 16*8;
 
     logic [31:0] s_gpio_sync;
     logic       s_sel_hyper_axi;
@@ -192,18 +263,56 @@ module soc_peripherals #(
     logic [UDMA_EVENTS-1:0] s_udma_events;
     logic [          159:0] s_events;
 
+
+    logic [N_EFPGA_EVENTS-1:0] s_efpga_hwpe_events;
+    logic [`N_EFPGA_TCDM_PORTS-1:0]                             tcdm_req;
+    logic [`N_EFPGA_TCDM_PORTS-1:0][TCDM_EFPGA_ADDR_WIDTH-1:0]  tcdm_addr;
+    logic [`N_EFPGA_TCDM_PORTS-1:0]                             tcdm_wen;
+    logic [`N_EFPGA_TCDM_PORTS-1:0][31:0]                       tcdm_wdata;
+    logic [`N_EFPGA_TCDM_PORTS-1:0][3:0]                        tcdm_be;
+    logic [`N_EFPGA_TCDM_PORTS-1:0]                             tcdm_gnt;
+    logic [`N_EFPGA_TCDM_PORTS-1:0][31:0]                       tcdm_r_rdata;
+    logic [`N_EFPGA_TCDM_PORTS-1:0]                             tcdm_r_valid;
+    logic                                                      enable_udma_efpga;
+    logic                                                      enable_events_efpga;
+    logic                                                      enable_apb_efpga;
+    logic                                                      enable_tcdm3_efpga;
+    logic                                                      enable_tcdm2_efpga;
+    logic                                                      enable_tcdm1_efpga;
+    logic                                                      enable_tcdm0_efpga;
+
+
     logic s_timer_in_lo_event;
     logic s_timer_in_hi_event;
+    logic [2:0] sel_clk_dc_fifo_efpga;
+    logic       clk_gating_dc_fifo_efpga;
+    logic [3:0] reset_type1_efpga;
+    logic s_efpga_clk;
+    logic [31:0] udma2efpga_cfg_data;
+    logic [31:0] efpga2udma_cfg_data;
+    logic        efpga_udma_tx_lin_valid;
+    logic [31:0] efpga_udma_tx_lin_data ;
+    logic        efpga_udma_tx_lin_ready;
+    logic        efpga_udma_rx_lin_valid;
+    logic [31:0] efpga_udma_rx_lin_data ;
+    logic        efpga_udma_rx_lin_ready;
 
+   logic                                             enable_perf_counter_efpga_x;
+   logic                                             reset_perf_counter_efpga_x;
+   logic [31:0]                                      perf_counter_value_x;
+
+/*  old pulp interrupts
     assign s_events[UDMA_EVENTS-1:0]  = s_udma_events;
     assign s_events[135]              = s_adv_timer_events[0];
     assign s_events[136]              = s_adv_timer_events[1];
     assign s_events[137]              = s_adv_timer_events[2];
     assign s_events[138]              = s_adv_timer_events[3];
     assign s_events[139]              = s_gpio_event;
-    assign s_events[140]              = fc_hwpe_events_i[0];
-    assign s_events[141]              = fc_hwpe_events_i[1];
-    assign s_events[159:142]          = '0;
+    assign s_events[140]              = s_efpga_hwpe_events[14];
+    assign s_events[141]              = s_efpga_hwpe_events[15];
+    assign s_events[142]              = 1'b0;
+    assign s_events[143]              = 1'b0;
+    assign s_events[159:144]          = '0;
 
     assign fc_events_o[7:0] = 8'h0; //RESERVED for sw events
     assign fc_events_o[8]   = dma_pe_evt_i;
@@ -234,7 +343,41 @@ module soc_peripherals #(
     assign fc_events_o[29]  = s_fc_err_events;
     assign fc_events_o[30]  = s_fc_hp_events[0];
     assign fc_events_o[31]  = s_fc_hp_events[1];
+*/
+    assign s_events[UDMA_EVENTS-1:0]  = s_udma_events;
+    assign s_events[135]              = s_adv_timer_events[0];
+    assign s_events[136]              = s_adv_timer_events[1];
+    assign s_events[137]              = s_adv_timer_events[2];
+    assign s_events[138]              = s_adv_timer_events[3];
+    assign s_events[139]              = s_gpio_event;
+    assign s_events[140]              = fc_hwpe_events_i[0];
+    assign s_events[141]              = fc_hwpe_events_i[1];
+    assign s_events[159:142]          = '0;
 
+    assign fc_events_o[6:0] = 7'h0; //RESERVED for sw events all routed to irq3
+    assign fc_events_o[7]  = s_timer_lo_event; // MTIME irq
+    assign fc_events_o[8]   = 0; //dma_pe_evt_i; // unused core-v-mcu
+    assign fc_events_o[9]   = 0; //dma_pe_irq_i; // unused core-v-mcu
+    assign fc_events_o[10]  = 0; //pf_evt_i;  // unused core-v-mcu
+    assign fc_events_o[11]  =  1'b0 ; // Machine irq - from event_fifo
+    assign fc_events_o[15:12]  = 4'b0000;
+
+    assign fc_events_o[16]  = s_timer_lo_event;
+    assign fc_events_o[17]  = s_timer_hi_event;
+    assign fc_events_o[18]  = s_gpio_event;
+    assign fc_events_o[19]  = s_adv_timer_events[0];
+    assign fc_events_o[20]  = s_adv_timer_events[1];
+    assign fc_events_o[21]  = s_adv_timer_events[2];
+    assign fc_events_o[22]  = s_adv_timer_events[3];
+    assign fc_events_o[23]  = s_ref_rise_event | s_ref_fall_event;
+    assign fc_events_o[24]  = 1'b0;
+    assign fc_events_o[25]  = 1'b0;
+    assign fc_events_o[26]  = 1'b0;
+    assign fc_events_o[27]  = 1'b0;
+    assign fc_events_o[28]  = 1'b0;
+    assign fc_events_o[29]  = s_fc_err_events;
+    assign fc_events_o[30]  = s_fc_hp_events[0];
+    assign fc_events_o[31]  = s_fc_hp_events[1];
     pulp_sync_wedge i_ref_clk_sync (
         .clk_i    ( clk_i            ),
         .rstn_i   ( rst_ni           ),
@@ -340,8 +483,8 @@ module soc_peripherals #(
 
     apb_gpio #(
         .APB_ADDR_WIDTH (APB_ADDR_WIDTH),
-        .PAD_NUM        (NGPIO),
-        .NBIT_PADCFG    (NBIT_PADCFG)
+        .PAD_NUM        (`N_GPIO),
+        .NBIT_PADCFG    (`NBIT_PADCFG)
     ) i_apb_gpio (
         .HCLK            ( clk_i              ),
         .HRESETn         ( rst_ni             ),
@@ -359,10 +502,10 @@ module soc_peripherals #(
 
         .gpio_in_sync    ( s_gpio_sync        ),
 
-        .gpio_in         ( gpio_in            ),
-        .gpio_out        ( gpio_out           ),
-        .gpio_dir        ( gpio_dir           ),
-        .gpio_padcfg     ( gpio_padcfg        ),
+        .gpio_in         ( gpio_in_i          ),
+        .gpio_out        ( gpio_out_o         ),
+        .gpio_dir        ( gpio_oe_o          ),
+        .gpio_padcfg     (                    ),
         .interrupt       ( s_gpio_event       )
     );
 
@@ -377,10 +520,7 @@ module soc_peripherals #(
 
     udma_subsystem #(
         .APB_ADDR_WIDTH     ( APB_ADDR_WIDTH       ),
-        .L2_ADDR_WIDTH      ( MEM_ADDR_WIDTH       ),
-        .N_SPI (N_SPI),
-        .N_UART(N_UART),
-        .N_I2C (N_I2C)
+        .L2_ADDR_WIDTH      ( MEM_ADDR_WIDTH       )
     ) i_udma (
         .L2_ro_req_o      ( l2_tx_master.req     ),
         .L2_ro_gnt_i      ( l2_tx_master.gnt     ),
@@ -405,6 +545,7 @@ module soc_peripherals #(
 
         .sys_clk_i        ( clk_i                ),
         .periph_clk_i     ( periph_clk_i         ),
+        .efpga_clk_i      ( s_efpga_clk          ),
         .sys_resetn_i     ( rst_ni               ),
 
         .udma_apb_paddr   ( s_udma_bus.paddr     ),
@@ -421,44 +562,57 @@ module soc_peripherals #(
         .event_valid_i    ( s_pr_event_valid     ),
         .event_data_i     ( s_pr_event_data      ),
         .event_ready_o    ( s_pr_event_ready     ),
+        
+        .efpga_data_tx_valid_o   ( efpga_udma_tx_lin_valid  ),
+        .efpga_data_tx_o         ( efpga_udma_tx_lin_data   ),
+        .efpga_data_tx_ready_i   ( efpga_udma_tx_lin_ready  ),
+        .efpga_data_rx_valid_i   ( efpga_udma_rx_lin_valid  ),
+        .efpga_data_rx_i         ( efpga_udma_rx_lin_data   ),
+        .efpga_data_rx_ready_o   ( efpga_udma_rx_lin_ready  ),
+        .efpga_setup_i           ( efpga2udma_cfg_data      ),
+        .efpga_setup_o           ( udma2efpga_cfg_data      ),
+		
+		.perio_in_i			(perio_in_i),
+		.perio_out_o		(perio_out_o),
+		.perio_oe_o			(perio_oe_o)
 
-        .spi_clk          ( spi_clk_o            ),
-        .spi_csn          ( spi_csn_o            ),
-        .spi_oen          ( spi_oen_o            ),
-        .spi_sdo          ( spi_sdo_o            ),
-        .spi_sdi          ( spi_sdi_i            ),
+        // .spi_clk          ( spi_clk_o            ),
+        // .spi_csn          ( spi_csn_o            ),
+        // .spi_oen          ( spi_oen_o            ),
+        // .spi_sdo          ( spi_sdo_o            ),
+        // .spi_sdi          ( spi_sdi_i            ),
 
-        .sdio_clk_o       ( sdclk_o              ),
-        .sdio_cmd_o       ( sdcmd_o              ),
-        .sdio_cmd_i       ( sdcmd_i              ),
-        .sdio_cmd_oen_o   ( sdcmd_oen_o          ),
-        .sdio_data_o      ( sddata_o             ),
-        .sdio_data_i      ( sddata_i             ),
-        .sdio_data_oen_o  ( sddata_oen_o         ),
+        // .sdio_clk_o       ( sdclk_o              ),
+        // .sdio_cmd_o       ( sdcmd_o              ),
+        // .sdio_cmd_i       ( sdcmd_i              ),
+        // .sdio_cmd_oen_o   ( sdcmd_oen_o          ),
+        // .sdio_data_o      ( sddata_o             ),
+        // .sdio_data_i      ( sddata_i             ),
+        // .sdio_data_oen_o  ( sddata_oen_o         ),
 
-        .cam_clk_i        ( cam_clk_i            ),
-        .cam_data_i       ( cam_data_i           ),
-        .cam_hsync_i      ( cam_hsync_i          ),
-        .cam_vsync_i      ( cam_vsync_i          ),
+        // .cam_clk_i        ( cam_clk_i            ),
+        // .cam_data_i       ( cam_data_i           ),
+        // .cam_hsync_i      ( cam_hsync_i          ),
+        // .cam_vsync_i      ( cam_vsync_i          ),
 
-        .i2s_slave_sd0_i  ( i2s_slave_sd0_i      ),
-        .i2s_slave_sd1_i  ( i2s_slave_sd1_i      ),
-        .i2s_slave_ws_i   ( i2s_slave_ws_i       ),
-        .i2s_slave_ws_o   ( i2s_slave_ws_o       ),
-        .i2s_slave_ws_oe  ( i2s_slave_ws_oe      ),
-        .i2s_slave_sck_i  ( i2s_slave_sck_i      ),
-        .i2s_slave_sck_o  ( i2s_slave_sck_o      ),
-        .i2s_slave_sck_oe ( i2s_slave_sck_oe     ),
+        // .i2s_slave_sd0_i  ( i2s_slave_sd0_i      ),
+        // .i2s_slave_sd1_i  ( i2s_slave_sd1_i      ),
+        // .i2s_slave_ws_i   ( i2s_slave_ws_i       ),
+        // .i2s_slave_ws_o   ( i2s_slave_ws_o       ),
+        // .i2s_slave_ws_oe  ( i2s_slave_ws_oe      ),
+        // .i2s_slave_sck_i  ( i2s_slave_sck_i      ),
+        // .i2s_slave_sck_o  ( i2s_slave_sck_o      ),
+        // .i2s_slave_sck_oe ( i2s_slave_sck_oe     ),
 
-        .uart_rx_i        ( uart_rx              ),
-        .uart_tx_o        ( uart_tx              ),
+        // .uart_rx_i        ( uart_rx              ),
+        // .uart_tx_o        ( uart_tx              ),
 
-        .i2c_scl_i        ( i2c_scl_i            ),
-        .i2c_scl_o        ( i2c_scl_o            ),
-        .i2c_scl_oe       ( i2c_scl_oe_o         ),
-        .i2c_sda_i        ( i2c_sda_i            ),
-        .i2c_sda_o        ( i2c_sda_o            ),
-        .i2c_sda_oe       ( i2c_sda_oe_o         )
+        // .i2c_scl_i        ( i2c_scl_i            ),
+        // .i2c_scl_o        ( i2c_scl_o            ),
+        // .i2c_scl_oe       ( i2c_scl_oe_o         ),
+        // .i2c_sda_i        ( i2c_sda_i            ),
+        // .i2c_sda_o        ( i2c_sda_o            ),
+        // .i2c_sda_oe       ( i2c_sda_oe_o         )
 
     );
 
@@ -470,14 +624,17 @@ module soc_peripherals #(
     // ██║  ██║██║     ██████╔╝    ███████║╚██████╔╝╚██████╗    ╚██████╗   ██║   ██║  ██║███████╗ //
     // ╚═╝  ╚═╝╚═╝     ╚═════╝     ╚══════╝ ╚═════╝  ╚═════╝     ╚═════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝ //
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    if (NPAD != 64)
+    if (`N_IO > 64)
         $error("apb_soc_ctrl doesn't support any other value than NPAD=64");
-
+    if (`NBIT_PADMUX != 2)
+        $error("apb_soc_ctrl doesn't support any other value than NBIT_PADMUX=2");
+	logic [63:0][`NBIT_PADMUX-1:0]  s_pad_mux_local;
+	logic [63:0][`NBIT_PADCFG-1:0]  s_pad_cfg_local;
     apb_soc_ctrl #(
         .NB_CORES       ( NB_CORES       ),
         .NB_CLUSTERS    ( NB_CLUSTERS    ),
         .APB_ADDR_WIDTH ( APB_ADDR_WIDTH ),
-        .NBIT_PADCFG    ( NBIT_PADCFG    )
+        .NBIT_PADCFG    ( `NBIT_PADCFG    )
     ) i_apb_soc_ctrl (
         .HCLK                ( clk_i                  ),
         .HRESETn             ( rst_ni                 ),
@@ -499,12 +656,24 @@ module soc_peripherals #(
 
         .fc_bootaddr_o       ( fc_bootaddr_o          ),
         .fc_fetchen_o        ( fc_fetchen_o           ),
+        
+        // eFPGA connections
+        .clk_gating_dc_fifo_o     ( clk_gating_dc_fifo_efpga),
+        .reset_type1_efpga_o      ( reset_type1_efpga       ),
+        .enable_udma_efpga_o      ( enable_udma_efpga       ),
+        .enable_events_efpga_o    ( enable_events_efpga     ),
+        .enable_apb_efpga_o       ( enable_apb_efpga        ),
+        .enable_tcdm3_efpga_o     ( enable_tcdm3_efpga      ),
+        .enable_tcdm2_efpga_o     ( enable_tcdm2_efpga      ),
+        .enable_tcdm1_efpga_o     ( enable_tcdm1_efpga      ),
+        .enable_tcdm0_efpga_o     ( enable_tcdm0_efpga      ),
+        
 
         .soc_jtag_reg_i      ( soc_jtag_reg_i         ),
         .soc_jtag_reg_o      ( soc_jtag_reg_o         ),
 
-        .pad_mux             ( pad_mux_o              ),
-        .pad_cfg             ( pad_cfg_o              ),
+        .pad_mux_o           ( s_pad_mux_local              ),
+        .pad_cfg_o           ( s_pad_cfg_local              ),
         .cluster_pow_o       ( cluster_pow_o          ),
         .sel_hyper_axi_o     ( s_sel_hyper_axi        ),
 
@@ -514,7 +683,18 @@ module soc_peripherals #(
         .cluster_rstn_o           ( cluster_rstn_o         ),
         .cluster_irq_o            ( cluster_irq_o          )
     );
+    for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_mux_outer
+        for (genvar j = 0; j < `NBIT_PADMUX; j++) begin : gen_pad_mux_innter
+            assign pad_mux_o[i][j] = s_pad_mux_local[i][j];
+        end
+    end
 
+    for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_cfg_outer
+        for (genvar j = 0; j < `NBIT_PADCFG; j++) begin : gen_pad_cfg_inner
+            assign pad_cfg_o[i][j] = s_pad_cfg_local[i][j];
+        end
+    end
+	
     apb_adv_timer #(
         .APB_ADDR_WIDTH ( APB_ADDR_WIDTH ),
         .EXTSIG_NUM     ( 32             )
@@ -607,7 +787,137 @@ module soc_peripherals #(
         .event_hi_i ( s_timer_in_hi_event     ),
         .irq_lo_o   ( s_timer_lo_event        ),
         .irq_hi_o   ( s_timer_hi_event        ),
+	.stoptimer_i( stoptimer),
         .busy_o     (                         )
+    );
+    
+    ////////////////////////////////////////////////
+    //  ███████╗███████╗██████╗  ██████╗  █████╗  //
+    //  ██╔════╝██╔════╝██╔══██╗██╔════╝ ██╔══██╗ //
+    //  █████╗  █████╗  ██████╔╝██║  ███╗███████║ //
+    //  ██╔══╝  ██╔══╝  ██╔═══╝ ██║   ██║██╔══██║ //
+    //  ███████╗██║     ██║     ╚██████╔╝██║  ██║ //
+    //  ╚══════╝╚═╝     ╚═╝      ╚═════╝ ╚═╝  ╚═╝ //
+    ////////////////////////////////////////////////
+
+
+    logic fpga_clk1_int, fpga_clk2_int, sel_clk_mode;
+
+    //assign sel_clk_mode = selected_mode_i == MODE_FUNCTIONAL_ASIC;
+    assign sel_clk_mode = 1'b1;
+  
+    pulp_clock_mux2 clk_mux_efpga_clk_1_i (
+        .clk0_i    ( fpga_clk_1_i  ),
+        .clk1_i    ( efpga_clk_i   ),
+        .clk_sel_i ( sel_clk_mode  ),
+        .clk_o     ( fpga_clk1_int )
+    ); //clk1
+
+    pulp_clock_mux2 clk_mux_efpga_clk_2_i (
+        .clk0_i    ( fpga_clk_2_i     ),
+        .clk1_i    ( efpga_div_clk_i  ),
+        .clk_sel_i ( sel_clk_mode     ),
+        .clk_o     ( fpga_clk2_int    )
+    ); //clk2
+
+
+    efpga_subsystem
+    #(
+       .L2_ADDR_WIDTH             ( TCDM_EFPGA_ADDR_WIDTH                                           ),
+       .APB_HWCE_ADDR_WIDTH       ( APB_EFPGA_HWCE_ADDR_WIDTH                                       )
+    )
+    i_efpga_subsystem
+    (
+        .asic_clk_i              (  clk_i                                                           ),
+        .fpga_clk0_i             (  ref_clk_i                                                       ),
+        .fpga_clk1_i             (  fpga_clk1_int                                                   ),
+        .fpga_clk2_i             (  fpga_clk2_int                                                   ),
+        .fpga_clk3_i             (  fpga_clk_3_i                                                    ),
+        .fpga_clk4_i             (  fpga_clk_4_i                                                    ),
+        .fpga_clk5_i             (  fpga_clk_5_i                                                    ),
+
+        .efpga_clk_o             ( s_efpga_clk                                                      ),
+
+
+        .sel_clk_dc_fifo_efpga_i (  sel_clk_dc_fifo_efpga                                           ),
+        .clk_gating_dc_fifo_i    (  clk_gating_dc_fifo_efpga                                        ),
+        .reset_type1_efpga_i     (  reset_type1_efpga                                               ),
+        .enable_udma_efpga_i     ( enable_udma_efpga                                                ),
+        .enable_events_efpga_i   ( enable_events_efpga                                              ),
+        .enable_apb_efpga_i      ( enable_apb_efpga                                                 ),
+        .enable_tcdm3_efpga_i    ( enable_tcdm3_efpga                                               ),
+        .enable_tcdm2_efpga_i    ( enable_tcdm2_efpga                                               ),
+        .enable_tcdm1_efpga_i    ( enable_tcdm1_efpga                                               ),
+        .enable_tcdm0_efpga_i    ( enable_tcdm0_efpga                                               ),
+
+        .rst_n                   (  rst_ni                                                          ),
+
+        .udma_tx_lin_valid_i     ( efpga_udma_tx_lin_valid                                          ),
+        .udma_tx_lin_data_i      ( efpga_udma_tx_lin_data                                           ),
+        .udma_tx_lin_ready_o     ( efpga_udma_tx_lin_ready                                          ),
+        .udma_rx_lin_valid_o     ( efpga_udma_rx_lin_valid                                          ),
+        .udma_rx_lin_data_o      ( efpga_udma_rx_lin_data                                           ),
+        .udma_rx_lin_ready_i     ( efpga_udma_rx_lin_ready                                          ),
+        .udma_cfg_data_i         ( udma2efpga_cfg_data                                              ),
+        .udma_cfg_data_o         ( efpga2udma_cfg_data                                              ),
+
+        .l2_asic_tcdm_o          ( l2_efpga_tcdm_master                                             ),
+        .apbprogram_i            ( efpga_apbprogram_slave                                           ),
+        .apbt1_i                 ( efpga_apbt1_slave                                                ),
+
+        .fpgaio_oe_o          ( fpgaio_oe_o                                                     ),
+        .fpgaio_in_i        ( fpgaio_in_i                                                     ),
+        .fpgaio_out_o        ( fpgaio_out_o                                                    ),
+
+        .efpga_event_o            ( s_efpga_hwpe_events                                              ),
+
+         //eFPGA SPIS
+        .efpga_fcb_spis_rst_n_i       ( efpga_fcb_spis_rst_n_i                                      ),
+        .efpga_fcb_spis_mosi_i        ( efpga_fcb_spis_mosi_i                                       ),
+        .efpga_fcb_spis_cs_n_i        ( efpga_fcb_spis_cs_n_i                                       ),
+        .efpga_fcb_spis_clk_i         ( efpga_fcb_spis_clk_i                                        ),
+        .efpga_fcb_spi_mode_en_bo_i   ( efpga_fcb_spi_mode_en_bo_i                                  ),
+        .efpga_fcb_spis_miso_en_o     ( efpga_fcb_spis_miso_en_o                                    ),
+        .efpga_fcb_spis_miso_o        ( efpga_fcb_spis_miso_o                                       ),
+
+         //eFPGA TEST MODE
+        .efpga_STM_i                  ( efpga_STM_i                                                 ),
+        .efpga_test_fcb_pif_vldo_en_o ( efpga_test_fcb_pif_vldo_en_o                                ),
+        .efpga_test_fcb_pif_vldo_o    ( efpga_test_fcb_pif_vldo_o                                   ),
+        .efpga_test_fcb_pif_do_l_en_o ( efpga_test_fcb_pif_do_l_en_o                                ),
+        .efpga_test_fcb_pif_do_l_0_o  ( efpga_test_fcb_pif_do_l_0_o                                 ),
+        .efpga_test_fcb_pif_do_l_1_o  ( efpga_test_fcb_pif_do_l_1_o                                 ),
+        .efpga_test_fcb_pif_do_l_2_o  ( efpga_test_fcb_pif_do_l_2_o                                 ),
+        .efpga_test_fcb_pif_do_l_3_o  ( efpga_test_fcb_pif_do_l_3_o                                 ),
+        .efpga_test_fcb_pif_do_h_en_o ( efpga_test_fcb_pif_do_h_en_o                                ),
+        .efpga_test_fcb_pif_do_h_0_o  ( efpga_test_fcb_pif_do_h_0_o                                 ),
+        .efpga_test_fcb_pif_do_h_1_o  ( efpga_test_fcb_pif_do_h_1_o                                 ),
+        .efpga_test_fcb_pif_do_h_2_o  ( efpga_test_fcb_pif_do_h_2_o                                 ),
+        .efpga_test_fcb_pif_do_h_3_o  ( efpga_test_fcb_pif_do_h_3_o                                 ),
+        .efpga_test_FB_SPE_OUT_0_o    ( efpga_test_FB_SPE_OUT_0_o                                   ),
+        .efpga_test_FB_SPE_OUT_1_o    ( efpga_test_FB_SPE_OUT_1_o                                   ),
+        .efpga_test_FB_SPE_OUT_2_o    ( efpga_test_FB_SPE_OUT_2_o                                   ),
+        .efpga_test_FB_SPE_OUT_3_o    ( efpga_test_FB_SPE_OUT_3_o                                   ),
+        .efpga_test_fcb_pif_vldi_i    ( efpga_test_fcb_pif_vldi_i                                   ),
+        .efpga_test_fcb_pif_di_l_0_i  ( efpga_test_fcb_pif_di_l_0_i                                 ),
+        .efpga_test_fcb_pif_di_l_1_i  ( efpga_test_fcb_pif_di_l_1_i                                 ),
+        .efpga_test_fcb_pif_di_l_2_i  ( efpga_test_fcb_pif_di_l_2_i                                 ),
+        .efpga_test_fcb_pif_di_l_3_i  ( efpga_test_fcb_pif_di_l_3_i                                 ),
+        .efpga_test_fcb_pif_di_h_0_i  ( efpga_test_fcb_pif_di_h_0_i                                 ),
+        .efpga_test_fcb_pif_di_h_1_i  ( efpga_test_fcb_pif_di_h_1_i                                 ),
+        .efpga_test_fcb_pif_di_h_2_i  ( efpga_test_fcb_pif_di_h_2_i                                 ),
+        .efpga_test_fcb_pif_di_h_3_i  ( efpga_test_fcb_pif_di_h_3_i                                 ),
+        .efpga_test_FB_SPE_IN_0_i     ( efpga_test_FB_SPE_IN_0_i                                    ),
+        .efpga_test_FB_SPE_IN_1_i     ( efpga_test_FB_SPE_IN_1_i                                    ),
+        .efpga_test_FB_SPE_IN_2_i     ( efpga_test_FB_SPE_IN_2_i                                    ),
+        .efpga_test_FB_SPE_IN_3_i     ( efpga_test_FB_SPE_IN_3_i                                    ),
+        .efpga_test_M_0_i             ( efpga_test_M_0_i                                            ),
+        .efpga_test_M_1_i             ( efpga_test_M_1_i                                            ),
+        .efpga_test_M_2_i             ( efpga_test_M_2_i                                            ),
+        .efpga_test_M_3_i             ( efpga_test_M_3_i                                            ),
+        .efpga_test_M_4_i             ( efpga_test_M_4_i                                            ),
+        .efpga_test_M_5_i             ( efpga_test_M_5_i                                            ),
+        .efpga_test_MLATCH_i          ( efpga_test_MLATCH_i                                         )
     );
 
 `ifdef PULP_TRAINING

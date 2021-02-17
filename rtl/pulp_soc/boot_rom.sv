@@ -75,7 +75,7 @@ module boot_rom #(
             .T_WBT          ( 1'b0                  ),
             .MA_SAWL        ( '0                    ),
             .MA_WL          ( 1'b0                  ),
-            .Q              (  mem_slave.r_data     ),
+            .Q              (  mem_slave.r_rdata     ),
             .T_SO           (                       )
         );
 
