@@ -50,8 +50,8 @@ apb/apb2apbcomp:
     group: null
     server: null
 apb_interrupt_cntrl:
-  commit: cv32int
-  group: QuickLogic-Corp  
+  commit: master
+  group: Quicklogic-Corp
   domain: [soc]
 axi/axi:
   commit: v0.24.1
@@ -66,8 +66,8 @@ axi/axi_slice_dc:
   commit: v1.1.3
   domain: [cluster, soc]
 timer_unit:
-  commit: stoptimer
-  group: QuickLogic-Corp  
+  commit: master
+  group: QuickLogic-Corp
   domain: [cluster, soc]
 fpnew:
   commit: v0.6.5

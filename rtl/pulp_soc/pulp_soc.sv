@@ -408,7 +408,6 @@ input  logic [1:0]                    selected_mode_i,
     logic                  s_soc_clk;
     logic                  s_soc_rstn;
     logic                  s_cluster_clk;
-    logic                  s_efpga_clk, s_efpga_div_clk;
     logic                  s_cluster_rstn;
     logic                  s_cluster_rstn_soc_ctrl;
     logic                  s_sel_fll_clk;
@@ -524,6 +523,7 @@ input  logic [1:0]                    selected_mode_i,
     XBAR_TCDM_BUS s_lint_fc_data_bus ();
     XBAR_TCDM_BUS s_lint_fc_instr_bus ();
     XBAR_TCDM_BUS s_lint_hwpe_bus[NB_HWPE_PORTS-1:0]();
+
     XBAR_TCDM_BUS s_lint_efpga_bus[`N_EFPGA_TCDM_PORTS-1:0]();
     XBAR_TCDM_BUS s_lint_efpga_apbprogram_bus();
     XBAR_TCDM_BUS s_lint_efpga_apbt1_bus();
@@ -629,8 +629,6 @@ input  logic [1:0]                    selected_mode_i,
 
         .clk_i                  ( s_soc_clk              ),
         .periph_clk_i           ( s_periph_clk           ),
-        .efpga_clk_i            ( s_efpga_clk            ),
-        .efpga_div_clk_i        ( s_efpga_div_clk        ),
         .rst_ni                 ( s_soc_rstn             ),
         .sel_fll_clk_i          ( s_sel_fll_clk          ),
         .ref_clk_i              ( ref_clk_i              ),
@@ -899,7 +897,7 @@ input  logic [1:0]                    selected_mode_i,
         .rstn_soc_sync_o            ( s_soc_rstn                    ),
         .rstn_cluster_sync_o        ( s_cluster_rstn                ),
 
-        .clk_cluster_o              ( s_efpga_clk                 ),
+        .clk_cluster_o              ( s_cluster_clk                 ),
         .test_mode_i                ( dft_test_mode_i               ),
         .shift_enable_i             ( 1'b0                          ),
 
