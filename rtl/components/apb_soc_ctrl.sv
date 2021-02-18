@@ -41,6 +41,8 @@
 `define REG_PADCFG13    7'b0010101 //BASEADDR+0x54 sets config for pin 52(bits [7:0]) to pin 55(bits [31:24])
 `define REG_PADCFG14    7'b0010110 //BASEADDR+0x58 sets config for pin 56(bits [7:0]) to pin 59(bits [31:24])
 `define REG_PADCFG15    7'b0010111 //BASEADDR+0x5C sets config for pin 60(bits [7:0]) to pin 63(bits [31:24])
+`define REG_WCFGFUN     7'b0011000 // BASEADDR+0x60  Sets mux and cfg control for specifed iopad
+`define REG_RCFGFUN     7'b0011001 // BASEADDR+0x64  reads mux and cfg control for specifed iopad  
 
 `define REG_JTAGREG     7'b0011101 //BASEADDR+0x74 JTAG REG
 
@@ -66,11 +68,14 @@
 //`define MSG_VERBOSE
 
 module apb_soc_ctrl #(
-    parameter int unsigned APB_ADDR_WIDTH = 12,  // APB slaves are 4KB by default
-    parameter int unsigned NB_CLUSTERS    = 0,   // N_CLUSTERS
-    parameter int unsigned NB_CORES       = 4,   // N_CORES
-    parameter int unsigned JTAG_REG_SIZE  = 8,
-    parameter int unsigned NBIT_PADCFG    = 6
+    parameter int unsigned APB_ADDR_WIDTH = 12, // APB slaves are 4KB by default
+    parameter int unsigned NB_CLUSTERS = 0, // N_CLUSTERS
+    parameter int unsigned NB_CORES = 4, // N_CORES
+    parameter int unsigned JTAG_REG_SIZE = 8,
+    parameter int unsigned NBIT_PADCFG = 6,
+    parameter int unsigned NBIT_PADMUX = 2,
+    parameter int unsigned N_IO = 64,
+    parameter int unsigned IO_IDX_WIDTH = 6
 ) (
     input  logic                      HCLK,
     input  logic                      HRESETn,
@@ -89,8 +94,8 @@ module apb_soc_ctrl #(
     input  logic                      fc_fetch_en_valid_i,
     input  logic                      fc_fetch_en_i,
 
-    output logic         [63:0] [NBIT_PADCFG-1:0] pad_cfg_o,
-    output logic         [63:0] [1:0] pad_mux_o,
+    output logic         [N_IO-1:0] [NBIT_PADCFG-1:0] pad_cfg_o,
+    output logic         [N_IO-1:0] [NBIT_PADMUX-1:0] pad_mux_o,
 
     input  logic                [JTAG_REG_SIZE-1:0] soc_jtag_reg_i,
     output logic                [JTAG_REG_SIZE-1:0] soc_jtag_reg_o,
@@ -117,17 +122,21 @@ module apb_soc_ctrl #(
     output logic                      cluster_irq_o
     );
 
-   logic     [31:0] r_pwr_reg;
-   logic     [31:0] r_corestatus;
+   logic [IO_IDX_WIDTH-1:0]     r_io_pad;
+   
+
+   logic [31:0]     r_pwr_reg;
+   logic [31:0]     r_corestatus;
 
 
    logic      [6:0] s_apb_addr;
 
-   logic     [15:0] n_cores;
-   logic     [15:0] n_clusters;
-
-   logic     [63:0] r_pad_fun0;
-   logic     [63:0] r_pad_fun1;
+   logic [15:0]     n_cores;
+   logic [15:0]     n_clusters;
+   logic [N_IO-1:0] [NBIT_PADMUX-1:0] r_padmux;
+   
+   logic [63:0] 		  r_pad_fun0;
+   logic [63:0] 		  r_pad_fun1;
 
    logic     [63:0] r_cluster_boot;
    logic            r_cluster_fetch_enable;
@@ -156,6 +165,8 @@ module apb_soc_ctrl #(
                                           
    logic s_apb_write;
 
+   assign pad_mux_o = r_padmux;
+   
    // sanity check on NBIT_PADCFG
    if (NBIT_PADCFG > 8 || NBIT_PADCFG < 3)
        $error("apb_soc_ctrl NBIT_PADCFG out of range. This won't work.");
@@ -206,13 +217,13 @@ module apb_soc_ctrl #(
 
   assign {enable_udma_efpga_o, enable_events_efpga_o, enable_apb_efpga_o, enable_tcdm3_efpga_o, enable_tcdm2_efpga_o, enable_tcdm1_efpga_o, enable_tcdm0_efpga_o} = r_enable_inout_efpga[5:0];
                                                   
-   always_comb begin
-     for (int i=0;i<64;i++)
-     begin
-       pad_mux_o[i][0]  = r_pad_fun0[i];
-       pad_mux_o[i][1]  = r_pad_fun1[i];
-     end
-   end
+//   always_comb begin
+//     for (int i=0;i<64;i++)
+//     begin
+//       pad_mux_o[i][0]  = r_pad_fun0[i];
+//       pad_mux_o[i][1]  = r_pad_fun1[i];
+//     end
+//   end
 
 
    assign s_apb_addr = PADDR[8:2];
@@ -220,6 +231,8 @@ module apb_soc_ctrl #(
     always_ff @(posedge HCLK, negedge HRESETn)
     begin
       if(~HRESETn) begin
+	 r_io_pad <= '0;
+	 r_padmux <= '0;
         r_corestatus           <= '0;
         r_pwr_reg              <= '0;
         r_pad_fun0             <= '0;
@@ -268,24 +281,28 @@ module apb_soc_ctrl #(
                 `REG_PADFUN0:
                 for (int i=0;i<16;i++)
                 begin
+		   r_padmux[i] <= {PWDATA[(i*2)+1],PWDATA[(i*2)]};
                   r_pad_fun0[i] <= PWDATA[i*2];
                   r_pad_fun1[i] <= PWDATA[i*2+1];
                 end
                `REG_PADFUN1:
                 for (int i=0;i<16;i++)
-                begin
+                  begin
+     		   r_padmux[16+i] <= {PWDATA[(i*2)+1],PWDATA[(i*2)]};
                   r_pad_fun0[16+i] <= PWDATA[i*2];
                   r_pad_fun1[16+i] <= PWDATA[i*2+1];
                 end
                 `REG_PADFUN2:
                 for (int i=0;i<16;i++)
-                begin
+                  begin
+		     r_padmux[32+i] <= {PWDATA[(i*2)+1],PWDATA[(i*2)]};
                   r_pad_fun0[32+i] <= PWDATA[i*2];
                   r_pad_fun1[32+i] <= PWDATA[i*2+1];
                 end
                 `REG_PADFUN3:
                 for (int i=0;i<16;i++)
-                begin
+                  begin
+		     r_padmux[48+i] <= {PWDATA[(i*2)+1],PWDATA[(i*2)]};
                   r_pad_fun0[48+i] <= PWDATA[i*2];
                   r_pad_fun1[48+i] <= PWDATA[i*2+1];
                 end
@@ -401,7 +418,16 @@ module apb_soc_ctrl #(
                   pad_cfg_o[62]        <= PWDATA[16 +: NBIT_PADCFG-1]; //
                   pad_cfg_o[63]        <= PWDATA[24 +: NBIT_PADCFG-1]; //
                 end
-                `REG_JTAGREG:
+                `REG_WCFGFUN: begin
+		   r_io_pad <= PWDATA[0 +: IO_IDX_WIDTH];
+		   pad_cfg_o[PWDATA[0 +: NBIT_PADCFG]] <= PWDATA[24 +: NBIT_PADCFG];
+		   r_padmux[PWDATA[0 +: NBIT_PADCFG]] <= PWDATA[16 +: NBIT_PADMUX];
+		   
+		end
+	    `REG_RCFGFUN: begin
+	       r_io_pad <= PWDATA[0 +: IO_IDX_WIDTH];
+	    end
+	        `REG_JTAGREG:
                 begin
                   r_jtag_rego   <= PWDATA[JTAG_REG_SIZE-1:0];
                 end
@@ -464,27 +490,36 @@ module apb_soc_ctrl #(
         case (s_apb_addr)
           `REG_PADFUN0:
               for (int i=0;i<16;i++)
-              begin
-                PRDATA[i*2]   = r_pad_fun0[i];
-                PRDATA[i*2+1] = r_pad_fun1[i];
+		begin
+
+//		   PRDATA[(i*2)+1:i*2] = r_padmux[i] ;
+		   
+                PRDATA[i*2]   = r_padmux[i][0];
+                PRDATA[i*2+1] = r_padmux[i][1];
               end
           `REG_PADFUN1:
               for (int i=0;i<16;i++)
-              begin
-                PRDATA[i*2]   = r_pad_fun0[16+i];
-                PRDATA[i*2+1] = r_pad_fun1[16+i];
+		begin
+//		   PRDATA[(i*2)+1:i*2] = r_padmux[16+i] ;
+		   
+                PRDATA[i*2]   = r_padmux[16+i][0];
+                PRDATA[i*2+1] = r_padmux[16+i][1];
               end
           `REG_PADFUN2:
               for (int i=0;i<16;i++)
-              begin
-                PRDATA[i*2]   = r_pad_fun0[32+i];
-                PRDATA[i*2+1] = r_pad_fun1[32+i];
+		begin
+//		   PRDATA[(i*2)+1:i*2] = r_padmux[32+i] ;
+		   
+                PRDATA[i*2]   = r_padmux[32+i][0];
+                PRDATA[i*2+1] = r_padmux[32+i][1];
               end
           `REG_PADFUN3:
               for (int i=0;i<16;i++)
-              begin
-                PRDATA[i*2]   = r_pad_fun0[48+i];
-                PRDATA[i*2+1] = r_pad_fun1[48+i];
+		begin
+//		   PRDATA[(i*2)+1:i*2] = r_padmux[32+i] ;
+		   
+                PRDATA[i*2]   = r_padmux[48+i][0];
+                PRDATA[i*2+1] = r_padmux[48+i][1];
               end
           `REG_PADCFG0:
               for (int i=0; i<4; i++) begin
@@ -550,6 +585,16 @@ module apb_soc_ctrl #(
               for (int i=0; i<4; i++) begin
                   PRDATA[i*8 +: NBIT_PADCFG-1] = pad_cfg_o[i+60];
               end
+	  `REG_WCFGFUN : begin
+	     PRDATA[0 +: IO_IDX_WIDTH]  = r_io_pad;
+	     PRDATA[16 +: NBIT_PADMUX] = r_padmux[r_io_pad];
+	     PRDATA[24 +: NBIT_PADCFG] = pad_cfg_o[r_io_pad];
+	  end
+	  `REG_RCFGFUN : begin
+	     PRDATA[0 +: IO_IDX_WIDTH]  = r_io_pad;
+	     PRDATA[16 +: NBIT_PADMUX] = r_padmux[r_io_pad];
+	     PRDATA[24 +: NBIT_PADCFG] = pad_cfg_o[r_io_pad];
+	  end
           `REG_FCBOOT:
             PRDATA = r_bootaddr;
           `REG_INFO:
