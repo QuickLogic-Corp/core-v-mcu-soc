@@ -241,7 +241,7 @@ module soc_peripherals #(
     logic [31:0] s_gpio_sync;
     logic       s_sel_hyper_axi;
 
-    logic       s_gpio_event      ;
+    logic [`N_GPIO-1:0]      s_gpio_event      ;
     logic [1:0] s_spim_event      ;
     logic       s_uart_event      ;
     logic       s_i2c_event       ;
@@ -345,6 +345,8 @@ module soc_peripherals #(
     assign fc_events_o[31]  = s_fc_hp_events[1];
 */
     assign s_events[UDMA_EVENTS-1:0]  = s_udma_events;
+    assign s_events[`N_GPIO+63:64] = s_gpio_event;
+   
     assign s_events[135]              = s_adv_timer_events[0];
     assign s_events[136]              = s_adv_timer_events[1];
     assign s_events[137]              = s_adv_timer_events[2];
@@ -481,10 +483,8 @@ module soc_peripherals #(
     // ╚═╝  ╚═╝╚═╝     ╚═════╝      ╚═════╝ ╚═╝     ╚═╝ ╚═════╝  //
     ///////////////////////////////////////////////////////////////
 
-    apb_gpio #(
-        .APB_ADDR_WIDTH (APB_ADDR_WIDTH),
-        .PAD_NUM        (`N_GPIO),
-        .NBIT_PADCFG    (`NBIT_PADCFG)
+    apb_gpiov2 #(
+        .APB_ADDR_WIDTH (APB_ADDR_WIDTH)
     ) i_apb_gpio (
         .HCLK            ( clk_i              ),
         .HRESETn         ( rst_ni             ),
@@ -505,7 +505,6 @@ module soc_peripherals #(
         .gpio_in         ( gpio_in_i          ),
         .gpio_out        ( gpio_out_o         ),
         .gpio_dir        ( gpio_oe_o          ),
-        .gpio_padcfg     (                    ),
         .interrupt       ( s_gpio_event       )
     );
 
