@@ -195,7 +195,7 @@ module fc_subsystem #(
             .apu_master_result_i   ( '0                ),
             .apu_master_flags_i    ( '0                ),
 
-            .irq_i                 ( irq_o     ),
+            .irq_i                 ( core_irq_x     ),
             .irq_id_i              ( core_irq_id       ),
             .irq_ack_o             ( core_irq_ack      ),
             .irq_id_o              ( core_irq_ack_id   ),
@@ -256,7 +256,7 @@ module fc_subsystem #(
              .apu_result_i          ( '0                ),
              .apu_flags_i           ( '0                ),
 
-             .irq_i                 ( core_irq_x        ),
+             .irq_i                 ( irq_o        ),
              .irq_ack_o             ( core_irq_ack      ),
              .irq_id_o              ( core_irq_ack_id   ),
 
