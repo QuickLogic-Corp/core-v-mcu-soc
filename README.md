@@ -1,6 +1,4 @@
-# pulp_soc
+# core-v-mcu-soc
 
-The `pulp_soc` repository contains the structure of the SoC microcontroller
-subsystem used in PULPissimo (single-core) and PULP (multi-core) chips.
-For more details on the internal architecture, see the README.md in the
-`pulpissimo` repository.
+The `core-v-mcu-soc` repository contains the structure of the SoC microcontroller
+subsystem used in the core-v-mcu which is a derivative of the pulpissimo device from pulp_soc repo
