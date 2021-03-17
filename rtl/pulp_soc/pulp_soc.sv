@@ -242,11 +242,7 @@ module pulp_soc import dm::*; #(
     //      To EFPGA                                 //
     ///////////////////////////////////////////////////
 input  logic [1:0]                    selected_mode_i,
-    input  logic                          fpga_clk_1_i,
-    input  logic                          fpga_clk_2_i,
-    input  logic                          fpga_clk_3_i,
-    input  logic                          fpga_clk_4_i,
-    input  logic                          fpga_clk_5_i,
+    input  logic [5:0]                         fpga_clk_in,
 
     //eFPGA SPIS
     input  logic                          efpga_fcb_spis_rst_n_i    ,
@@ -525,7 +521,6 @@ input  logic [1:0]                    selected_mode_i,
     XBAR_TCDM_BUS s_lint_hwpe_bus[NB_HWPE_PORTS-1:0]();
 
     XBAR_TCDM_BUS s_lint_efpga_bus[`N_EFPGA_TCDM_PORTS-1:0]();
-    XBAR_TCDM_BUS s_lint_efpga_apbprogram_bus();
     XBAR_TCDM_BUS s_lint_efpga_apbt1_bus();
 
     `ifdef REMAP_ADDRESS
@@ -657,8 +652,7 @@ input  logic [1:0]                    selected_mode_i,
         .l2_tx_master           ( s_lint_udma_tx_bus     ),
         
         .l2_efpga_tcdm_master    ( s_lint_efpga_bus       ),
-        .efpga_apbprogram_slave  ( s_lint_efpga_apbprogram_bus 	),
-        .efpga_apbt1_slave       ( s_lint_efpga_apbt1_bus      	),
+        .efpga_apbt1_slave       (s_lint_efpga_apbt1_bus      	),
 
         .soc_jtag_reg_i         ( soc_jtag_reg_tap       ),
         .soc_jtag_reg_o         ( soc_jtag_reg_soc       ),
@@ -738,11 +732,7 @@ input  logic [1:0]                    selected_mode_i,
         // .sddata_oen_o           ( sdio_data_oen_o        ),
         
         // other FPGA signals
-        .fpga_clk_1_i                 ( fpga_clk_1_i                 ),
-        .fpga_clk_2_i                 ( fpga_clk_2_i                 ),
-        .fpga_clk_3_i                 ( fpga_clk_3_i                 ),
-        .fpga_clk_4_i                 ( fpga_clk_4_i                 ),
-        .fpga_clk_5_i                 ( fpga_clk_5_i                 ),
+        .fpga_clk_in                 ( fpga_clk_in),
 
          //eFPGA SPIS
         .efpga_fcb_spis_rst_n_i       ( efpga_fcb_spis_rst_n_i       ),
@@ -948,7 +938,6 @@ input  logic [1:0]                    selected_mode_i,
         .axi_master_plug        ( s_data_in_bus       ),
         .axi_slave_plug         ( s_data_out_bus      ),
         .apb_peripheral_bus     ( s_apb_periph_bus    ),
-        .tcdm_efpga_apbprogram  ( s_lint_efpga_apbprogram_bus ),
         .tcdm_efpga_apbt1       ( s_lint_efpga_apbt1_bus      ),
         .l2_interleaved_slaves  ( s_mem_l2_bus        ),
         .l2_private_slaves      ( s_mem_l2_pri_bus    ),

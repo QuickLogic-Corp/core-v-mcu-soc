@@ -161,7 +161,7 @@ module apb_soc_ctrl #(
    logic [5:0]      r_sel_clk_dc_fifo_onehot;
    logic            r_clk_gating_dc_fifo;
    logic [3:0]      r_reset_type1_efpga;
-   logic [5:0]      r_enable_inout_efpga;
+   logic [6:0]      r_enable_inout_efpga;
                                           
    logic s_apb_write;
 
@@ -215,7 +215,7 @@ module apb_soc_ctrl #(
 
   assign reset_type1_efpga_o  = r_reset_type1_efpga;
 
-  assign {enable_udma_efpga_o, enable_events_efpga_o, enable_apb_efpga_o, enable_tcdm3_efpga_o, enable_tcdm2_efpga_o, enable_tcdm1_efpga_o, enable_tcdm0_efpga_o} = r_enable_inout_efpga[5:0];
+  assign {enable_udma_efpga_o, enable_events_efpga_o, enable_apb_efpga_o, enable_tcdm3_efpga_o, enable_tcdm2_efpga_o, enable_tcdm1_efpga_o, enable_tcdm0_efpga_o} = r_enable_inout_efpga[6:0];
                                                   
 //   always_comb begin
 //     for (int i=0;i<64;i++)
@@ -469,7 +469,7 @@ module apb_soc_ctrl #(
                     //4: APB
                     //5: EVENTS
                     //6: uDMA
-                    r_enable_inout_efpga     <= PWDATA[5:0];
+                    r_enable_inout_efpga     <= PWDATA[6:0];
                 
                 default: begin
                 `ifndef SYNTHESIS
@@ -633,7 +633,7 @@ module apb_soc_ctrl #(
           `RESET_TYPE1_EFPGA:
             PRDATA = {28'b0, r_reset_type1_efpga};
           `ENABLE_IN_OUT_EFPGA:
-            PRDATA = {26'b0, r_enable_inout_efpga};                 
+            PRDATA = {25'b0, r_enable_inout_efpga};                 
           default:
             begin
             PRDATA = 'h0;

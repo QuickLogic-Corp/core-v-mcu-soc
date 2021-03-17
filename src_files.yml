@@ -100,7 +100,7 @@ efpga_subsystem:
   ]
   files: [
     rtl/efpga_subsystem/efpga_subsystem.sv,
-    rtl/efpga_subsystem/apb_efpga_hwce.sv,
-    rtl/efpga_subsystem/dc_accelerator_fsm.sv,
-    rtl/efpga_subsystem/efpga_sel_clk_dc_fifo.sv,
+#    rtl/efpga_subsystem/apb_efpga_hwce.sv,
+#    rtl/efpga_subsystem/dc_accelerator_fsm.sv,
+#    rtl/efpga_subsystem/efpga_sel_clk_dc_fifo.sv,
   ]
