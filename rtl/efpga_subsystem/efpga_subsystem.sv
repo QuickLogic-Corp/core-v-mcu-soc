@@ -177,7 +177,7 @@ module efpga_subsystem
 
 
    XBAR_TCDM_BUS                                  apbt1_int();
-   logic                                              s_lint_VALID, s_lint_GNT, s_lint_REQ;
+(* mark_debug = "yes" *)   logic                                              s_lint_VALID, s_lint_GNT, s_lint_REQ;
    
    
    logic                                              s_efpga_clk;
@@ -324,6 +324,21 @@ module efpga_subsystem
       end
     endgenerate
 
+   logic [3:0] d_lint_GNT;
+   always @ (posedge asic_clk_i or negedge rst_n) begin
+      if (rst_n == 0) begin
+         d_lint_GNT <= 0;
+         end
+      else begin
+         if (apbt1_i.req == 0)
+           d_lint_GNT <= '0;
+         else
+           d_lint_GNT <= {d_lint_GNT[2:0],apbt1_i.req};
+         
+//           d_lint_GNT <= {((apbt1_i.req & ~apbt1_i.wen & s_lint_GNT) | d_lint_GNT[0]),s_lint_GNT};
+      end 
+      end
+   
   `ifndef SYNTHESIS
     assign #1 event_gate      = s_event & {`N_EFPGA_EVENTS{enable_events_efpga_i}};
   `else
@@ -331,8 +346,8 @@ module efpga_subsystem
   `endif
     assign apbt1_i.r_valid = enable_apb_efpga_i ? 
                                s_lint_VALID : 1; // always valid if not enabled
-   assign apbt1_i.gnt    = enable_apb_efpga_i ? s_lint_GNT : apbt1_i.req;   // always granted if not enabled
-   assign s_lint_REQ = enable_apb_efpga_i ? apbt1_i.req : 0;
+   assign apbt1_i.gnt    = enable_apb_efpga_i ? d_lint_GNT[3] & s_lint_GNT : apbt1_i.req;   // always granted if not enabled
+   assign s_lint_REQ = enable_apb_efpga_i ? apbt1_i.req & ~(d_lint_GNT[0] | d_lint_GNT[1]) : 0;
    
     assign tcdm_req_fpga_gated[3]  = enable_tcdm3_efpga_i &  tcdm_req_fpga[3];
     assign tcdm_req_fpga_gated[2]  = enable_tcdm1_efpga_i &  tcdm_req_fpga[2];
