@@ -467,7 +467,7 @@ fcb U_fcb(
     .fcb_spi_master_en   (0)
 );
    
-      eFPGA_wrapper eFPGA_wrapper
+      eFPGA_wrapper1 eFPGA_wrapper
         (
          
          //Outputs
