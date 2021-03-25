@@ -254,8 +254,8 @@ module apb_soc_ctrl #(
                 APB_fsm <= FSM_READ;
            end
            FSM_WRITE: begin
-              PREADY = 1;
-              APB_fsm = FSM_WAIT;
+              PREADY <= 1;
+              APB_fsm <= FSM_WAIT;
               casex (PADDR[11:0])
                 `REG_FCBOOT:
                   r_bootaddr <= PWDATA;
@@ -357,7 +357,7 @@ module apb_soc_ctrl #(
               endcase // case (PADDR[11:0])
               if (PADDR[11:10] == 2'b01) begin
                  PRDATA <= 32'b0;
-                 r_io_pad = PADDR[2 +: IDX_WIDTH];
+                 r_io_pad <= PADDR[2 +: IDX_WIDTH];
                  if (PADDR[9:2] < `N_IO) begin
                     PRDATA[8 +: `NBIT_PADCFG] <= pad_cfg_o[PADDR[9:2]];
                     PRDATA[0 +: `NBIT_PADMUX] <=  r_padmux[PADDR[9:2]];
