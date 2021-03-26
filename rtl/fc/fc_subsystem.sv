@@ -43,7 +43,7 @@ module fc_subsystem #(
     input logic [EVENT_ID_WIDTH-1:0] event_fifo_data_i, // goes indirectly to core interrupt
     input logic [31:0] 		     events_i, // goes directly to core interrupt, should be called irqs
     output logic [1:0] 		     hwpe_events_o,
-    output logic 		     stoptimer,
+    output logic 		     stoptimer_o,
     output logic 		     supervisor_mode_o
 );
 
@@ -263,7 +263,7 @@ module fc_subsystem #(
              .debug_req_i           ( debug_req_i       ),
              .debug_havereset_o     (                   ),
              .debug_running_o       (                   ),
-             .debug_halted_o        ( stoptimer         ),
+             .debug_halted_o        ( stoptimer_o         ),
              .fetch_enable_i        ( fetch_en_int      ),
              .core_sleep_o          (                   )
          );

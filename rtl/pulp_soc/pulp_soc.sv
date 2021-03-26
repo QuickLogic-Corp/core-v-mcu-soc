@@ -379,7 +379,7 @@ input  logic [1:0]                    selected_mode_i,
     //***************** SIGNALS DECLARATION ******************
     //********************************************************
 
-   logic stoptimer;
+   logic s_stoptimer;
    
     logic [ 1:0]           s_fc_hwpe_events;
     logic [31:0]           s_fc_events;
@@ -637,7 +637,7 @@ input  logic [1:0]                    selected_mode_i,
         .dft_test_mode_i        ( dft_test_mode_i        ),
         .dft_cg_enable_i        ( 1'b0                   ),
 
-	.stoptimer (stoptimer),		 
+        .stoptimer_i (s_stoptimer),		 
         .boot_l2_i              ( boot_l2_i              ),
         .bootsel_i              ( bootsel_i              ),
 
@@ -878,7 +878,7 @@ input  logic [1:0]                    selected_mode_i,
         .apb_slave_eu        ( s_apb_eu_bus        ),
         .apb_slave_hwpe      ( s_apb_hwpe_bus      ),
         .debug_req_i         ( dm_debug_req[FC_CORE_MHARTID] ),
-	.stoptimer (stoptimer),
+        .stoptimer_o        ( s_stoptimer),
         .event_fifo_valid_i  ( s_fc_event_valid    ),
         .event_fifo_fulln_o  ( s_fc_event_ready    ),
         .event_fifo_data_i   ( s_fc_event_data     ),
