@@ -623,12 +623,6 @@ module soc_peripherals #(
     // ██║  ██║██║     ██████╔╝    ███████║╚██████╔╝╚██████╗    ╚██████╗   ██║   ██║  ██║███████╗ //
     // ╚═╝  ╚═╝╚═╝     ╚═════╝     ╚══════╝ ╚═════╝  ╚═════╝     ╚═════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝ //
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    if (`N_IO > 64)
-        $error("apb_soc_ctrl doesn't support any other value than NPAD=64");
-    if (`NBIT_PADMUX != 2)
-        $error("apb_soc_ctrl doesn't support any other value than NBIT_PADMUX=2");
-		logic [`N_IO:0][`NBIT_PADMUX-1:0]  s_pad_mux_local;
-		logic [`N_IO:0][`NBIT_PADCFG-1:0]  s_pad_cfg_local;
     apb_soc_ctrl #(
         .NB_CORES       ( NB_CORES       ),
         .NB_CLUSTERS    ( NB_CLUSTERS    ),
@@ -671,8 +665,8 @@ module soc_peripherals #(
         .soc_jtag_reg_i      ( soc_jtag_reg_i         ),
         .soc_jtag_reg_o      ( soc_jtag_reg_o         ),
 
-        .pad_mux_o           ( s_pad_mux_local              ),
-        .pad_cfg_o           ( s_pad_cfg_local              ),
+        .pad_mux_o           ( pad_mux_o              ),
+        .pad_cfg_o           ( pad_cfg_o              ),
         .cluster_pow_o       ( cluster_pow_o          ),
         .sel_hyper_axi_o     ( s_sel_hyper_axi        ),
 
@@ -682,17 +676,6 @@ module soc_peripherals #(
         .cluster_rstn_o           ( cluster_rstn_o         ),
         .cluster_irq_o            ( cluster_irq_o          )
     );
-    for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_mux_outer
-        for (genvar j = 0; j < `NBIT_PADMUX; j++) begin : gen_pad_mux_innter
-            assign pad_mux_o[i][j] = s_pad_mux_local[i][j];
-        end
-    end
-
-    for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_cfg_outer
-        for (genvar j = 0; j < `NBIT_PADCFG; j++) begin : gen_pad_cfg_inner
-            assign pad_cfg_o[i][j] = s_pad_cfg_local[i][j];
-        end
-    end
 	
     apb_adv_timer #(
         .APB_ADDR_WIDTH ( APB_ADDR_WIDTH ),
