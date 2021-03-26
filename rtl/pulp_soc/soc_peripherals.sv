@@ -627,8 +627,8 @@ module soc_peripherals #(
         $error("apb_soc_ctrl doesn't support any other value than NPAD=64");
     if (`NBIT_PADMUX != 2)
         $error("apb_soc_ctrl doesn't support any other value than NBIT_PADMUX=2");
-	logic [63:0][`NBIT_PADMUX-1:0]  s_pad_mux_local;
-	logic [63:0][`NBIT_PADCFG-1:0]  s_pad_cfg_local;
+		logic [`N_IO:0][`NBIT_PADMUX-1:0]  s_pad_mux_local;
+		logic [`N_IO:0][`NBIT_PADCFG-1:0]  s_pad_cfg_local;
     apb_soc_ctrl #(
         .NB_CORES       ( NB_CORES       ),
         .NB_CLUSTERS    ( NB_CLUSTERS    ),
