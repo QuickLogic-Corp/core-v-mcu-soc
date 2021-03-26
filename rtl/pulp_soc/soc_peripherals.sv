@@ -35,7 +35,7 @@ module soc_peripherals #(
     output logic                       fc_fetchen_o,
     input  logic [7:0]                 soc_jtag_reg_i,
     output logic [7:0]                 soc_jtag_reg_o,
-    input logic 			      stoptimer,
+    input logic                        stoptimer_i,
     input  logic                       boot_l2_i,
     input  logic                       bootsel_i,
     // fc fetch enable can be controlled through this signal or through an APB
@@ -769,6 +769,14 @@ module soc_peripherals #(
         .pr_event_ready_i ( s_pr_event_ready           )
     );
 
+    /////////////////////////////////////////////////////////////////////////
+    //  █████╗ ██████╗ ██████╗     ████████╗██╗███╗   ███╗███████╗██████╗  //
+    // ██╔══██╗██╔══██╗██╔══██╗    ╚══██╔══╝██║████╗ ████║██╔════╝██╔══██╗ //
+    // ███████║██████╔╝██████╔╝       ██║   ██║██╔████╔██║█████╗  ██████╔╝ //
+    // ██╔══██║██╔═══╝ ██╔══██╗       ██║   ██║██║╚██╔╝██║██╔══╝  ██╔══██╗ //
+    // ██║  ██║██║     ██████╔╝       ██║   ██║██║ ╚═╝ ██║███████╗██║  ██║ //
+    // ╚═╝  ╚═╝╚═╝     ╚═════╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ //
+    /////////////////////////////////////////////////////////////////////////
 
     apb_timer_unit #(.APB_ADDR_WIDTH(APB_ADDR_WIDTH)) i_apb_timer_unit (
         .HCLK       ( clk_i                   ),
@@ -786,7 +794,7 @@ module soc_peripherals #(
         .event_hi_i ( s_timer_in_hi_event     ),
         .irq_lo_o   ( s_timer_lo_event        ),
         .irq_hi_o   ( s_timer_hi_event        ),
-	.stoptimer_i( stoptimer),
+        .stoptimer_i( stoptimer_i             ),
         .busy_o     (                         )
     );
     
