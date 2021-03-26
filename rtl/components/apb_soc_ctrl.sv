@@ -381,6 +381,6 @@ module apb_soc_ctrl #(
    assign n_clusters = NB_CLUSTERS;
    
    
-   assign PSLVERR    = 1'b0;
+   // assign PSLVERR    = 1'b0;
    
 endmodule
