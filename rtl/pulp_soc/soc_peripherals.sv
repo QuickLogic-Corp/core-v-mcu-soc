@@ -296,6 +296,11 @@ module soc_peripherals #(
    logic                                             reset_perf_counter_efpga_x;
    logic [31:0]                                      perf_counter_value_x;
 
+   logic [31:0]                                      control_in, status_out;
+   logic [7:0]                                       version;
+   
+               
+   
 /*  old pulp interrupts
     assign s_events[UDMA_EVENTS-1:0]  = s_udma_events;
     assign s_events[135]              = s_adv_timer_events[0];
@@ -663,6 +668,10 @@ module soc_peripherals #(
         .enable_tcdm2_efpga_o     ( enable_tcdm2_efpga      ),
         .enable_tcdm1_efpga_o     ( enable_tcdm1_efpga      ),
         .enable_tcdm0_efpga_o     ( enable_tcdm0_efpga      ),
+
+        .control_in(control_in),
+                      .status_out(status_out),
+                      .version(version),
         
 
         .soc_jtag_reg_i      ( soc_jtag_reg_i         ),
@@ -831,6 +840,9 @@ module soc_peripherals #(
         .l2_asic_tcdm_o          ( l2_efpga_tcdm_master  ),
         .apbprogram_i (s_apb_fcb_bus),
         .apbt1_i                 (efpga_apbt1_slave ),
+        .control_in(control_in),
+                      .status_out(status_out),
+                      .version(version),
 
         .fpgaio_oe_o          ( fpgaio_oe_o                                                     ),
         .fpgaio_in_i        ( fpgaio_in_i                                                     ),

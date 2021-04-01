@@ -16,95 +16,97 @@ module efpga_subsystem
         parameter APB_FPGA_ADDR_WIDTH = 20
 )
 (
-    input  logic                                             asic_clk_i,
+    input logic                        asic_clk_i,
 
-    input  logic                                             fpga_clk0_i,
-    input  logic                                             fpga_clk1_i,
-    input  logic                                             fpga_clk2_i,
-    input  logic                                             fpga_clk3_i,
-    input  logic                                             fpga_clk4_i,
-    input  logic                                             fpga_clk5_i,
+    input logic                        fpga_clk0_i,
+    input logic                        fpga_clk1_i,
+    input logic                        fpga_clk2_i,
+    input logic                        fpga_clk3_i,
+    input logic                        fpga_clk4_i,
+    input logic                        fpga_clk5_i,
 
-    input  logic  [2:0]                                      sel_clk_dc_fifo_efpga_i,
-    input  logic                                             clk_gating_dc_fifo_i,
-    input  logic  [3:0]                                      reset_type1_efpga_i,
-    input  logic                                             enable_udma_efpga_i,
-    input  logic                                             enable_events_efpga_i,
-    input  logic                                             enable_apb_efpga_i,
-    input  logic                                             enable_tcdm3_efpga_i,
-    input  logic                                             enable_tcdm2_efpga_i,
-    input  logic                                             enable_tcdm1_efpga_i,
-    input  logic                                             enable_tcdm0_efpga_i,
+    input logic [2:0]                  sel_clk_dc_fifo_efpga_i,
+    input logic                        clk_gating_dc_fifo_i,
+    input logic [3:0]                  reset_type1_efpga_i,
+    input logic                        enable_udma_efpga_i,
+    input logic                        enable_events_efpga_i,
+    input logic                        enable_apb_efpga_i,
+    input logic                        enable_tcdm3_efpga_i,
+    input logic                        enable_tcdm2_efpga_i,
+    input logic                        enable_tcdm1_efpga_i,
+    input logic                        enable_tcdm0_efpga_i,
 
- input logic                        rst_n,
-                                    
-                                    
-                                    /*
-                                    
-                                    CONFIGURATION PORTS
-                                    
-                                    */
-                                    
-                                    /*
-                                    
-                                    PULP PORTS
-                                    
-                                    */
-                                    
-                                    
-                                    XBAR_TCDM_BUS.Master l2_asic_tcdm_o[`N_EFPGA_TCDM_PORTS-1:0],
-                                    APB_BUS.Slave apbprogram_i, 
-                                    XBAR_TCDM_BUS.Slave apbt1_i,
+    input logic                        rst_n,
+    input logic [31:0]                 control_in, 
+                                       
+                                       /*
+                                       
+                                       CONFIGURATION PORTS
+                                       
+                                       */
+                                       
+                                       /*
+                                       
+                                       PULP PORTS
+                                       
+                                       */
+                                       
+                                       
+                                       XBAR_TCDM_BUS.Master l2_asic_tcdm_o[`N_EFPGA_TCDM_PORTS-1:0],
+                                       APB_BUS.Slave apbprogram_i, 
+                                       XBAR_TCDM_BUS.Slave apbt1_i,
 
 
-    output logic  [`N_FPGAIO-1:0]                            fpgaio_oe_o,
-    input  logic  [`N_FPGAIO-1:0]                            fpgaio_in_i,
-    output logic  [`N_FPGAIO-1:0]                            fpgaio_out_o,
-    output logic  [`N_EFPGA_EVENTS-1:0]                      efpga_event_o,
+    output [31:0]                      status_out,
+    output [7:0]                       version,
+    output logic [`N_FPGAIO-1:0]       fpgaio_oe_o,
+    input logic [`N_FPGAIO-1:0]        fpgaio_in_i,
+    output logic [`N_FPGAIO-1:0]       fpgaio_out_o,
+    output logic [`N_EFPGA_EVENTS-1:0] efpga_event_o,
 
     //eFPGA SPIS
-    input  logic                                             efpga_fcb_spis_rst_n_i       ,
-    input  logic                                             efpga_fcb_spis_mosi_i        ,
-    input  logic                                             efpga_fcb_spis_cs_n_i        ,
-    input  logic                                             efpga_fcb_spis_clk_i         ,
-    input  logic                                             efpga_fcb_spi_mode_en_bo_i   ,
-    output logic                                             efpga_fcb_spis_miso_en_o     ,
-    output logic                                             efpga_fcb_spis_miso_o        ,
+    input logic                        efpga_fcb_spis_rst_n_i ,
+    input logic                        efpga_fcb_spis_mosi_i ,
+    input logic                        efpga_fcb_spis_cs_n_i ,
+    input logic                        efpga_fcb_spis_clk_i ,
+    input logic                        efpga_fcb_spi_mode_en_bo_i ,
+    output logic                       efpga_fcb_spis_miso_en_o ,
+    output logic                       efpga_fcb_spis_miso_o ,
 
     //eFPGA TEST MODE
-    input  logic                                             efpga_STM_i                  ,
+    input logic                        efpga_STM_i ,
 
- output logic                       efpga_test_FB_SPE_OUT_0_o ,
- output logic                       efpga_test_FB_SPE_OUT_1_o ,
- output logic                       efpga_test_FB_SPE_OUT_2_o ,
- output logic                       efpga_test_FB_SPE_OUT_3_o ,
- input logic                        efpga_test_fcb_pif_vldi_i ,
- input logic                        efpga_test_fcb_pif_di_l_0_i ,
- input logic                        efpga_test_fcb_pif_di_l_1_i ,
- input logic                        efpga_test_fcb_pif_di_l_2_i ,
- input logic                        efpga_test_fcb_pif_di_l_3_i ,
- input logic                        efpga_test_fcb_pif_di_h_0_i ,
- input logic                        efpga_test_fcb_pif_di_h_1_i ,
- input logic                        efpga_test_fcb_pif_di_h_2_i ,
- input logic                        efpga_test_fcb_pif_di_h_3_i ,
- input logic                        efpga_test_FB_SPE_IN_0_i ,
- input logic                        efpga_test_FB_SPE_IN_1_i ,
- input logic                        efpga_test_FB_SPE_IN_2_i ,
- input logic                        efpga_test_FB_SPE_IN_3_i ,
- input logic                        efpga_test_M_0_i ,
- input logic                        efpga_test_M_1_i ,
- input logic                        efpga_test_M_2_i ,
- input logic                        efpga_test_M_3_i ,
- input logic                        efpga_test_M_4_i ,
- input logic                        efpga_test_M_5_i ,
- input logic                        efpga_test_MLATCH_i
-                                    `ifndef SYNTHESIS
-                                    ,
- input logic                        enable_perf_counter_efpga_i,
- input logic                        reset_perf_counter_efpga_i,
- output logic [31:0]                perf_counter_value_o
-                                    `endif
- );
+    output logic                       efpga_test_FB_SPE_OUT_0_o ,
+    output logic                       efpga_test_FB_SPE_OUT_1_o ,
+    output logic                       efpga_test_FB_SPE_OUT_2_o ,
+    output logic                       efpga_test_FB_SPE_OUT_3_o ,
+    input logic                        efpga_test_fcb_pif_vldi_i ,
+    input logic                        efpga_test_fcb_pif_di_l_0_i ,
+    input logic                        efpga_test_fcb_pif_di_l_1_i ,
+    input logic                        efpga_test_fcb_pif_di_l_2_i ,
+    input logic                        efpga_test_fcb_pif_di_l_3_i ,
+    input logic                        efpga_test_fcb_pif_di_h_0_i ,
+    input logic                        efpga_test_fcb_pif_di_h_1_i ,
+    input logic                        efpga_test_fcb_pif_di_h_2_i ,
+    input logic                        efpga_test_fcb_pif_di_h_3_i ,
+    input logic                        efpga_test_FB_SPE_IN_0_i ,
+    input logic                        efpga_test_FB_SPE_IN_1_i ,
+    input logic                        efpga_test_FB_SPE_IN_2_i ,
+    input logic                        efpga_test_FB_SPE_IN_3_i ,
+    input logic                        efpga_test_M_0_i ,
+    input logic                        efpga_test_M_1_i ,
+    input logic                        efpga_test_M_2_i ,
+    input logic                        efpga_test_M_3_i ,
+    input logic                        efpga_test_M_4_i ,
+    input logic                        efpga_test_M_5_i ,
+    input logic                        efpga_test_MLATCH_i
+                                       `ifndef SYNTHESIS
+                                       ,
+    input logic                        enable_perf_counter_efpga_i,
+    input logic                        reset_perf_counter_efpga_i,
+    output logic [31:0]                perf_counter_value_o
+                                       `endif
+    );
 
 //FCB connections
    logic                            fcb2efpga_blclk;
@@ -186,7 +188,9 @@ module efpga_subsystem
 
 `ifndef SYNTHESIS
     `include "efpga_subsystem_rtl_tests.sv"
-`endif
+   `endif
+
+   
 
     generate
         for (genvar g_tcdm = 0; g_tcdm < `N_EFPGA_TCDM_PORTS; g_tcdm++) begin : DC_FIFO_TCDM_EFPGA
@@ -349,10 +353,10 @@ module efpga_subsystem
    assign apbt1_i.gnt    = enable_apb_efpga_i ? d_lint_GNT[3] & s_lint_GNT : apbt1_i.req;   // always granted if not enabled
    assign s_lint_REQ = enable_apb_efpga_i ? apbt1_i.req & ~(d_lint_GNT[0] | d_lint_GNT[1]) : 0;
    
-    assign tcdm_req_fpga_gated[3]  = enable_tcdm3_efpga_i &  tcdm_req_fpga[3];
-    assign tcdm_req_fpga_gated[2]  = enable_tcdm1_efpga_i &  tcdm_req_fpga[2];
-    assign tcdm_req_fpga_gated[1]  = enable_tcdm2_efpga_i &  tcdm_req_fpga[1];
-    assign tcdm_req_fpga_gated[0]  = enable_tcdm0_efpga_i &  tcdm_req_fpga[0];
+    assign tcdm_req_fpga_gated[3]  = enable_tcdm3_efpga_i &  tcdm_req_fpga[3] & tcdm_gnt_fpga[3];
+    assign tcdm_req_fpga_gated[2]  = enable_tcdm1_efpga_i &  tcdm_req_fpga[2] & tcdm_gnt_fpga[2];
+    assign tcdm_req_fpga_gated[1]  = enable_tcdm2_efpga_i &  tcdm_req_fpga[1] & tcdm_gnt_fpga[1];
+    assign tcdm_req_fpga_gated[0]  = enable_tcdm0_efpga_i &  tcdm_req_fpga[0] & tcdm_gnt_fpga[0];
 
 
 `ifndef USE_RTL_DESIGNS
@@ -569,12 +573,12 @@ fcb U_fcb(
          .tcdm_valid_p1                  (   tcdm_valid_fpga[1]       ),
          .tcdm_valid_p2                  (   tcdm_valid_fpga[2]       ),
          .tcdm_valid_p3                  (   tcdm_valid_fpga[3]       ),
-
+         .control_in(control_in),
          //outputs
+         .status_out ( status_out),
+         .version(version),
          .events_o                        ( s_event            ),
-
          .lint_RDATA(apbt1_int.r_rdata        ),
-         
          .lint_VALID(apbt1_int.r_valid),
          .lint_GNT(apbt1_int.gnt),
 
