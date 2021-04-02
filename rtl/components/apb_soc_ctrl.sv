@@ -9,7 +9,7 @@
 // specific language governing permissions and limitations under the License.
 
 `include "pulp_soc_defines.sv"
-`include "pulp_peripheral_defines.sv"
+`include "pulp_peripheral_defines.svh"
 
 `define REG_INFO        12'h00  //BASEADDR+0x00 CONTAINS NUMBER OF CORES [31:16] AND CLUSTERS [15:0]
 `define REG_FCBOOT      12'h04 //BASEADDR+0x04 not used at the moment
