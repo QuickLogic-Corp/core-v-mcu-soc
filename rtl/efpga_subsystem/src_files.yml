@@ -8,4 +8,8 @@ efpga_subsystem:
     apb_efpga_hwce.sv,
     dc_accelerator_fsm.sv,
     efpga_sel_clk_dc_fifo.sv,
+    tcdm_interface.sv,
+    A2_fifo.sv,
+    A2_fifo_ctl.sv,
+    A2_fifo_ram.sv,
   ]

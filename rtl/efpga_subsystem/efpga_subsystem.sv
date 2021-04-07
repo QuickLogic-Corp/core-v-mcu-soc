@@ -190,10 +190,31 @@ module efpga_subsystem
     `include "efpga_subsystem_rtl_tests.sv"
    `endif
 
+   tcdm_interface  p3 (
+		       .efpga_rst(rst_n),
+		       .efpga_clk(tcdm_clk[3]),
+		       .efpga_req(l2_efpga_tcdm[3].req),
+		       .efpga_gnt(l2_efpga_tcdm[3].gnt),
+		       .efpga_valid(l2_efpga_tcdm[3].r_valid),
+		       .efpga_req_data( {l2_efpga_tcdm[3].wen,
+					 l2_efpga_tcdm[3].add[19:0],
+					 l2_efpga_tcdm[3].be,
+					 l2_efpga_tcdm[3].wdata}),
+		       .soc_req_data( {l2_asic_tcdm_o[3].wen,	
+				       l2_asic_tcdm[3].add[19:0],
+				       l2_asic_tcdm[3].be,
+				       l2_asic_tcdm[3].wdata}),
+		       .efpga_rdata(l2_efpga_tcdm[3].rdata),
+		       .soc_rdata(l2_asic_tcdm[3].rdata),
+		       .soc_rst(rst_n),
+		       .soc_clk(asic_clk_i),
+		       .soc_req(l2_asic_tcdm[3].req),
+		       .soc_gnt(l2_asic_tcdm[3].gnt),
+		       .soc_valid(l2_asic_tcdm[3].r_valid)
+		       );
    
-
     generate
-        for (genvar g_tcdm = 0; g_tcdm < `N_EFPGA_TCDM_PORTS; g_tcdm++) begin : DC_FIFO_TCDM_EFPGA
+        for (genvar g_tcdm = 0; g_tcdm < `N_EFPGA_TCDM_PORTS-1; g_tcdm++) begin : DC_FIFO_TCDM_EFPGA
 
              log_int_dc_slice_wrap logint_dc_efpga_tcdm
              (
