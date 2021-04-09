@@ -143,6 +143,43 @@ module udma_subsystem
 
     localparam N_PERIPHS = `N_SPI + `N_HYPER + `N_UART + `N_MRAM + `N_I2C + `N_CAM + `N_I2S + `N_CSI2 + `N_SDIO + `N_JTAG + `N_FILTER + `N_FPGA + N_EXT_PER;
 
+    //TX Channels
+    localparam CH_ID_TX_UART    = 0;
+    localparam CH_ID_TX_SPIM    = CH_ID_TX_UART + `N_UART;
+    localparam CH_ID_CMD_SPIM   = CH_ID_TX_SPIM + `N_SPI;
+    localparam CH_ID_TX_I2C     = CH_ID_CMD_SPIM + `N_SPI;
+    localparam CH_ID_TX_SDIO    = CH_ID_TX_I2C  +`N_I2C;
+    localparam CH_ID_TX_I2S     = CH_ID_TX_SDIO + `N_SDIO;
+    localparam CH_ID_TX_FPGA    = CH_ID_TX_I2S  + `N_I2S;
+    localparam CH_ID_TX_EXT_PER = CH_ID_TX_FPGA + `N_FPGA;
+	if (`CH_ID_TX_EXT_PER != CH_ID_TX_EXT_PER) $error("CH_ID_TX_EXT_PER mismatch");
+
+    //RX Channels
+    localparam CH_ID_RX_UART    = 0;
+    localparam CH_ID_RX_SPIM    = CH_ID_RX_UART + `N_UART;
+    localparam CH_ID_RX_I2C     = CH_ID_RX_SPIM + `N_SPI;
+    localparam CH_ID_RX_SDIO    = CH_ID_RX_I2C  + `N_I2C;
+    localparam CH_ID_RX_I2S     = CH_ID_RX_SDIO + `N_SDIO;
+    localparam CH_ID_RX_CAM     = CH_ID_RX_I2S  + `N_I2S;
+    localparam CH_ID_RX_FPGA    = CH_ID_RX_CAM  + `N_CAM;
+    localparam CH_ID_RX_EXT_PER = CH_ID_RX_FPGA + `N_FPGA;
+	if (`CH_ID_RX_EXT_PER != CH_ID_RX_EXT_PER) $error("CH_ID_RX_EXT_PER mismatch");
+
+    // PER_ID definitions
+    localparam PER_ID_UART      = 0;
+    localparam PER_ID_SPIM      = PER_ID_UART   + `N_UART;
+    localparam PER_ID_I2C       = PER_ID_SPIM   + `N_SPI;
+    localparam PER_ID_SDIO      = PER_ID_I2C    + `N_I2C;
+    localparam PER_ID_I2S       = PER_ID_SDIO   + `N_SDIO;
+    localparam PER_ID_CAM       = PER_ID_I2S    + `N_I2S;
+    localparam PER_ID_FILTER    = PER_ID_CAM    + `N_CAM;
+    localparam PER_ID_FPGA      = PER_ID_FILTER + `N_FILTER;
+    localparam PER_ID_EXT_PER   = PER_ID_FPGA   + `N_FPGA;
+	if (`PER_ID_EXT_PER != PER_ID_EXT_PER) $error("PER_ID_EXT_PER mismatch");
+
+
+    localparam CH_ID_EXT_TX_FILTER = 0;
+    localparam CH_ID_EXT_RX_FILTER = 0;
 
     localparam STREAM_ID_FILTER = 0;
 
@@ -381,22 +418,22 @@ module udma_subsystem
         genvar g_uart;
         for (g_uart=0;g_uart<`N_UART;g_uart++)
         begin : i_uart_gen
-            assign s_events[4*(`PER_ID_UART+g_uart)+0] = s_rx_ch_events[`CH_ID_RX_UART+g_uart];
-            assign s_events[4*(`PER_ID_UART+g_uart)+1] = s_tx_ch_events[`CH_ID_TX_UART+g_uart];
-            assign s_events[4*(`PER_ID_UART+g_uart)+2] = 1'b0;
-            assign s_events[4*(`PER_ID_UART+g_uart)+3] = 1'b0;
+            assign s_events[4*(PER_ID_UART+g_uart)+0] = s_rx_ch_events[CH_ID_RX_UART+g_uart];
+            assign s_events[4*(PER_ID_UART+g_uart)+1] = s_tx_ch_events[CH_ID_TX_UART+g_uart];
+            assign s_events[4*(PER_ID_UART+g_uart)+2] = 1'b0;
+            assign s_events[4*(PER_ID_UART+g_uart)+3] = 1'b0;
 
-            assign s_rx_cfg_stream[`CH_ID_RX_UART+g_uart] = 'h0;
-            assign s_rx_cfg_stream_id[`CH_ID_RX_UART+g_uart] = 'h0;
-            assign s_rx_ch_destination[`CH_ID_RX_UART+g_uart] = 'h0;
-            assign s_tx_ch_destination[`CH_ID_TX_UART+g_uart] = 'h0;
+            assign s_rx_cfg_stream[CH_ID_RX_UART+g_uart] = 'h0;
+            assign s_rx_cfg_stream_id[CH_ID_RX_UART+g_uart] = 'h0;
+            assign s_rx_ch_destination[CH_ID_RX_UART+g_uart] = 'h0;
+            assign s_tx_ch_destination[CH_ID_TX_UART+g_uart] = 'h0;
 
             udma_uart_top #(
                 .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
                 .TRANS_SIZE(TRANS_SIZE)
             ) i_uart(
-                .sys_clk_i           ( s_clk_periphs_core[`PER_ID_UART+g_uart]  ),
-                .periph_clk_i        ( s_clk_periphs_per[`PER_ID_UART+g_uart]   ),
+                .sys_clk_i           ( s_clk_periphs_core[PER_ID_UART+g_uart]  ),
+                .periph_clk_i        ( s_clk_periphs_per[PER_ID_UART+g_uart]   ),
                 .rstn_i              ( sys_resetn_i                            ),
 				
 				// .uart_tx_o           ( uart_tx_o[g_uart]                       ),
@@ -411,156 +448,92 @@ module udma_subsystem
 
                 .cfg_data_i          ( s_periph_data_to                        ),
                 .cfg_addr_i          ( s_periph_addr                           ),
-                .cfg_valid_i         ( s_periph_valid[`PER_ID_UART+g_uart]      ),
+                .cfg_valid_i         ( s_periph_valid[PER_ID_UART+g_uart]      ),
                 .cfg_rwn_i           ( s_periph_rwn                            ),
-                .cfg_data_o          ( s_periph_data_from[`PER_ID_UART+g_uart]  ),
-                .cfg_ready_o         ( s_periph_ready[`PER_ID_UART+g_uart]      ),
+                .cfg_data_o          ( s_periph_data_from[PER_ID_UART+g_uart]  ),
+                .cfg_ready_o         ( s_periph_ready[PER_ID_UART+g_uart]      ),
 
-                .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[`CH_ID_RX_UART+g_uart]  ),
-                .cfg_rx_size_o       ( s_rx_cfg_size[`CH_ID_RX_UART+g_uart]       ),
-                .cfg_rx_continuous_o ( s_rx_cfg_continuous[`CH_ID_RX_UART+g_uart] ),
-                .cfg_rx_en_o         ( s_rx_cfg_en[`CH_ID_RX_UART+g_uart]         ),
-                .cfg_rx_clr_o        ( s_rx_cfg_clr[`CH_ID_RX_UART+g_uart]        ),
-                .cfg_rx_en_i         ( s_rx_ch_en[`CH_ID_RX_UART+g_uart]          ),
-                .cfg_rx_pending_i    ( s_rx_ch_pending[`CH_ID_RX_UART+g_uart]     ),
-                .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[`CH_ID_RX_UART+g_uart]   ),
-                .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[`CH_ID_RX_UART+g_uart]  ),
+                .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_UART+g_uart]  ),
+                .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_UART+g_uart]       ),
+                .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_UART+g_uart] ),
+                .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_UART+g_uart]         ),
+                .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_UART+g_uart]        ),
+                .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_UART+g_uart]          ),
+                .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_UART+g_uart]     ),
+                .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_UART+g_uart]   ),
+                .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_UART+g_uart]  ),
                 .cfg_rx_datasize_o   (                                         ),  // FIXME ANTONIO
 
-                .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[`CH_ID_TX_UART+g_uart]  ),
-                .cfg_tx_size_o       ( s_tx_cfg_size[`CH_ID_TX_UART+g_uart]       ),
-                .cfg_tx_continuous_o ( s_tx_cfg_continuous[`CH_ID_TX_UART+g_uart] ),
-                .cfg_tx_en_o         ( s_tx_cfg_en[`CH_ID_TX_UART+g_uart]         ),
-                .cfg_tx_clr_o        ( s_tx_cfg_clr[`CH_ID_TX_UART+g_uart]        ),
-                .cfg_tx_en_i         ( s_tx_ch_en[`CH_ID_TX_UART+g_uart]          ),
-                .cfg_tx_pending_i    ( s_tx_ch_pending[`CH_ID_TX_UART+g_uart]     ),
-                .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[`CH_ID_TX_UART+g_uart]   ),
-                .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[`CH_ID_TX_UART+g_uart]  ),
+                .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_TX_UART+g_uart]  ),
+                .cfg_tx_size_o       ( s_tx_cfg_size[CH_ID_TX_UART+g_uart]       ),
+                .cfg_tx_continuous_o ( s_tx_cfg_continuous[CH_ID_TX_UART+g_uart] ),
+                .cfg_tx_en_o         ( s_tx_cfg_en[CH_ID_TX_UART+g_uart]         ),
+                .cfg_tx_clr_o        ( s_tx_cfg_clr[CH_ID_TX_UART+g_uart]        ),
+                .cfg_tx_en_i         ( s_tx_ch_en[CH_ID_TX_UART+g_uart]          ),
+                .cfg_tx_pending_i    ( s_tx_ch_pending[CH_ID_TX_UART+g_uart]     ),
+                .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_TX_UART+g_uart]   ),
+                .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_TX_UART+g_uart]  ),
                 .cfg_tx_datasize_o   (                                         ),  // FIXME ANTONIO
 
-                .data_tx_req_o       ( s_tx_ch_req[`CH_ID_TX_UART+g_uart]         ),
-                .data_tx_gnt_i       ( s_tx_ch_gnt[`CH_ID_TX_UART+g_uart]         ),
-                .data_tx_datasize_o  ( s_tx_ch_datasize[`CH_ID_TX_UART+g_uart]    ),
-                .data_tx_i           ( s_tx_ch_data[`CH_ID_TX_UART+g_uart]        ),
-                .data_tx_valid_i     ( s_tx_ch_valid[`CH_ID_TX_UART+g_uart]       ),
-                .data_tx_ready_o     ( s_tx_ch_ready[`CH_ID_TX_UART+g_uart]       ),
+                .data_tx_req_o       ( s_tx_ch_req[CH_ID_TX_UART+g_uart]         ),
+                .data_tx_gnt_i       ( s_tx_ch_gnt[CH_ID_TX_UART+g_uart]         ),
+                .data_tx_datasize_o  ( s_tx_ch_datasize[CH_ID_TX_UART+g_uart]    ),
+                .data_tx_i           ( s_tx_ch_data[CH_ID_TX_UART+g_uart]        ),
+                .data_tx_valid_i     ( s_tx_ch_valid[CH_ID_TX_UART+g_uart]       ),
+                .data_tx_ready_o     ( s_tx_ch_ready[CH_ID_TX_UART+g_uart]       ),
 
-                .data_rx_datasize_o  ( s_rx_ch_datasize[`CH_ID_RX_UART+g_uart]    ),
-                .data_rx_o           ( s_rx_ch_data[`CH_ID_RX_UART+g_uart]        ),
-                .data_rx_valid_o     ( s_rx_ch_valid[`CH_ID_RX_UART+g_uart]       ),
-                .data_rx_ready_i     ( s_rx_ch_ready[`CH_ID_RX_UART+g_uart]       )	
+                .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_UART+g_uart]    ),
+                .data_rx_o           ( s_rx_ch_data[CH_ID_RX_UART+g_uart]        ),
+                .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_UART+g_uart]       ),
+                .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_UART+g_uart]       )	
             );
         end
     endgenerate
 
-    
-    // I2C
-    generate
-        for (genvar g_i2c=0;g_i2c<`N_I2C;g_i2c++)
-        begin: i_i2c_gen
-            assign s_events[4*(`PER_ID_I2C+g_i2c)+0] = s_rx_ch_events[`CH_ID_RX_I2C+g_i2c];
-            assign s_events[4*(`PER_ID_I2C+g_i2c)+1] = s_tx_ch_events[`CH_ID_TX_I2C+g_i2c];
-            assign s_events[4*(`PER_ID_I2C+g_i2c)+2] = 1'b0;
-            assign s_events[4*(`PER_ID_I2C+g_i2c)+3] = 1'b0;
-
-            assign s_rx_cfg_stream[`CH_ID_RX_I2C+g_i2c] = 'h0;
-            assign s_rx_cfg_stream_id[`CH_ID_RX_I2C+g_i2c] = 'h0;
-            assign s_rx_ch_destination[`CH_ID_RX_I2C+g_i2c] = 'h0;
-            assign s_tx_ch_destination[`CH_ID_TX_I2C+g_i2c] = 'h0;
-
-            udma_i2c_top #(
-                .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
-                .TRANS_SIZE(TRANS_SIZE)
-            ) i_i2c (
-            //
-            // inputs & outputs
-            //
-                .sys_clk_i           ( s_clk_periphs_core[`PER_ID_I2C+g_i2c] ),
-                .periph_clk_i        ( s_clk_periphs_per[`PER_ID_I2C+g_i2c]  ),
-                .rstn_i              ( sys_resetn_i                  ),
-
-                .cfg_data_i          ( s_periph_data_to                  ),
-                .cfg_addr_i          ( s_periph_addr                     ),
-                .cfg_valid_i         ( s_periph_valid[`PER_ID_I2C+g_i2c]       ),
-                .cfg_rwn_i           ( s_periph_rwn                      ),
-                .cfg_data_o          ( s_periph_data_from[`PER_ID_I2C+g_i2c]   ),
-                .cfg_ready_o         (  s_periph_ready[`PER_ID_I2C+g_i2c] ),
-
-
-                .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[`CH_ID_TX_I2C+g_i2c]   ),
-                .cfg_tx_size_o       ( s_tx_cfg_size[`CH_ID_TX_I2C+g_i2c]        ),
-                .cfg_tx_continuous_o ( s_tx_cfg_continuous[`CH_ID_TX_I2C+g_i2c]  ),
-                .cfg_tx_en_o         ( s_tx_cfg_en[`CH_ID_TX_I2C+g_i2c]          ),
-                .cfg_tx_clr_o        ( s_tx_cfg_clr[`CH_ID_TX_I2C+g_i2c]         ),
-                .cfg_tx_en_i         ( s_tx_ch_en[`CH_ID_TX_I2C+g_i2c]           ),
-                .cfg_tx_pending_i    ( s_tx_ch_pending[`CH_ID_TX_I2C+g_i2c]      ),
-                .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[`CH_ID_TX_I2C+g_i2c]    ),
-                .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[`CH_ID_TX_I2C+g_i2c]   ),
-
-                .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[`CH_ID_RX_I2C+g_i2c]   ),
-                .cfg_rx_size_o       ( s_rx_cfg_size[`CH_ID_RX_I2C+g_i2c]        ),
-                .cfg_rx_continuous_o ( s_rx_cfg_continuous[`CH_ID_RX_I2C+g_i2c]  ),
-                .cfg_rx_en_o         ( s_rx_cfg_en[`CH_ID_RX_I2C+g_i2c]          ),
-                .cfg_rx_clr_o        ( s_rx_cfg_clr[`CH_ID_RX_I2C+g_i2c]         ),
-                .cfg_rx_en_i         ( s_rx_ch_en[`CH_ID_RX_I2C+g_i2c]           ),
-                .cfg_rx_pending_i    ( s_rx_ch_pending[`CH_ID_RX_I2C+g_i2c]      ),
-                .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[`CH_ID_RX_I2C+g_i2c]    ),
-                .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[`CH_ID_RX_I2C+g_i2c]   ),
-
-                .data_tx_req_o       ( s_tx_ch_req[`CH_ID_TX_I2C+g_i2c]          ),
-                .data_tx_gnt_i       ( s_tx_ch_gnt[`CH_ID_TX_I2C+g_i2c]          ),
-                .data_tx_datasize_o  ( s_tx_ch_datasize[`CH_ID_TX_I2C+g_i2c]     ),
-                .data_tx_i           ( s_tx_ch_data[`CH_ID_TX_I2C+g_i2c][7:0]    ),
-                .data_tx_valid_i     ( s_tx_ch_valid[`CH_ID_TX_I2C+g_i2c]        ),
-                .data_tx_ready_o     ( s_tx_ch_ready[`CH_ID_TX_I2C+g_i2c]        ),
-
-                .data_rx_datasize_o  ( s_rx_ch_datasize[`CH_ID_RX_I2C+g_i2c]     ),
-                .data_rx_o           ( s_rx_ch_data[`CH_ID_RX_I2C+g_i2c][7:0]    ),
-                .data_rx_valid_o     ( s_rx_ch_valid[`CH_ID_RX_I2C+g_i2c]        ),
-                .data_rx_ready_i     ( s_rx_ch_ready[`CH_ID_RX_I2C+g_i2c]        ),
-
-                .err_o               ( s_i2c_evt[g_i2c]                        ),
-				
-				// Signals to pads
-				.scl_i               ( perio_in_i[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
-                .scl_o               ( perio_out_o[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
-                .scl_oe              ( perio_oe_o[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
-                .sda_i               ( perio_in_i[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]	),
-                .sda_o               ( perio_out_o[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]),
-                .sda_oe              ( perio_oe_o[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]),
-				
-                .ext_events_i        ( s_trigger_events                  )
-            );
-            assign s_rx_ch_data[`CH_ID_RX_I2C+g_i2c][31:8]= 'h0;
-        end
-    endgenerate
-    
     // SPIM
     generate
         for (genvar g_spi=0;g_spi<`N_SPI;g_spi++)
         begin : i_spim_gen
-            assign s_events[4*(`PER_ID_SPIM+g_spi)+0] = s_rx_ch_events[`CH_ID_RX_SPIM+g_spi];
-            assign s_events[4*(`PER_ID_SPIM+g_spi)+1] = s_tx_ch_events[`CH_ID_TX_SPIM+g_spi];
-            assign s_events[4*(`PER_ID_SPIM+g_spi)+2] = s_tx_ch_events[`CH_ID_CMD_SPIM+g_spi];
-            assign s_events[4*(`PER_ID_SPIM+g_spi)+3] = s_spi_eot[g_spi];
+            assign s_events[4*(PER_ID_SPIM+g_spi)+0] = s_rx_ch_events[CH_ID_RX_SPIM+g_spi];
+            assign s_events[4*(PER_ID_SPIM+g_spi)+1] = s_tx_ch_events[CH_ID_TX_SPIM+g_spi];
+            assign s_events[4*(PER_ID_SPIM+g_spi)+2] = s_tx_ch_events[CH_ID_CMD_SPIM+g_spi];
+            assign s_events[4*(PER_ID_SPIM+g_spi)+3] = s_spi_eot[g_spi];
 
-            assign s_rx_cfg_stream[`CH_ID_RX_SPIM+g_spi] = 'h0;
-            assign s_rx_cfg_stream_id[`CH_ID_RX_SPIM+g_spi] = 'h0;
-            assign s_rx_ch_destination[`CH_ID_RX_SPIM+g_spi] = 'h0;
-            assign s_tx_ch_destination[`CH_ID_TX_SPIM+g_spi] = 'h0;
-            assign s_tx_ch_destination[`CH_ID_CMD_SPIM+g_spi] = 'h0;
+            assign s_rx_cfg_stream[CH_ID_RX_SPIM+g_spi] = 'h0;
+            assign s_rx_cfg_stream_id[CH_ID_RX_SPIM+g_spi] = 'h0;
+            assign s_rx_ch_destination[CH_ID_RX_SPIM+g_spi] = 'h0;
+            assign s_tx_ch_destination[CH_ID_TX_SPIM+g_spi] = 'h0;
+            assign s_tx_ch_destination[CH_ID_CMD_SPIM+g_spi] = 'h0;
             udma_spim_top
             #(
                 .L2_AWIDTH_NOAL      ( L2_AWIDTH_NOAL                           ),
                 .TRANS_SIZE          ( TRANS_SIZE                               )
             ) i_spim (
-                .sys_clk_i           ( s_clk_periphs_core[`PER_ID_SPIM+g_spi]    ),
-                .periph_clk_i        ( s_clk_periphs_per[`PER_ID_SPIM+g_spi]     ),
+                .sys_clk_i           ( s_clk_periphs_core[PER_ID_SPIM+g_spi]    ),
+                .periph_clk_i        ( s_clk_periphs_per[PER_ID_SPIM+g_spi]     ),
                 .rstn_i              ( sys_resetn_i                             ),
                 .dft_test_mode_i     ( dft_test_mode_i                          ),
                 .dft_cg_enable_i     ( dft_cg_enable_i                          ),
                 .spi_eot_o           ( s_spi_eot[g_spi]                         ),
                 .spi_event_i         ( s_trigger_events                         ),
+				
+                // .spi_clk_o           ( spi_clk[g_spi]                           ),
+                // .spi_csn0_o          ( spi_csn[g_spi][0]                        ),
+                // .spi_csn1_o          ( spi_csn[g_spi][1]                        ),
+                // .spi_csn2_o          ( spi_csn[g_spi][2]                        ),
+                // .spi_csn3_o          ( spi_csn[g_spi][3]                        ),
+                // .spi_oen0_o          ( spi_oen[g_spi][0]                        ),
+                // .spi_oen1_o          ( spi_oen[g_spi][1]                        ),
+                // .spi_oen2_o          ( spi_oen[g_spi][2]                        ),
+                // .spi_oen3_o          ( spi_oen[g_spi][3]                        ),
+                // .spi_sdo0_o          ( spi_sdo[g_spi][0]                        ),
+                // .spi_sdo1_o          ( spi_sdo[g_spi][1]                        ),
+                // .spi_sdo2_o          ( spi_sdo[g_spi][2]                        ),
+                // .spi_sdo3_o          ( spi_sdo[g_spi][3]                        ),
+                // .spi_sdi0_i          ( spi_sdi[g_spi][0]                        ),
+                // .spi_sdi1_i          ( spi_sdi[g_spi][1]                        ),
+                // .spi_sdi2_i          ( spi_sdi[g_spi][2]                        ),
+                // .spi_sdi3_i          ( spi_sdi[g_spi][3]                        ),
 				
 				// Signals to pads
 				.spi_clk_o           ( perio_out_o[`PERIO_QSPIM0_CLK + `PERIO_QSPIM_NPORTS * g_spi]	),
@@ -583,63 +556,150 @@ module udma_subsystem
                
                 .cfg_data_i          ( s_periph_data_to                         ),
                 .cfg_addr_i          ( s_periph_addr                            ),
-                .cfg_valid_i         ( s_periph_valid[`PER_ID_SPIM+g_spi]        ),
+                .cfg_valid_i         ( s_periph_valid[PER_ID_SPIM+g_spi]        ),
                 .cfg_rwn_i           ( s_periph_rwn                             ),
-                .cfg_data_o          ( s_periph_data_from[`PER_ID_SPIM+g_spi]    ),
-                .cfg_ready_o         ( s_periph_ready[`PER_ID_SPIM+g_spi]        ),
+                .cfg_data_o          ( s_periph_data_from[PER_ID_SPIM+g_spi]    ),
+                .cfg_ready_o         ( s_periph_ready[PER_ID_SPIM+g_spi]        ),
 
-                .cmd_req_o           ( s_tx_ch_req[`CH_ID_CMD_SPIM+g_spi]          ),
-                .cmd_gnt_i           ( s_tx_ch_gnt[`CH_ID_CMD_SPIM+g_spi]          ),
-                .cmd_datasize_o      ( s_tx_ch_datasize[`CH_ID_CMD_SPIM+g_spi]     ),
-                .cmd_i               ( s_tx_ch_data[`CH_ID_CMD_SPIM+g_spi]         ),
-                .cmd_valid_i         ( s_tx_ch_valid[`CH_ID_CMD_SPIM+g_spi]        ),
-                .cmd_ready_o         ( s_tx_ch_ready[`CH_ID_CMD_SPIM+g_spi]        ),
+                .cmd_req_o           ( s_tx_ch_req[CH_ID_CMD_SPIM+g_spi]          ),
+                .cmd_gnt_i           ( s_tx_ch_gnt[CH_ID_CMD_SPIM+g_spi]          ),
+                .cmd_datasize_o      ( s_tx_ch_datasize[CH_ID_CMD_SPIM+g_spi]     ),
+                .cmd_i               ( s_tx_ch_data[CH_ID_CMD_SPIM+g_spi]         ),
+                .cmd_valid_i         ( s_tx_ch_valid[CH_ID_CMD_SPIM+g_spi]        ),
+                .cmd_ready_o         ( s_tx_ch_ready[CH_ID_CMD_SPIM+g_spi]        ),
 
-                .data_tx_req_o       ( s_tx_ch_req[`CH_ID_TX_SPIM+g_spi]           ),
-                .data_tx_gnt_i       ( s_tx_ch_gnt[`CH_ID_TX_SPIM+g_spi]           ),
-                .data_tx_datasize_o  ( s_tx_ch_datasize[`CH_ID_TX_SPIM+g_spi]      ),
-                .data_tx_i           ( s_tx_ch_data[`CH_ID_TX_SPIM+g_spi]          ),
-                .data_tx_valid_i     ( s_tx_ch_valid[`CH_ID_TX_SPIM+g_spi]         ),
-                .data_tx_ready_o     ( s_tx_ch_ready[`CH_ID_TX_SPIM+g_spi]         ),
+                .data_tx_req_o       ( s_tx_ch_req[CH_ID_TX_SPIM+g_spi]           ),
+                .data_tx_gnt_i       ( s_tx_ch_gnt[CH_ID_TX_SPIM+g_spi]           ),
+                .data_tx_datasize_o  ( s_tx_ch_datasize[CH_ID_TX_SPIM+g_spi]      ),
+                .data_tx_i           ( s_tx_ch_data[CH_ID_TX_SPIM+g_spi]          ),
+                .data_tx_valid_i     ( s_tx_ch_valid[CH_ID_TX_SPIM+g_spi]         ),
+                .data_tx_ready_o     ( s_tx_ch_ready[CH_ID_TX_SPIM+g_spi]         ),
 
-                .data_rx_datasize_o  ( s_rx_ch_datasize[`CH_ID_RX_SPIM+g_spi]      ),
-                .data_rx_o           ( s_rx_ch_data[`CH_ID_RX_SPIM+g_spi]          ),
-                .data_rx_valid_o     ( s_rx_ch_valid[`CH_ID_RX_SPIM+g_spi]         ),
-                .data_rx_ready_i     ( s_rx_ch_ready[`CH_ID_RX_SPIM+g_spi]         ),
+                .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_SPIM+g_spi]      ),
+                .data_rx_o           ( s_rx_ch_data[CH_ID_RX_SPIM+g_spi]          ),
+                .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_SPIM+g_spi]         ),
+                .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_SPIM+g_spi]         ),
 
-                .cfg_cmd_startaddr_o  ( s_tx_cfg_startaddr[`CH_ID_CMD_SPIM+g_spi]  ),
-                .cfg_cmd_size_o       ( s_tx_cfg_size[`CH_ID_CMD_SPIM+g_spi]       ),
-                .cfg_cmd_continuous_o ( s_tx_cfg_continuous[`CH_ID_CMD_SPIM+g_spi] ),
-                .cfg_cmd_en_o         ( s_tx_cfg_en[`CH_ID_CMD_SPIM+g_spi]         ),
-                .cfg_cmd_clr_o        ( s_tx_cfg_clr[`CH_ID_CMD_SPIM+g_spi]        ),
-                .cfg_cmd_en_i         ( s_tx_ch_en[`CH_ID_CMD_SPIM+g_spi]          ),
-                .cfg_cmd_pending_i    ( s_tx_ch_pending[`CH_ID_CMD_SPIM+g_spi]     ),
-                .cfg_cmd_curr_addr_i  ( s_tx_ch_curr_addr[`CH_ID_CMD_SPIM+g_spi]   ),
-                .cfg_cmd_bytes_left_i ( s_tx_ch_bytes_left[`CH_ID_CMD_SPIM+g_spi]  ),
+                .cfg_cmd_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_CMD_SPIM+g_spi]  ),
+                .cfg_cmd_size_o       ( s_tx_cfg_size[CH_ID_CMD_SPIM+g_spi]       ),
+                .cfg_cmd_continuous_o ( s_tx_cfg_continuous[CH_ID_CMD_SPIM+g_spi] ),
+                .cfg_cmd_en_o         ( s_tx_cfg_en[CH_ID_CMD_SPIM+g_spi]         ),
+                .cfg_cmd_clr_o        ( s_tx_cfg_clr[CH_ID_CMD_SPIM+g_spi]        ),
+                .cfg_cmd_en_i         ( s_tx_ch_en[CH_ID_CMD_SPIM+g_spi]          ),
+                .cfg_cmd_pending_i    ( s_tx_ch_pending[CH_ID_CMD_SPIM+g_spi]     ),
+                .cfg_cmd_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_CMD_SPIM+g_spi]   ),
+                .cfg_cmd_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_CMD_SPIM+g_spi]  ),
 
-                .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[`CH_ID_TX_SPIM+g_spi]    ),
-                .cfg_tx_size_o       ( s_tx_cfg_size[`CH_ID_TX_SPIM+g_spi]         ),
-                .cfg_tx_continuous_o ( s_tx_cfg_continuous[`CH_ID_TX_SPIM+g_spi]   ),
-                .cfg_tx_en_o         ( s_tx_cfg_en[`CH_ID_TX_SPIM+g_spi]           ),
-                .cfg_tx_clr_o        ( s_tx_cfg_clr[`CH_ID_TX_SPIM+g_spi]          ),
-                .cfg_tx_en_i         ( s_tx_ch_en[`CH_ID_TX_SPIM+g_spi]            ),
-                .cfg_tx_pending_i    ( s_tx_ch_pending[`CH_ID_TX_SPIM+g_spi]       ),
-                .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[`CH_ID_TX_SPIM+g_spi]     ),
-                .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[`CH_ID_TX_SPIM+g_spi]    ),
+                .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_TX_SPIM+g_spi]    ),
+                .cfg_tx_size_o       ( s_tx_cfg_size[CH_ID_TX_SPIM+g_spi]         ),
+                .cfg_tx_continuous_o ( s_tx_cfg_continuous[CH_ID_TX_SPIM+g_spi]   ),
+                .cfg_tx_en_o         ( s_tx_cfg_en[CH_ID_TX_SPIM+g_spi]           ),
+                .cfg_tx_clr_o        ( s_tx_cfg_clr[CH_ID_TX_SPIM+g_spi]          ),
+                .cfg_tx_en_i         ( s_tx_ch_en[CH_ID_TX_SPIM+g_spi]            ),
+                .cfg_tx_pending_i    ( s_tx_ch_pending[CH_ID_TX_SPIM+g_spi]       ),
+                .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_TX_SPIM+g_spi]     ),
+                .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_TX_SPIM+g_spi]    ),
 
-                .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[`CH_ID_RX_SPIM+g_spi]    ),
-                .cfg_rx_size_o       ( s_rx_cfg_size[`CH_ID_RX_SPIM+g_spi]         ),
-                .cfg_rx_continuous_o ( s_rx_cfg_continuous[`CH_ID_RX_SPIM+g_spi]   ),
-                .cfg_rx_en_o         ( s_rx_cfg_en[`CH_ID_RX_SPIM+g_spi]           ),
-                .cfg_rx_clr_o        ( s_rx_cfg_clr[`CH_ID_RX_SPIM+g_spi]          ),
-                .cfg_rx_en_i         ( s_rx_ch_en[`CH_ID_RX_SPIM+g_spi]            ),
-                .cfg_rx_pending_i    ( s_rx_ch_pending[`CH_ID_RX_SPIM+g_spi]       ),
-                .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[`CH_ID_RX_SPIM+g_spi]     ),
-                .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[`CH_ID_RX_SPIM+g_spi]    )
+                .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_SPIM+g_spi]    ),
+                .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_SPIM+g_spi]         ),
+                .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_SPIM+g_spi]   ),
+                .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_SPIM+g_spi]           ),
+                .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_SPIM+g_spi]          ),
+                .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_SPIM+g_spi]            ),
+                .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_SPIM+g_spi]       ),
+                .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_SPIM+g_spi]     ),
+                .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_SPIM+g_spi]    )
             );
         end
     endgenerate
 
+    // I2C
+    generate
+        for (genvar g_i2c=0;g_i2c<`N_I2C;g_i2c++)
+        begin: i_i2c_gen
+            assign s_events[4*(PER_ID_I2C+g_i2c)+0] = s_rx_ch_events[CH_ID_RX_I2C+g_i2c];
+            assign s_events[4*(PER_ID_I2C+g_i2c)+1] = s_tx_ch_events[CH_ID_TX_I2C+g_i2c];
+            assign s_events[4*(PER_ID_I2C+g_i2c)+2] = 1'b0;
+            assign s_events[4*(PER_ID_I2C+g_i2c)+3] = 1'b0;
+
+            assign s_rx_cfg_stream[CH_ID_RX_I2C+g_i2c] = 'h0;
+            assign s_rx_cfg_stream_id[CH_ID_RX_I2C+g_i2c] = 'h0;
+            assign s_rx_ch_destination[CH_ID_RX_I2C+g_i2c] = 'h0;
+            assign s_tx_ch_destination[CH_ID_TX_I2C+g_i2c] = 'h0;
+
+            udma_i2c_top #(
+                .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
+                .TRANS_SIZE(TRANS_SIZE)
+            ) i_i2c (
+            //
+            // inputs & outputs
+            //
+                .sys_clk_i           ( s_clk_periphs_core[PER_ID_I2C+g_i2c] ),
+                .periph_clk_i        ( s_clk_periphs_per[PER_ID_I2C+g_i2c]  ),
+                .rstn_i              ( sys_resetn_i                  ),
+
+                .cfg_data_i          ( s_periph_data_to                  ),
+                .cfg_addr_i          ( s_periph_addr                     ),
+                .cfg_valid_i         ( s_periph_valid[PER_ID_I2C+g_i2c]       ),
+                .cfg_rwn_i           ( s_periph_rwn                      ),
+                .cfg_data_o          ( s_periph_data_from[PER_ID_I2C+g_i2c]   ),
+                .cfg_ready_o         (  s_periph_ready[PER_ID_I2C+g_i2c] ),
+
+
+                .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_TX_I2C+g_i2c]   ),
+                .cfg_tx_size_o       ( s_tx_cfg_size[CH_ID_TX_I2C+g_i2c]        ),
+                .cfg_tx_continuous_o ( s_tx_cfg_continuous[CH_ID_TX_I2C+g_i2c]  ),
+                .cfg_tx_en_o         ( s_tx_cfg_en[CH_ID_TX_I2C+g_i2c]          ),
+                .cfg_tx_clr_o        ( s_tx_cfg_clr[CH_ID_TX_I2C+g_i2c]         ),
+                .cfg_tx_en_i         ( s_tx_ch_en[CH_ID_TX_I2C+g_i2c]           ),
+                .cfg_tx_pending_i    ( s_tx_ch_pending[CH_ID_TX_I2C+g_i2c]      ),
+                .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_TX_I2C+g_i2c]    ),
+                .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_TX_I2C+g_i2c]   ),
+
+                .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_I2C+g_i2c]   ),
+                .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_I2C+g_i2c]        ),
+                .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_I2C+g_i2c]  ),
+                .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_I2C+g_i2c]          ),
+                .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_I2C+g_i2c]         ),
+                .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_I2C+g_i2c]           ),
+                .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_I2C+g_i2c]      ),
+                .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_I2C+g_i2c]    ),
+                .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_I2C+g_i2c]   ),
+
+                .data_tx_req_o       ( s_tx_ch_req[CH_ID_TX_I2C+g_i2c]          ),
+                .data_tx_gnt_i       ( s_tx_ch_gnt[CH_ID_TX_I2C+g_i2c]          ),
+                .data_tx_datasize_o  ( s_tx_ch_datasize[CH_ID_TX_I2C+g_i2c]     ),
+                .data_tx_i           ( s_tx_ch_data[CH_ID_TX_I2C+g_i2c][7:0]    ),
+                .data_tx_valid_i     ( s_tx_ch_valid[CH_ID_TX_I2C+g_i2c]        ),
+                .data_tx_ready_o     ( s_tx_ch_ready[CH_ID_TX_I2C+g_i2c]        ),
+
+                .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_I2C+g_i2c]     ),
+                .data_rx_o           ( s_rx_ch_data[CH_ID_RX_I2C+g_i2c][7:0]    ),
+                .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_I2C+g_i2c]        ),
+                .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_I2C+g_i2c]        ),
+
+                .err_o               ( s_i2c_evt[g_i2c]                        ),
+
+                // .scl_i               ( i2c_scl_i[g_i2c]                      ),
+                // .scl_o               ( i2c_scl_o[g_i2c]                      ),
+                // .scl_oe              ( i2c_scl_oe[g_i2c]                     ),
+                // .sda_i               ( i2c_sda_i[g_i2c]                      ),
+                // .sda_o               ( i2c_sda_o[g_i2c]                      ),
+                // .sda_oe              ( i2c_sda_oe[g_i2c]                     ),
+				
+				// Signals to pads
+				.scl_i               ( perio_in_i[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
+                .scl_o               ( perio_out_o[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
+                .scl_oe              ( perio_oe_o[`PERIO_I2CM0_SCL + `PERIO_I2CM_NPORTS * g_i2c]	),
+                .sda_i               ( perio_in_i[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]	),
+                .sda_o               ( perio_out_o[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]),
+                .sda_oe              ( perio_oe_o[`PERIO_I2CM0_SDA + `PERIO_I2CM_NPORTS * g_i2c]),
+				
+                .ext_events_i        ( s_trigger_events                  )
+            );
+            assign s_rx_ch_data[CH_ID_RX_I2C+g_i2c][31:8]= 'h0;
+        end
+    endgenerate
 
     // SDIO
     generate
@@ -649,14 +709,14 @@ module udma_subsystem
         logic                        s_sdio_err;
 		logic [3:0]					s_sddata_oen;
 
-        assign s_events[4*(`PER_ID_SDIO + g_sdio)+0]    = s_rx_ch_events[`CH_ID_RX_SDIO + g_sdio];
-        assign s_events[4*(`PER_ID_SDIO + g_sdio)+1]  = s_tx_ch_events[`CH_ID_TX_SDIO + g_sdio];
-        assign s_events[4*(`PER_ID_SDIO + g_sdio)+2]  = s_sdio_eot;
-        assign s_events[4*(`PER_ID_SDIO + g_sdio)+3]  = s_sdio_err;
-        assign s_rx_cfg_stream[`CH_ID_RX_SDIO + g_sdio] = 'h0;
-        assign s_rx_cfg_stream_id[`CH_ID_RX_SDIO + g_sdio] = 'h0;
-        assign s_rx_ch_destination[`CH_ID_RX_SDIO + g_sdio] = 'h0;
-        assign s_tx_ch_destination[`CH_ID_TX_SDIO + g_sdio] = 'h0;
+        assign s_events[4*(PER_ID_SDIO + g_sdio)+0]    = s_rx_ch_events[CH_ID_RX_SDIO + g_sdio];
+        assign s_events[4*(PER_ID_SDIO + g_sdio)+1]  = s_tx_ch_events[CH_ID_TX_SDIO + g_sdio];
+        assign s_events[4*(PER_ID_SDIO + g_sdio)+2]  = s_sdio_eot;
+        assign s_events[4*(PER_ID_SDIO + g_sdio)+3]  = s_sdio_err;
+        assign s_rx_cfg_stream[CH_ID_RX_SDIO + g_sdio] = 'h0;
+        assign s_rx_cfg_stream_id[CH_ID_RX_SDIO + g_sdio] = 'h0;
+        assign s_rx_ch_destination[CH_ID_RX_SDIO + g_sdio] = 'h0;
+        assign s_tx_ch_destination[CH_ID_TX_SDIO + g_sdio] = 'h0;
 		
         assign perio_oe_o[`PERIO_SDIO_NPORTS * g_sdio + `PERIO_SDIO0_DATA3 : `PERIO_SDIO_NPORTS * g_sdio + `PERIO_SDIO0_DATA0] = ~s_sddata_oen;
 		
@@ -664,8 +724,8 @@ module udma_subsystem
             .L2_AWIDTH_NOAL ( L2_AWIDTH_NOAL ),
             .TRANS_SIZE     ( TRANS_SIZE     )
         ) i_sdio (
-            .sys_clk_i           ( s_clk_periphs_core[(`PER_ID_SDIO + g_sdio)] ),
-            .periph_clk_i        ( s_clk_periphs_per[(`PER_ID_SDIO + g_sdio)]  ),
+            .sys_clk_i           ( s_clk_periphs_core[(PER_ID_SDIO + g_sdio)] ),
+            .periph_clk_i        ( s_clk_periphs_per[(PER_ID_SDIO + g_sdio)]  ),
             .rstn_i              ( sys_resetn_i                  ),
 
             .err_o               ( s_sdio_err      ),
@@ -681,42 +741,42 @@ module udma_subsystem
 
             .cfg_data_i          ( s_periph_data_to                    ),
             .cfg_addr_i          ( s_periph_addr                       ),
-            .cfg_valid_i         ( s_periph_valid[(`PER_ID_SDIO + g_sdio)]         ),
+            .cfg_valid_i         ( s_periph_valid[(PER_ID_SDIO + g_sdio)]         ),
             .cfg_rwn_i           ( s_periph_rwn                        ),
-            .cfg_data_o          ( s_periph_data_from[(`PER_ID_SDIO + g_sdio)]     ),
-            .cfg_ready_o         ( s_periph_ready[(`PER_ID_SDIO + g_sdio)]    ),
+            .cfg_data_o          ( s_periph_data_from[(PER_ID_SDIO + g_sdio)]     ),
+            .cfg_ready_o         ( s_periph_ready[(PER_ID_SDIO + g_sdio)]    ),
 
-            .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[`CH_ID_RX_SDIO + g_sdio]      ),
-            .cfg_rx_size_o       ( s_rx_cfg_size[`CH_ID_RX_SDIO + g_sdio]           ),
-            .cfg_rx_continuous_o ( s_rx_cfg_continuous[`CH_ID_RX_SDIO + g_sdio]     ),
-            .cfg_rx_en_o         ( s_rx_cfg_en[`CH_ID_RX_SDIO + g_sdio]             ),
-            .cfg_rx_clr_o        ( s_rx_cfg_clr[`CH_ID_RX_SDIO + g_sdio]            ),
-            .cfg_rx_en_i         ( s_rx_ch_en[`CH_ID_RX_SDIO + g_sdio]              ),
-            .cfg_rx_pending_i    ( s_rx_ch_pending[`CH_ID_RX_SDIO + g_sdio]         ),
-            .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[`CH_ID_RX_SDIO + g_sdio]       ),
-            .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[`CH_ID_RX_SDIO + g_sdio]      ),
+            .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_SDIO + g_sdio]      ),
+            .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_SDIO + g_sdio]           ),
+            .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_SDIO + g_sdio]     ),
+            .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_SDIO + g_sdio]             ),
+            .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_SDIO + g_sdio]            ),
+            .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_SDIO + g_sdio]              ),
+            .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_SDIO + g_sdio]         ),
+            .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_SDIO + g_sdio]       ),
+            .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_SDIO + g_sdio]      ),
 
-            .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[`CH_ID_TX_SDIO + g_sdio]      ),
-            .cfg_tx_size_o       ( s_tx_cfg_size[`CH_ID_TX_SDIO + g_sdio]           ),
-            .cfg_tx_continuous_o ( s_tx_cfg_continuous[`CH_ID_TX_SDIO + g_sdio]     ),
-            .cfg_tx_en_o         ( s_tx_cfg_en[`CH_ID_TX_SDIO + g_sdio]             ),
-            .cfg_tx_clr_o        ( s_tx_cfg_clr[`CH_ID_TX_SDIO + g_sdio]            ),
-            .cfg_tx_en_i         ( s_tx_ch_en[`CH_ID_TX_SDIO + g_sdio]              ),
-            .cfg_tx_pending_i    ( s_tx_ch_pending[`CH_ID_TX_SDIO + g_sdio]         ),
-            .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[`CH_ID_TX_SDIO + g_sdio]       ),
-            .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[`CH_ID_TX_SDIO + g_sdio]      ),
+            .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_TX_SDIO + g_sdio]      ),
+            .cfg_tx_size_o       ( s_tx_cfg_size[CH_ID_TX_SDIO + g_sdio]           ),
+            .cfg_tx_continuous_o ( s_tx_cfg_continuous[CH_ID_TX_SDIO + g_sdio]     ),
+            .cfg_tx_en_o         ( s_tx_cfg_en[CH_ID_TX_SDIO + g_sdio]             ),
+            .cfg_tx_clr_o        ( s_tx_cfg_clr[CH_ID_TX_SDIO + g_sdio]            ),
+            .cfg_tx_en_i         ( s_tx_ch_en[CH_ID_TX_SDIO + g_sdio]              ),
+            .cfg_tx_pending_i    ( s_tx_ch_pending[CH_ID_TX_SDIO + g_sdio]         ),
+            .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_TX_SDIO + g_sdio]       ),
+            .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_TX_SDIO + g_sdio]      ),
 
-            .data_tx_req_o       ( s_tx_ch_req[`CH_ID_TX_SDIO + g_sdio]             ),
-            .data_tx_gnt_i       ( s_tx_ch_gnt[`CH_ID_TX_SDIO + g_sdio]             ),
-            .data_tx_datasize_o  ( s_tx_ch_datasize[`CH_ID_TX_SDIO + g_sdio]        ),
-            .data_tx_i           ( s_tx_ch_data[`CH_ID_TX_SDIO + g_sdio]            ),
-            .data_tx_valid_i     ( s_tx_ch_valid[`CH_ID_TX_SDIO + g_sdio]           ),
-            .data_tx_ready_o     ( s_tx_ch_ready[`CH_ID_TX_SDIO + g_sdio]           ),
+            .data_tx_req_o       ( s_tx_ch_req[CH_ID_TX_SDIO + g_sdio]             ),
+            .data_tx_gnt_i       ( s_tx_ch_gnt[CH_ID_TX_SDIO + g_sdio]             ),
+            .data_tx_datasize_o  ( s_tx_ch_datasize[CH_ID_TX_SDIO + g_sdio]        ),
+            .data_tx_i           ( s_tx_ch_data[CH_ID_TX_SDIO + g_sdio]            ),
+            .data_tx_valid_i     ( s_tx_ch_valid[CH_ID_TX_SDIO + g_sdio]           ),
+            .data_tx_ready_o     ( s_tx_ch_ready[CH_ID_TX_SDIO + g_sdio]           ),
 
-            .data_rx_datasize_o  ( s_rx_ch_datasize[`CH_ID_RX_SDIO + g_sdio]        ),
-            .data_rx_o           ( s_rx_ch_data[`CH_ID_RX_SDIO + g_sdio]            ),
-            .data_rx_valid_o     ( s_rx_ch_valid[`CH_ID_RX_SDIO + g_sdio]           ),
-            .data_rx_ready_i     ( s_rx_ch_ready[`CH_ID_RX_SDIO + g_sdio]           )
+            .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_SDIO + g_sdio]        ),
+            .data_rx_o           ( s_rx_ch_data[CH_ID_RX_SDIO + g_sdio]            ),
+            .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_SDIO + g_sdio]           ),
+            .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_SDIO + g_sdio]           )
         );
       end
     endgenerate
@@ -726,20 +786,20 @@ module udma_subsystem
     generate
       for (genvar g_i2s = 0; g_i2s < `N_I2S; g_i2s++)
       begin: i_i2s_gen
-        assign s_events[4*(`PER_ID_I2S + g_i2s)+0]    = s_rx_ch_events[`CH_ID_RX_I2S + g_i2s];
-        assign s_events[4*(`PER_ID_I2S + g_i2s)+1]  = s_tx_ch_events[`CH_ID_TX_I2S + g_i2s];
-        assign s_events[4*(`PER_ID_I2S + g_i2s)+2]  = 1'b0;
-        assign s_events[4*(`PER_ID_I2S + g_i2s)+3]  = 1'b0;
-        assign s_rx_cfg_stream[`CH_ID_RX_I2S + g_i2s] = 'h0;
-        assign s_rx_cfg_stream_id[`CH_ID_RX_I2S + g_i2s] = 'h0;
-        assign s_rx_ch_destination[`CH_ID_RX_I2S + g_i2s] = 'h0;
-        assign s_tx_ch_destination[`CH_ID_TX_I2S + g_i2s] = 'h0;
+        assign s_events[4*(PER_ID_I2S + g_i2s)+0]    = s_rx_ch_events[CH_ID_RX_I2S + g_i2s];
+        assign s_events[4*(PER_ID_I2S + g_i2s)+1]  = s_tx_ch_events[CH_ID_TX_I2S + g_i2s];
+        assign s_events[4*(PER_ID_I2S + g_i2s)+2]  = 1'b0;
+        assign s_events[4*(PER_ID_I2S + g_i2s)+3]  = 1'b0;
+        assign s_rx_cfg_stream[CH_ID_RX_I2S + g_i2s] = 'h0;
+        assign s_rx_cfg_stream_id[CH_ID_RX_I2S + g_i2s] = 'h0;
+        assign s_rx_ch_destination[CH_ID_RX_I2S + g_i2s] = 'h0;
+        assign s_tx_ch_destination[CH_ID_TX_I2S + g_i2s] = 'h0;
         udma_i2s_top #(
             .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
             .TRANS_SIZE(TRANS_SIZE)
         ) i_i2s_udma (
-            .sys_clk_i           ( s_clk_periphs_core[`PER_ID_I2S + g_i2s]  ),
-            .periph_clk_i        ( s_clk_periphs_per[`PER_ID_I2S + g_i2s]   ),
+            .sys_clk_i           ( s_clk_periphs_core[PER_ID_I2S + g_i2s]  ),
+            .periph_clk_i        ( s_clk_periphs_per[PER_ID_I2S + g_i2s]   ),
             .rstn_i              ( sys_resetn_i                    ),
 
             .dft_test_mode_i     ( dft_test_mode_i                 ),
@@ -774,42 +834,42 @@ module udma_subsystem
 
             .cfg_data_i          ( s_periph_data_to                ),
             .cfg_addr_i          ( s_periph_addr                   ),
-            .cfg_valid_i         ( s_periph_valid[`PER_ID_I2S + g_i2s]      ),
+            .cfg_valid_i         ( s_periph_valid[PER_ID_I2S + g_i2s]      ),
             .cfg_rwn_i           ( s_periph_rwn                    ),
-            .cfg_data_o          ( s_periph_data_from[`PER_ID_I2S + g_i2s]  ),
-            .cfg_ready_o         ( s_periph_ready[`PER_ID_I2S + g_i2s]      ),
+            .cfg_data_o          ( s_periph_data_from[PER_ID_I2S + g_i2s]  ),
+            .cfg_ready_o         ( s_periph_ready[PER_ID_I2S + g_i2s]      ),
 
-            .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[`CH_ID_RX_I2S + g_i2s]  ),
-            .cfg_rx_size_o       ( s_rx_cfg_size[`CH_ID_RX_I2S + g_i2s]       ),
-            .cfg_rx_continuous_o ( s_rx_cfg_continuous[`CH_ID_RX_I2S + g_i2s] ),
-            .cfg_rx_en_o         ( s_rx_cfg_en[`CH_ID_RX_I2S + g_i2s]         ),
-            .cfg_rx_clr_o        ( s_rx_cfg_clr[`CH_ID_RX_I2S + g_i2s]        ),
-            .cfg_rx_en_i         ( s_rx_ch_en[`CH_ID_RX_I2S + g_i2s]          ),
-            .cfg_rx_pending_i    ( s_rx_ch_pending[`CH_ID_RX_I2S + g_i2s]     ),
-            .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[`CH_ID_RX_I2S + g_i2s]   ),
-            .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[`CH_ID_RX_I2S + g_i2s]  ),
+            .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_I2S + g_i2s]  ),
+            .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_I2S + g_i2s]       ),
+            .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_I2S + g_i2s] ),
+            .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_I2S + g_i2s]         ),
+            .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_I2S + g_i2s]        ),
+            .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_I2S + g_i2s]          ),
+            .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_I2S + g_i2s]     ),
+            .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_I2S + g_i2s]   ),
+            .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_I2S + g_i2s]  ),
 
-            .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[`CH_ID_TX_I2S + g_i2s]  ),
-            .cfg_tx_size_o       ( s_tx_cfg_size[`CH_ID_TX_I2S + g_i2s]       ),
-            .cfg_tx_continuous_o ( s_tx_cfg_continuous[`CH_ID_TX_I2S + g_i2s] ),
-            .cfg_tx_en_o         ( s_tx_cfg_en[`CH_ID_TX_I2S + g_i2s]         ),
-            .cfg_tx_clr_o        ( s_tx_cfg_clr[`CH_ID_TX_I2S + g_i2s]        ),
-            .cfg_tx_en_i         ( s_tx_ch_en[`CH_ID_TX_I2S + g_i2s]          ),
-            .cfg_tx_pending_i    ( s_tx_ch_pending[`CH_ID_TX_I2S + g_i2s]     ),
-            .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[`CH_ID_TX_I2S + g_i2s]   ),
-            .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[`CH_ID_TX_I2S + g_i2s]  ),
+            .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_TX_I2S + g_i2s]  ),
+            .cfg_tx_size_o       ( s_tx_cfg_size[CH_ID_TX_I2S + g_i2s]       ),
+            .cfg_tx_continuous_o ( s_tx_cfg_continuous[CH_ID_TX_I2S + g_i2s] ),
+            .cfg_tx_en_o         ( s_tx_cfg_en[CH_ID_TX_I2S + g_i2s]         ),
+            .cfg_tx_clr_o        ( s_tx_cfg_clr[CH_ID_TX_I2S + g_i2s]        ),
+            .cfg_tx_en_i         ( s_tx_ch_en[CH_ID_TX_I2S + g_i2s]          ),
+            .cfg_tx_pending_i    ( s_tx_ch_pending[CH_ID_TX_I2S + g_i2s]     ),
+            .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_TX_I2S + g_i2s]   ),
+            .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_TX_I2S + g_i2s]  ),
 
-            .data_rx_datasize_o  ( s_rx_ch_datasize[`CH_ID_RX_I2S + g_i2s]    ),
-            .data_rx_o           ( s_rx_ch_data[`CH_ID_RX_I2S + g_i2s]        ),
-            .data_rx_valid_o     ( s_rx_ch_valid[`CH_ID_RX_I2S + g_i2s]       ),
-            .data_rx_ready_i     ( s_rx_ch_ready[`CH_ID_RX_I2S + g_i2s]       ),
+            .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_I2S + g_i2s]    ),
+            .data_rx_o           ( s_rx_ch_data[CH_ID_RX_I2S + g_i2s]        ),
+            .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_I2S + g_i2s]       ),
+            .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_I2S + g_i2s]       ),
 
-            .data_tx_req_o       ( s_tx_ch_req[`CH_ID_TX_I2S + g_i2s]         ),
-            .data_tx_gnt_i       ( s_tx_ch_gnt[`CH_ID_TX_I2S + g_i2s]         ),
-            .data_tx_datasize_o  ( s_tx_ch_datasize[`CH_ID_TX_I2S + g_i2s]    ),
-            .data_tx_i           ( s_tx_ch_data[`CH_ID_TX_I2S + g_i2s]        ),
-            .data_tx_valid_i     ( s_tx_ch_valid[`CH_ID_TX_I2S + g_i2s]       ),
-            .data_tx_ready_o     ( s_tx_ch_ready[`CH_ID_TX_I2S + g_i2s]       )
+            .data_tx_req_o       ( s_tx_ch_req[CH_ID_TX_I2S + g_i2s]         ),
+            .data_tx_gnt_i       ( s_tx_ch_gnt[CH_ID_TX_I2S + g_i2s]         ),
+            .data_tx_datasize_o  ( s_tx_ch_datasize[CH_ID_TX_I2S + g_i2s]    ),
+            .data_tx_i           ( s_tx_ch_data[CH_ID_TX_I2S + g_i2s]        ),
+            .data_tx_valid_i     ( s_tx_ch_valid[CH_ID_TX_I2S + g_i2s]       ),
+            .data_tx_ready_o     ( s_tx_ch_ready[CH_ID_TX_I2S + g_i2s]       )
         );
       end
     endgenerate
@@ -820,19 +880,19 @@ module udma_subsystem
       begin: i_cam_gen
 		logic [7:0]		s_cam_data;
 		assign s_cam_data = perio_in_i[`PERIO_CAM0_DATA7 + `PERIO_CAM_NPORTS * g_cam : `PERIO_CAM0_DATA0 + `PERIO_CAM_NPORTS * g_cam];
-        assign s_events[4*(`PER_ID_CAM + g_cam)+0]    = s_rx_ch_events[`CH_ID_RX_CAM + g_cam];
-        assign s_events[4*(`PER_ID_CAM + g_cam)+1]  = 1'b0;
-        assign s_events[4*(`PER_ID_CAM + g_cam)+2]  = 1'b0;
-        assign s_events[4*(`PER_ID_CAM + g_cam)+3]  = 1'b0;
-        assign s_rx_cfg_stream[`CH_ID_RX_CAM + g_cam] = 'h0;
-        assign s_rx_cfg_stream_id[`CH_ID_RX_CAM + g_cam] = 'h0;
-        assign s_rx_ch_destination[`CH_ID_RX_CAM + g_cam] = 'h0;
+        assign s_events[4*(PER_ID_CAM + g_cam)+0]    = s_rx_ch_events[CH_ID_RX_CAM + g_cam];
+        assign s_events[4*(PER_ID_CAM + g_cam)+1]  = 1'b0;
+        assign s_events[4*(PER_ID_CAM + g_cam)+2]  = 1'b0;
+        assign s_events[4*(PER_ID_CAM + g_cam)+3]  = 1'b0;
+        assign s_rx_cfg_stream[CH_ID_RX_CAM + g_cam] = 'h0;
+        assign s_rx_cfg_stream_id[CH_ID_RX_CAM + g_cam] = 'h0;
+        assign s_rx_ch_destination[CH_ID_RX_CAM + g_cam] = 'h0;
         camera_if #(
             .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
             .TRANS_SIZE(TRANS_SIZE),
             .DATA_WIDTH(8)
         ) i_camera_if (
-            .clk_i(s_clk_periphs_core[`PER_ID_CAM + g_cam]),
+            .clk_i(s_clk_periphs_core[PER_ID_CAM + g_cam]),
             .rstn_i(sys_resetn_i),
 
             .dft_test_mode_i(dft_test_mode_i),
@@ -840,25 +900,25 @@ module udma_subsystem
 
             .cfg_data_i          ( s_periph_data_to                ),
             .cfg_addr_i          ( s_periph_addr                   ),
-            .cfg_valid_i         ( s_periph_valid[`PER_ID_CAM + g_cam]      ),
+            .cfg_valid_i         ( s_periph_valid[PER_ID_CAM + g_cam]      ),
             .cfg_rwn_i           ( s_periph_rwn                    ),
-            .cfg_data_o          ( s_periph_data_from[`PER_ID_CAM + g_cam]  ),
-            .cfg_ready_o         ( s_periph_ready[`PER_ID_CAM + g_cam]      ),
+            .cfg_data_o          ( s_periph_data_from[PER_ID_CAM + g_cam]  ),
+            .cfg_ready_o         ( s_periph_ready[PER_ID_CAM + g_cam]      ),
 
-            .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[`CH_ID_RX_CAM + g_cam]  ),
-            .cfg_rx_size_o       ( s_rx_cfg_size[`CH_ID_RX_CAM + g_cam]       ),
-            .cfg_rx_continuous_o ( s_rx_cfg_continuous[`CH_ID_RX_CAM + g_cam] ),
-            .cfg_rx_en_o         ( s_rx_cfg_en[`CH_ID_RX_CAM + g_cam]         ),
-            .cfg_rx_clr_o        ( s_rx_cfg_clr[`CH_ID_RX_CAM + g_cam]        ),
-            .cfg_rx_en_i         ( s_rx_ch_en[`CH_ID_RX_CAM + g_cam]          ),
-            .cfg_rx_pending_i    ( s_rx_ch_pending[`CH_ID_RX_CAM + g_cam]     ),
-            .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[`CH_ID_RX_CAM + g_cam]   ),
-            .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[`CH_ID_RX_CAM + g_cam]  ),
+            .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_CAM + g_cam]  ),
+            .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_CAM + g_cam]       ),
+            .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_CAM + g_cam] ),
+            .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_CAM + g_cam]         ),
+            .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_CAM + g_cam]        ),
+            .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_CAM + g_cam]          ),
+            .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_CAM + g_cam]     ),
+            .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_CAM + g_cam]   ),
+            .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_CAM + g_cam]  ),
 
-            .data_rx_datasize_o  ( s_rx_ch_datasize[`CH_ID_RX_CAM + g_cam]    ),
-            .data_rx_data_o      ( s_rx_ch_data[`CH_ID_RX_CAM + g_cam][15:0]  ),
-            .data_rx_valid_o     ( s_rx_ch_valid[`CH_ID_RX_CAM + g_cam]       ),
-            .data_rx_ready_i     ( s_rx_ch_ready[`CH_ID_RX_CAM + g_cam]       ),
+            .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_CAM + g_cam]    ),
+            .data_rx_data_o      ( s_rx_ch_data[CH_ID_RX_CAM + g_cam][15:0]  ),
+            .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_CAM + g_cam]       ),
+            .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_CAM + g_cam]       ),
 			
 			// Pad signals
             // .cam_clk_i           ( cam_clk_i                       ),
@@ -871,7 +931,7 @@ module udma_subsystem
             .cam_hsync_i         ( perio_in_i[`PERIO_CAM0_HSYNC + `PERIO_CAM_NPORTS * g_cam]),
             .cam_vsync_i         ( perio_in_i[`PERIO_CAM0_VSYNC + `PERIO_CAM_NPORTS * g_cam])
         );
-        assign s_rx_ch_data[`CH_ID_RX_CAM + g_cam][31:16]='h0;
+        assign s_rx_ch_data[CH_ID_RX_CAM + g_cam][31:16]='h0;
       end
     endgenerate
     
@@ -880,60 +940,60 @@ module udma_subsystem
    generate
       for (genvar g_filter = 0; g_filter < `N_FILTER; g_filter++)
       begin: i_filter_gen
-        assign s_events[4*(`PER_ID_FILTER + g_filter)+0]    = s_filter_eot_evt;
-        assign s_events[4*(`PER_ID_FILTER + g_filter)+1]  = s_filter_act_evt;
-        assign s_events[4*(`PER_ID_FILTER + g_filter)+2]  = 1'b0;
-        assign s_events[4*(`PER_ID_FILTER + g_filter)+3]  = 1'b0;
+        assign s_events[4*(PER_ID_FILTER + g_filter)+0]    = s_filter_eot_evt;
+        assign s_events[4*(PER_ID_FILTER + g_filter)+1]  = s_filter_act_evt;
+        assign s_events[4*(PER_ID_FILTER + g_filter)+2]  = 1'b0;
+        assign s_events[4*(PER_ID_FILTER + g_filter)+3]  = 1'b0;
 
-        assign s_rx_ext_destination[`CH_ID_EXT_RX_FILTER + g_filter] = 'h0;
-        assign s_rx_ext_stream[`CH_ID_EXT_RX_FILTER + g_filter]      = 'h0;
-        assign s_rx_ext_stream_id[`CH_ID_EXT_RX_FILTER + g_filter]   = 'h0;
-        assign s_rx_ext_sot[`CH_ID_EXT_RX_FILTER + g_filter]         = 'h0;
-        assign s_rx_ext_eot[`CH_ID_EXT_RX_FILTER + g_filter]         = 'h0;
+        assign s_rx_ext_destination[CH_ID_EXT_RX_FILTER + g_filter] = 'h0;
+        assign s_rx_ext_stream[CH_ID_EXT_RX_FILTER + g_filter]      = 'h0;
+        assign s_rx_ext_stream_id[CH_ID_EXT_RX_FILTER + g_filter]   = 'h0;
+        assign s_rx_ext_sot[CH_ID_EXT_RX_FILTER + g_filter]         = 'h0;
+        assign s_rx_ext_eot[CH_ID_EXT_RX_FILTER + g_filter]         = 'h0;
 
-        assign s_tx_ext_destination[`CH_ID_EXT_TX_FILTER + g_filter]   = 'h0;
-        assign s_tx_ext_destination[`CH_ID_EXT_TX_FILTER + g_filter+1] = 'h0;
+        assign s_tx_ext_destination[CH_ID_EXT_TX_FILTER + g_filter]   = 'h0;
+        assign s_tx_ext_destination[CH_ID_EXT_TX_FILTER + g_filter+1] = 'h0;
 
         udma_filter #(
             .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
             .TRANS_SIZE(TRANS_SIZE)
         ) i_filter (
-            .clk_i(s_clk_periphs_core[`PER_ID_FILTER + g_filter]),
+            .clk_i(s_clk_periphs_core[PER_ID_FILTER + g_filter]),
             .resetn_i(sys_resetn_i),
 
             .cfg_data_i              ( s_periph_data_to                  ),
             .cfg_addr_i              ( s_periph_addr                     ),
-            .cfg_valid_i             ( s_periph_valid[`PER_ID_FILTER + g_filter]     ),
+            .cfg_valid_i             ( s_periph_valid[PER_ID_FILTER + g_filter]     ),
             .cfg_rwn_i               ( s_periph_rwn                      ),
-            .cfg_data_o              ( s_periph_data_from[`PER_ID_FILTER + g_filter] ),
-            .cfg_ready_o             ( s_periph_ready[`PER_ID_FILTER + g_filter]     ),
+            .cfg_data_o              ( s_periph_data_from[PER_ID_FILTER + g_filter] ),
+            .cfg_ready_o             ( s_periph_ready[PER_ID_FILTER + g_filter]     ),
 
             .eot_event_o              ( s_filter_eot_evt ),
             .act_event_o              ( s_filter_act_evt ),
 
-            .filter_tx_ch0_req_o      ( s_tx_ext_req[`CH_ID_EXT_TX_FILTER + g_filter]      ),
-            .filter_tx_ch0_addr_o     ( s_tx_ext_addr[`CH_ID_EXT_TX_FILTER + g_filter]     ),
-            .filter_tx_ch0_datasize_o ( s_tx_ext_datasize[`CH_ID_EXT_TX_FILTER + g_filter] ),
-            .filter_tx_ch0_gnt_i      ( s_tx_ext_gnt[`CH_ID_EXT_TX_FILTER + g_filter]      ),
+            .filter_tx_ch0_req_o      ( s_tx_ext_req[CH_ID_EXT_TX_FILTER + g_filter]      ),
+            .filter_tx_ch0_addr_o     ( s_tx_ext_addr[CH_ID_EXT_TX_FILTER + g_filter]     ),
+            .filter_tx_ch0_datasize_o ( s_tx_ext_datasize[CH_ID_EXT_TX_FILTER + g_filter] ),
+            .filter_tx_ch0_gnt_i      ( s_tx_ext_gnt[CH_ID_EXT_TX_FILTER + g_filter]      ),
 
-            .filter_tx_ch0_valid_i    ( s_tx_ext_valid[`CH_ID_EXT_TX_FILTER + g_filter]    ),
-            .filter_tx_ch0_data_i     ( s_tx_ext_data[`CH_ID_EXT_TX_FILTER + g_filter]     ),
-            .filter_tx_ch0_ready_o    ( s_tx_ext_ready[`CH_ID_EXT_TX_FILTER + g_filter]    ),
+            .filter_tx_ch0_valid_i    ( s_tx_ext_valid[CH_ID_EXT_TX_FILTER + g_filter]    ),
+            .filter_tx_ch0_data_i     ( s_tx_ext_data[CH_ID_EXT_TX_FILTER + g_filter]     ),
+            .filter_tx_ch0_ready_o    ( s_tx_ext_ready[CH_ID_EXT_TX_FILTER + g_filter]    ),
 
-            .filter_tx_ch1_req_o      ( s_tx_ext_req[`CH_ID_EXT_TX_FILTER + g_filter+1]      ),
-            .filter_tx_ch1_addr_o     ( s_tx_ext_addr[`CH_ID_EXT_TX_FILTER + g_filter+1]     ),
-            .filter_tx_ch1_datasize_o ( s_tx_ext_datasize[`CH_ID_EXT_TX_FILTER + g_filter+1] ),
-            .filter_tx_ch1_gnt_i      ( s_tx_ext_gnt[`CH_ID_EXT_TX_FILTER + g_filter+1]      ),
+            .filter_tx_ch1_req_o      ( s_tx_ext_req[CH_ID_EXT_TX_FILTER + g_filter+1]      ),
+            .filter_tx_ch1_addr_o     ( s_tx_ext_addr[CH_ID_EXT_TX_FILTER + g_filter+1]     ),
+            .filter_tx_ch1_datasize_o ( s_tx_ext_datasize[CH_ID_EXT_TX_FILTER + g_filter+1] ),
+            .filter_tx_ch1_gnt_i      ( s_tx_ext_gnt[CH_ID_EXT_TX_FILTER + g_filter+1]      ),
 
-            .filter_tx_ch1_valid_i    ( s_tx_ext_valid[`CH_ID_EXT_TX_FILTER + g_filter+1]    ),
-            .filter_tx_ch1_data_i     ( s_tx_ext_data[`CH_ID_EXT_TX_FILTER + g_filter+1]     ),
-            .filter_tx_ch1_ready_o    ( s_tx_ext_ready[`CH_ID_EXT_TX_FILTER + g_filter+1]    ),
+            .filter_tx_ch1_valid_i    ( s_tx_ext_valid[CH_ID_EXT_TX_FILTER + g_filter+1]    ),
+            .filter_tx_ch1_data_i     ( s_tx_ext_data[CH_ID_EXT_TX_FILTER + g_filter+1]     ),
+            .filter_tx_ch1_ready_o    ( s_tx_ext_ready[CH_ID_EXT_TX_FILTER + g_filter+1]    ),
 
-            .filter_rx_ch_addr_o      ( s_rx_ext_addr[`CH_ID_EXT_RX_FILTER + g_filter]     ),
-            .filter_rx_ch_datasize_o  ( s_rx_ext_datasize[`CH_ID_EXT_RX_FILTER + g_filter] ),
-            .filter_rx_ch_valid_o     ( s_rx_ext_valid[`CH_ID_EXT_RX_FILTER + g_filter]    ),
-            .filter_rx_ch_data_o      ( s_rx_ext_data[`CH_ID_EXT_RX_FILTER + g_filter]     ),
-            .filter_rx_ch_ready_i     ( s_rx_ext_ready[`CH_ID_EXT_RX_FILTER + g_filter]    ),
+            .filter_rx_ch_addr_o      ( s_rx_ext_addr[CH_ID_EXT_RX_FILTER + g_filter]     ),
+            .filter_rx_ch_datasize_o  ( s_rx_ext_datasize[CH_ID_EXT_RX_FILTER + g_filter] ),
+            .filter_rx_ch_valid_o     ( s_rx_ext_valid[CH_ID_EXT_RX_FILTER + g_filter]    ),
+            .filter_rx_ch_data_o      ( s_rx_ext_data[CH_ID_EXT_RX_FILTER + g_filter]     ),
+            .filter_rx_ch_ready_i     ( s_rx_ext_ready[CH_ID_EXT_RX_FILTER + g_filter]    ),
 
             .filter_id_i              (  ),
             .filter_data_i            ( s_stream_data[STREAM_ID_FILTER]     ),
@@ -950,62 +1010,62 @@ module udma_subsystem
     generate
       for (genvar g_fpga = 0; g_fpga < `N_FILTER; g_fpga++)
       begin: i_fpga_gen
-        assign s_events[4*(`PER_ID_FPGA + g_fpga)+0] = s_rx_ch_events[`CH_ID_RX_FPGA + g_fpga];
-        assign s_events[4*(`PER_ID_FPGA + g_fpga)+1] = s_tx_ch_events[`CH_ID_TX_FPGA + g_fpga];
-        assign s_events[4*(`PER_ID_FPGA + g_fpga)+2] = 1'b0;
-        assign s_events[4*(`PER_ID_FPGA + g_fpga)+3] = 1'b0;
+        assign s_events[4*(PER_ID_FPGA + g_fpga)+0] = s_rx_ch_events[CH_ID_RX_FPGA + g_fpga];
+        assign s_events[4*(PER_ID_FPGA + g_fpga)+1] = s_tx_ch_events[CH_ID_TX_FPGA + g_fpga];
+        assign s_events[4*(PER_ID_FPGA + g_fpga)+2] = 1'b0;
+        assign s_events[4*(PER_ID_FPGA + g_fpga)+3] = 1'b0;
 
-        assign s_rx_cfg_stream[`CH_ID_RX_FPGA + g_fpga] = 'h0;
-        assign s_rx_cfg_stream_id[`CH_ID_RX_FPGA + g_fpga] = 'h0;
-        assign s_rx_ch_destination[`CH_ID_RX_FPGA + g_fpga] = 'h0;
-        assign s_tx_ch_destination[`CH_ID_TX_FPGA + g_fpga] = 'h0;
+        assign s_rx_cfg_stream[CH_ID_RX_FPGA + g_fpga] = 'h0;
+        assign s_rx_cfg_stream_id[CH_ID_RX_FPGA + g_fpga] = 'h0;
+        assign s_rx_ch_destination[CH_ID_RX_FPGA + g_fpga] = 'h0;
+        assign s_tx_ch_destination[CH_ID_TX_FPGA + g_fpga] = 'h0;
 
         udma_external_per_top #(
             .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
             .TRANS_SIZE(TRANS_SIZE)
         ) i_efpga (
-            .sys_clk_i           ( s_clk_periphs_core[`PER_ID_FPGA + g_fpga]         ),
+            .sys_clk_i           ( s_clk_periphs_core[PER_ID_FPGA + g_fpga]         ),
             .periph_clk_i        ( efpga_clk_i                             ),
             .rstn_i              ( sys_resetn_i                            ),
 
             .cfg_data_i          ( s_periph_data_to                        ),
             .cfg_addr_i          ( s_periph_addr                           ),
-            .cfg_valid_i         ( s_periph_valid[`PER_ID_FPGA + g_fpga]             ),
+            .cfg_valid_i         ( s_periph_valid[PER_ID_FPGA + g_fpga]             ),
             .cfg_rwn_i           ( s_periph_rwn                            ),
-            .cfg_ready_o         ( s_periph_ready[`PER_ID_FPGA + g_fpga]             ),
-            .cfg_data_o          ( s_periph_data_from[`PER_ID_FPGA + g_fpga]         ),
+            .cfg_ready_o         ( s_periph_ready[PER_ID_FPGA + g_fpga]             ),
+            .cfg_data_o          ( s_periph_data_from[PER_ID_FPGA + g_fpga]         ),
 
-            .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[`CH_ID_RX_FPGA + g_fpga]       ),
-            .cfg_rx_size_o       ( s_rx_cfg_size[`CH_ID_RX_FPGA + g_fpga]            ),
-            .cfg_rx_continuous_o ( s_rx_cfg_continuous[`CH_ID_RX_FPGA + g_fpga]      ),
-            .cfg_rx_en_o         ( s_rx_cfg_en[`CH_ID_RX_FPGA + g_fpga]              ),
-            .cfg_rx_clr_o        ( s_rx_cfg_clr[`CH_ID_RX_FPGA + g_fpga]             ),
-            .cfg_rx_en_i         ( s_rx_ch_en[`CH_ID_RX_FPGA + g_fpga]               ),
-            .cfg_rx_pending_i    ( s_rx_ch_pending[`CH_ID_RX_FPGA + g_fpga]          ),
-            .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[`CH_ID_RX_FPGA + g_fpga]        ),
-            .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[`CH_ID_RX_FPGA + g_fpga]       ),
+            .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_FPGA + g_fpga]       ),
+            .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_FPGA + g_fpga]            ),
+            .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_FPGA + g_fpga]      ),
+            .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_FPGA + g_fpga]              ),
+            .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_FPGA + g_fpga]             ),
+            .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_FPGA + g_fpga]               ),
+            .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_FPGA + g_fpga]          ),
+            .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_FPGA + g_fpga]        ),
+            .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_FPGA + g_fpga]       ),
 
-            .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[`CH_ID_TX_FPGA + g_fpga]       ),
-            .cfg_tx_size_o       ( s_tx_cfg_size[`CH_ID_TX_FPGA + g_fpga]            ),
-            .cfg_tx_continuous_o ( s_tx_cfg_continuous[`CH_ID_TX_FPGA + g_fpga]      ),
-            .cfg_tx_en_o         ( s_tx_cfg_en[`CH_ID_TX_FPGA + g_fpga]              ),
-            .cfg_tx_clr_o        ( s_tx_cfg_clr[`CH_ID_TX_FPGA + g_fpga]             ),
-            .cfg_tx_en_i         ( s_tx_ch_en[`CH_ID_TX_FPGA + g_fpga]               ),
-            .cfg_tx_pending_i    ( s_tx_ch_pending[`CH_ID_TX_FPGA + g_fpga]          ),
-            .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[`CH_ID_TX_FPGA + g_fpga]        ),
-            .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[`CH_ID_TX_FPGA + g_fpga]       ),
+            .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_TX_FPGA + g_fpga]       ),
+            .cfg_tx_size_o       ( s_tx_cfg_size[CH_ID_TX_FPGA + g_fpga]            ),
+            .cfg_tx_continuous_o ( s_tx_cfg_continuous[CH_ID_TX_FPGA + g_fpga]      ),
+            .cfg_tx_en_o         ( s_tx_cfg_en[CH_ID_TX_FPGA + g_fpga]              ),
+            .cfg_tx_clr_o        ( s_tx_cfg_clr[CH_ID_TX_FPGA + g_fpga]             ),
+            .cfg_tx_en_i         ( s_tx_ch_en[CH_ID_TX_FPGA + g_fpga]               ),
+            .cfg_tx_pending_i    ( s_tx_ch_pending[CH_ID_TX_FPGA + g_fpga]          ),
+            .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_TX_FPGA + g_fpga]        ),
+            .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_TX_FPGA + g_fpga]       ),
 
-            .data_tx_req_o       ( s_tx_ch_req[`CH_ID_TX_FPGA + g_fpga]              ),
-            .data_tx_gnt_i       ( s_tx_ch_gnt[`CH_ID_TX_FPGA + g_fpga]              ),
-            .data_tx_datasize_o  ( s_tx_ch_datasize[`CH_ID_TX_FPGA + g_fpga]         ),
-            .data_tx_i           ( s_tx_ch_data[`CH_ID_TX_FPGA + g_fpga]             ),
-            .data_tx_valid_i     ( s_tx_ch_valid[`CH_ID_TX_FPGA + g_fpga]            ),
-            .data_tx_ready_o     ( s_tx_ch_ready[`CH_ID_TX_FPGA + g_fpga]            ),
+            .data_tx_req_o       ( s_tx_ch_req[CH_ID_TX_FPGA + g_fpga]              ),
+            .data_tx_gnt_i       ( s_tx_ch_gnt[CH_ID_TX_FPGA + g_fpga]              ),
+            .data_tx_datasize_o  ( s_tx_ch_datasize[CH_ID_TX_FPGA + g_fpga]         ),
+            .data_tx_i           ( s_tx_ch_data[CH_ID_TX_FPGA + g_fpga]             ),
+            .data_tx_valid_i     ( s_tx_ch_valid[CH_ID_TX_FPGA + g_fpga]            ),
+            .data_tx_ready_o     ( s_tx_ch_ready[CH_ID_TX_FPGA + g_fpga]            ),
 
-            .data_rx_datasize_o  ( s_rx_ch_datasize[`CH_ID_RX_FPGA + g_fpga]         ),
-            .data_rx_o           ( s_rx_ch_data[`CH_ID_RX_FPGA + g_fpga]             ),
-            .data_rx_valid_o     ( s_rx_ch_valid[`CH_ID_RX_FPGA + g_fpga]            ),
-            .data_rx_ready_i     ( s_rx_ch_ready[`CH_ID_RX_FPGA + g_fpga]            ),
+            .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_FPGA + g_fpga]         ),
+            .data_rx_o           ( s_rx_ch_data[CH_ID_RX_FPGA + g_fpga]             ),
+            .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_FPGA + g_fpga]            ),
+            .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_FPGA + g_fpga]            ),
             
             .external_per_status_i  ( efpga_setup_i                         ),
             .external_per_setup_o   ( efpga_setup_o                         ),
@@ -1036,62 +1096,62 @@ module udma_subsystem
 
 `ifdef PULP_TRAINING
     //PER_ID 8
-    assign s_events[4*`PER_ID_EXT_PER]            = s_rx_ch_events[`CH_ID_RX_EXT_PER];
-    assign s_events[4*`PER_ID_EXT_PER+1]          = s_tx_ch_events[`CH_ID_TX_EXT_PER];
-    assign s_events[4*`PER_ID_EXT_PER+2]          = 1'b0;
-    assign s_events[4*`PER_ID_EXT_PER+3]          = 1'b0;
+    assign s_events[4*PER_ID_EXT_PER]            = s_rx_ch_events[CH_ID_RX_EXT_PER];
+    assign s_events[4*PER_ID_EXT_PER+1]          = s_tx_ch_events[CH_ID_TX_EXT_PER];
+    assign s_events[4*PER_ID_EXT_PER+2]          = 1'b0;
+    assign s_events[4*PER_ID_EXT_PER+3]          = 1'b0;
 
-    assign s_rx_cfg_stream[`CH_ID_RX_EXT_PER]     = 'h0;
-    assign s_rx_cfg_stream_id[`CH_ID_RX_EXT_PER]  = 'h0;
-    assign s_rx_ch_destination[`CH_ID_RX_EXT_PER] = 'h0;
-    assign s_tx_ch_destination[`CH_ID_TX_EXT_PER] = 'h0;
+    assign s_rx_cfg_stream[CH_ID_RX_EXT_PER]     = 'h0;
+    assign s_rx_cfg_stream_id[CH_ID_RX_EXT_PER]  = 'h0;
+    assign s_rx_ch_destination[CH_ID_RX_EXT_PER] = 'h0;
+    assign s_tx_ch_destination[CH_ID_TX_EXT_PER] = 'h0;
 
     udma_external_per_wrapper #(
       .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
       .TRANS_SIZE(TRANS_SIZE)
     ) i_external_per (
-        .sys_clk_i           ( s_clk_periphs_core[`PER_ID_EXT_PER]    ),
-        .periph_clk_i        ( s_clk_periphs_per[`PER_ID_EXT_PER]     ),
+        .sys_clk_i           ( s_clk_periphs_core[PER_ID_EXT_PER]    ),
+        .periph_clk_i        ( s_clk_periphs_per[PER_ID_EXT_PER]     ),
         .rstn_i              ( sys_resetn_i                          ),
 
         .cfg_data_i          ( s_periph_data_to                      ),
         .cfg_addr_i          ( s_periph_addr                         ),
-        .cfg_valid_i         ( s_periph_valid[`PER_ID_EXT_PER]        ),
+        .cfg_valid_i         ( s_periph_valid[PER_ID_EXT_PER]        ),
         .cfg_rwn_i           ( s_periph_rwn                          ),
-        .cfg_ready_o         ( s_periph_ready[`PER_ID_EXT_PER]        ),
-        .cfg_data_o          ( s_periph_data_from[`PER_ID_EXT_PER]    ),
+        .cfg_ready_o         ( s_periph_ready[PER_ID_EXT_PER]        ),
+        .cfg_data_o          ( s_periph_data_from[PER_ID_EXT_PER]    ),
 
-        .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[`CH_ID_RX_EXT_PER]  ),
-        .cfg_rx_size_o       ( s_rx_cfg_size[`CH_ID_RX_EXT_PER]       ),
-        .cfg_rx_continuous_o ( s_rx_cfg_continuous[`CH_ID_RX_EXT_PER] ),
-        .cfg_rx_en_o         ( s_rx_cfg_en[`CH_ID_RX_EXT_PER]         ),
-        .cfg_rx_clr_o        ( s_rx_cfg_clr[`CH_ID_RX_EXT_PER]        ),
-        .cfg_rx_en_i         ( s_rx_ch_en[`CH_ID_RX_EXT_PER]          ),
-        .cfg_rx_pending_i    ( s_rx_ch_pending[`CH_ID_RX_EXT_PER]     ),
-        .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[`CH_ID_RX_EXT_PER]   ),
-        .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[`CH_ID_RX_EXT_PER]  ),
+        .cfg_rx_startaddr_o  ( s_rx_cfg_startaddr[CH_ID_RX_EXT_PER]  ),
+        .cfg_rx_size_o       ( s_rx_cfg_size[CH_ID_RX_EXT_PER]       ),
+        .cfg_rx_continuous_o ( s_rx_cfg_continuous[CH_ID_RX_EXT_PER] ),
+        .cfg_rx_en_o         ( s_rx_cfg_en[CH_ID_RX_EXT_PER]         ),
+        .cfg_rx_clr_o        ( s_rx_cfg_clr[CH_ID_RX_EXT_PER]        ),
+        .cfg_rx_en_i         ( s_rx_ch_en[CH_ID_RX_EXT_PER]          ),
+        .cfg_rx_pending_i    ( s_rx_ch_pending[CH_ID_RX_EXT_PER]     ),
+        .cfg_rx_curr_addr_i  ( s_rx_ch_curr_addr[CH_ID_RX_EXT_PER]   ),
+        .cfg_rx_bytes_left_i ( s_rx_ch_bytes_left[CH_ID_RX_EXT_PER]  ),
 
-        .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[`CH_ID_TX_EXT_PER]  ),
-        .cfg_tx_size_o       ( s_tx_cfg_size[`CH_ID_TX_EXT_PER]       ),
-        .cfg_tx_continuous_o ( s_tx_cfg_continuous[`CH_ID_TX_EXT_PER] ),
-        .cfg_tx_en_o         ( s_tx_cfg_en[`CH_ID_TX_EXT_PER]         ),
-        .cfg_tx_clr_o        ( s_tx_cfg_clr[`CH_ID_TX_EXT_PER]        ),
-        .cfg_tx_en_i         ( s_tx_ch_en[`CH_ID_TX_EXT_PER]          ),
-        .cfg_tx_pending_i    ( s_tx_ch_pending[`CH_ID_TX_EXT_PER]     ),
-        .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[`CH_ID_TX_EXT_PER]   ),
-        .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[`CH_ID_TX_EXT_PER]  ),
+        .cfg_tx_startaddr_o  ( s_tx_cfg_startaddr[CH_ID_TX_EXT_PER]  ),
+        .cfg_tx_size_o       ( s_tx_cfg_size[CH_ID_TX_EXT_PER]       ),
+        .cfg_tx_continuous_o ( s_tx_cfg_continuous[CH_ID_TX_EXT_PER] ),
+        .cfg_tx_en_o         ( s_tx_cfg_en[CH_ID_TX_EXT_PER]         ),
+        .cfg_tx_clr_o        ( s_tx_cfg_clr[CH_ID_TX_EXT_PER]        ),
+        .cfg_tx_en_i         ( s_tx_ch_en[CH_ID_TX_EXT_PER]          ),
+        .cfg_tx_pending_i    ( s_tx_ch_pending[CH_ID_TX_EXT_PER]     ),
+        .cfg_tx_curr_addr_i  ( s_tx_ch_curr_addr[CH_ID_TX_EXT_PER]   ),
+        .cfg_tx_bytes_left_i ( s_tx_ch_bytes_left[CH_ID_TX_EXT_PER]  ),
 
-        .data_tx_req_o       ( s_tx_ch_req[`CH_ID_TX_EXT_PER]         ),
-        .data_tx_gnt_i       ( s_tx_ch_gnt[`CH_ID_TX_EXT_PER]         ),
-        .data_tx_datasize_o  ( s_tx_ch_datasize[`CH_ID_TX_EXT_PER]    ),
-        .data_tx_i           ( s_tx_ch_data[`CH_ID_TX_EXT_PER]        ),
-        .data_tx_valid_i     ( s_tx_ch_valid[`CH_ID_TX_EXT_PER]       ),
-        .data_tx_ready_o     ( s_tx_ch_ready[`CH_ID_TX_EXT_PER]       ),
+        .data_tx_req_o       ( s_tx_ch_req[CH_ID_TX_EXT_PER]         ),
+        .data_tx_gnt_i       ( s_tx_ch_gnt[CH_ID_TX_EXT_PER]         ),
+        .data_tx_datasize_o  ( s_tx_ch_datasize[CH_ID_TX_EXT_PER]    ),
+        .data_tx_i           ( s_tx_ch_data[CH_ID_TX_EXT_PER]        ),
+        .data_tx_valid_i     ( s_tx_ch_valid[CH_ID_TX_EXT_PER]       ),
+        .data_tx_ready_o     ( s_tx_ch_ready[CH_ID_TX_EXT_PER]       ),
 
-        .data_rx_datasize_o  ( s_rx_ch_datasize[`CH_ID_RX_EXT_PER]    ),
-        .data_rx_o           ( s_rx_ch_data[`CH_ID_RX_EXT_PER]        ),
-        .data_rx_valid_o     ( s_rx_ch_valid[`CH_ID_RX_EXT_PER]       ),
-        .data_rx_ready_i     ( s_rx_ch_ready[`CH_ID_RX_EXT_PER]       )
+        .data_rx_datasize_o  ( s_rx_ch_datasize[CH_ID_RX_EXT_PER]    ),
+        .data_rx_o           ( s_rx_ch_data[CH_ID_RX_EXT_PER]        ),
+        .data_rx_valid_o     ( s_rx_ch_valid[CH_ID_RX_EXT_PER]       ),
+        .data_rx_ready_i     ( s_rx_ch_ready[CH_ID_RX_EXT_PER]       )
 
     );
 `endif
