@@ -87,6 +87,10 @@ cv32e40p:
   commit: master
   group: Openhwgroup
   domain: [soc]
+cv32e40p:
+  commit: ae5b08bc4cc3459748dfa809572e8107703a4ade
+  group: openhwgroup
+  domain: [soc]
 scm:
   commit: v1.0.1
   domain: [cluster, soc]

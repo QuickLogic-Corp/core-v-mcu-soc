@@ -35,7 +35,7 @@ module soc_peripherals #(
     output logic                       fc_fetchen_o,
     input  logic [7:0]                 soc_jtag_reg_i,
     output logic [7:0]                 soc_jtag_reg_o,
-    input logic 			      stoptimer,
+    input logic                        stoptimer_i,
     input  logic                       boot_l2_i,
     input  logic                       bootsel_i,
     // fc fetch enable can be controlled through this signal or through an APB
@@ -623,12 +623,6 @@ module soc_peripherals #(
     // ██║  ██║██║     ██████╔╝    ███████║╚██████╔╝╚██████╗    ╚██████╗   ██║   ██║  ██║███████╗ //
     // ╚═╝  ╚═╝╚═╝     ╚═════╝     ╚══════╝ ╚═════╝  ╚═════╝     ╚═════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝ //
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    if (`N_IO > 64)
-        $error("apb_soc_ctrl doesn't support any other value than NPAD=64");
-    if (`NBIT_PADMUX != 2)
-        $error("apb_soc_ctrl doesn't support any other value than NBIT_PADMUX=2");
-	logic [63:0][`NBIT_PADMUX-1:0]  s_pad_mux_local;
-	logic [63:0][`NBIT_PADCFG-1:0]  s_pad_cfg_local;
     apb_soc_ctrl #(
         .NB_CORES       ( NB_CORES       ),
         .NB_CLUSTERS    ( NB_CLUSTERS    ),
@@ -671,8 +665,8 @@ module soc_peripherals #(
         .soc_jtag_reg_i      ( soc_jtag_reg_i         ),
         .soc_jtag_reg_o      ( soc_jtag_reg_o         ),
 
-        .pad_mux_o           ( s_pad_mux_local              ),
-        .pad_cfg_o           ( s_pad_cfg_local              ),
+        .pad_mux_o           ( pad_mux_o              ),
+        .pad_cfg_o           ( pad_cfg_o              ),
         .cluster_pow_o       ( cluster_pow_o          ),
         .sel_hyper_axi_o     ( s_sel_hyper_axi        ),
 
@@ -682,17 +676,6 @@ module soc_peripherals #(
         .cluster_rstn_o           ( cluster_rstn_o         ),
         .cluster_irq_o            ( cluster_irq_o          )
     );
-    for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_mux_outer
-        for (genvar j = 0; j < `NBIT_PADMUX; j++) begin : gen_pad_mux_innter
-            assign pad_mux_o[i][j] = s_pad_mux_local[i][j];
-        end
-    end
-
-    for (genvar i = 0; i < `N_IO; i++) begin : gen_pad_cfg_outer
-        for (genvar j = 0; j < `NBIT_PADCFG; j++) begin : gen_pad_cfg_inner
-            assign pad_cfg_o[i][j] = s_pad_cfg_local[i][j];
-        end
-    end
 	
     apb_adv_timer #(
         .APB_ADDR_WIDTH ( APB_ADDR_WIDTH ),
@@ -769,6 +752,14 @@ module soc_peripherals #(
         .pr_event_ready_i ( s_pr_event_ready           )
     );
 
+    /////////////////////////////////////////////////////////////////////////
+    //  █████╗ ██████╗ ██████╗     ████████╗██╗███╗   ███╗███████╗██████╗  //
+    // ██╔══██╗██╔══██╗██╔══██╗    ╚══██╔══╝██║████╗ ████║██╔════╝██╔══██╗ //
+    // ███████║██████╔╝██████╔╝       ██║   ██║██╔████╔██║█████╗  ██████╔╝ //
+    // ██╔══██║██╔═══╝ ██╔══██╗       ██║   ██║██║╚██╔╝██║██╔══╝  ██╔══██╗ //
+    // ██║  ██║██║     ██████╔╝       ██║   ██║██║ ╚═╝ ██║███████╗██║  ██║ //
+    // ╚═╝  ╚═╝╚═╝     ╚═════╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ //
+    /////////////////////////////////////////////////////////////////////////
 
     apb_timer_unit #(.APB_ADDR_WIDTH(APB_ADDR_WIDTH)) i_apb_timer_unit (
         .HCLK       ( clk_i                   ),
@@ -786,7 +777,7 @@ module soc_peripherals #(
         .event_hi_i ( s_timer_in_hi_event     ),
         .irq_lo_o   ( s_timer_lo_event        ),
         .irq_hi_o   ( s_timer_hi_event        ),
-	.stoptimer_i( stoptimer),
+        .stoptimer_i( stoptimer_i             ),
         .busy_o     (                         )
     );
     

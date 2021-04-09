@@ -38,13 +38,13 @@ module fc_subsystem #(
     input  logic [31:0]               boot_addr_i,
     input  logic                      debug_req_i,
 
-    input logic 		     event_fifo_valid_i,
-    output logic 		     event_fifo_fulln_o,
-    input logic [EVENT_ID_WIDTH-1:0] event_fifo_data_i, // goes indirectly to core interrupt
-    input logic [31:0] 		     events_i, // goes directly to core interrupt, should be called irqs
-    output logic [1:0] 		     hwpe_events_o,
-    output logic 		     stoptimer,
-    output logic 		     supervisor_mode_o
+    input  logic                      event_fifo_valid_i,
+    output logic                      event_fifo_fulln_o,
+    input  logic [EVENT_ID_WIDTH-1:0] event_fifo_data_i, // goes indirectly to core interrupt
+    input  logic [31:0]               events_i, // goes directly to core interrupt, should be called irqs
+    output logic [1:0]                hwpe_events_o,
+
+    output logic                      supervisor_mode_o
 );
 
     typedef enum logic [1:0] {
@@ -66,16 +66,6 @@ module fc_subsystem #(
     logic [4:0]  core_irq_ack_id;
     logic        core_irq_ack   ;
     logic [31:0] core_irq_x;
-    logic [31:0]  irq_o;
-   
-    logic	 core_irq_external ;
-    logic	 core_irq_software ;
-    logic	 core_irq_timer ;
-
-    logic [3:0]  irq_ack_id;
-
-    // Core sleep signal (not used in pulpissimo)
-    logic	 core_sleep ;
 
     // Boot address, core id, cluster id, fethc enable and core_status
     logic [31:0] boot_addr        ;
@@ -83,10 +73,6 @@ module fc_subsystem #(
     logic        core_busy_int    ;
     logic        perf_counters_int;
     logic [31:0] hart_id;
-    
-    logic [31:0] dm_halt_addr; //added for cv32e40p
-    logic [31:0] dm_exception_addr;  //added for cv32e40p
-    logic [31:0] mtvec_addr; //added for cv32e40p
 
     //EU signals
     logic core_clock_en;
@@ -106,10 +92,7 @@ module fc_subsystem #(
     assign perf_counters_int = 1'b0;
     assign fetch_en_int      = fetch_en_eu & fetch_en_i;
 
-    assign hart_id = {21'b0, CLUSTER_ID[5:0], 1'b0, CORE_ID[3:0]}; //hart_id = 992
-    assign mtvec_addr = 32'h00000000 ; //added for cv32e40p
-    assign dm_halt_addr = 32'h1A110800 ; //added for cv32e40p
-    assign dm_exception_addr = 32'h1A118080 ; //added for cv32e40p; value taken from IBEX
+    assign hart_id = CoreSelected != cv32e40pCore ? {21'b0, CLUSTER_ID[5:0], 1'b0, CORE_ID[3:0]} : '0;
 
     XBAR_TCDM_BUS core_data_bus ();
     XBAR_TCDM_BUS core_instr_bus ();
@@ -195,7 +178,7 @@ module fc_subsystem #(
             .apu_master_result_i   ( '0                ),
             .apu_master_flags_i    ( '0                ),
 
-            .irq_i                 ( core_irq_x     ),
+            .irq_i                 ( core_irq_req      ),
             .irq_id_i              ( core_irq_id       ),
             .irq_ack_o             ( core_irq_ack      ),
             .irq_id_o              ( core_irq_ack_id   ),
@@ -256,14 +239,14 @@ module fc_subsystem #(
              .apu_result_i          ( '0                ),
              .apu_flags_i           ( '0                ),
 
-             .irq_i                 ( irq_o        ),
+             .irq_i                 ( core_irq_x        ),
              .irq_ack_o             ( core_irq_ack      ),
              .irq_id_o              ( core_irq_ack_id   ),
 
              .debug_req_i           ( debug_req_i       ),
              .debug_havereset_o     (                   ),
              .debug_running_o       (                   ),
-             .debug_halted_o        ( stoptimer         ),
+             .debug_halted_o        (                   ),
              .fetch_enable_i        ( fetch_en_int      ),
              .core_sleep_o          (                   )
          );
@@ -356,8 +339,8 @@ module fc_subsystem #(
 
     end
     endgenerate
-   
-    apb_interrupt_cntrl #(.PER_ID_WIDTH(PER_ID_WIDTH), .FIFO_PIN(11)) fc_eu_i (
+
+    apb_interrupt_cntrl #(.PER_ID_WIDTH(PER_ID_WIDTH)) fc_eu_i (
         .clk_i              ( clk_i              ),
         .rst_ni             ( rst_ni             ),
         .test_mode_i        ( test_en_i          ),
@@ -373,8 +356,7 @@ module fc_subsystem #(
         .core_irq_sec_o     ( /* SECURE IRQ */   ),
         .core_clock_en_o    ( core_clock_en      ),
         .fetch_en_o         ( fetch_en_eu        ),
-        .apb_slave          ( apb_slave_eu       ),
-	.irq_o (irq_o)
+        .apb_slave          ( apb_slave_eu       )
     );
 
 
