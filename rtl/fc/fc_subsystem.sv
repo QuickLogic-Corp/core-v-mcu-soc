@@ -43,7 +43,7 @@ module fc_subsystem #(
     input  logic [EVENT_ID_WIDTH-1:0] event_fifo_data_i, // goes indirectly to core interrupt
     input  logic [31:0]               events_i, // goes directly to core interrupt, should be called irqs
     output logic [1:0]                hwpe_events_o,
-
+	output logic 		     		  stoptimer_o,
     output logic                      supervisor_mode_o
 );
 
@@ -246,7 +246,7 @@ module fc_subsystem #(
              .debug_req_i           ( debug_req_i       ),
              .debug_havereset_o     (                   ),
              .debug_running_o       (                   ),
-             .debug_halted_o        (                   ),
+             .debug_halted_o        ( stoptimer_o         ),
              .fetch_enable_i        ( fetch_en_int      ),
              .core_sleep_o          (                   )
          );
@@ -339,8 +339,8 @@ module fc_subsystem #(
 
     end
     endgenerate
-
-    apb_interrupt_cntrl #(.PER_ID_WIDTH(PER_ID_WIDTH)) fc_eu_i (
+   
+    apb_interrupt_cntrl #(.PER_ID_WIDTH(PER_ID_WIDTH), .FIFO_PIN(11)) fc_eu_i (
         .clk_i              ( clk_i              ),
         .rst_ni             ( rst_ni             ),
         .test_mode_i        ( test_en_i          ),
@@ -356,7 +356,8 @@ module fc_subsystem #(
         .core_irq_sec_o     ( /* SECURE IRQ */   ),
         .core_clock_en_o    ( core_clock_en      ),
         .fetch_en_o         ( fetch_en_eu        ),
-        .apb_slave          ( apb_slave_eu       )
+        .apb_slave          ( apb_slave_eu       ),
+	.irq_o (irq_o)
     );
 
 
