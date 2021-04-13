@@ -11,7 +11,7 @@ module  fifo_ram #
 	 input 		     rclk,
 	 input 		     wclk
     );
-    logic [WIDTH-1:0] data_ram [FIFO_DEPTH-1:0];
+    logic [FIFO_DEPTH-1:0][WIDTH-1:0] data_ram ;
    logic [A_WIDTH-1:0] latched_raddr;
    
    always @ (posedge wclk) begin

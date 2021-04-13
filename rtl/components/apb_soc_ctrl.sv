@@ -9,10 +9,13 @@
 // specific language governing permissions and limitations under the License.
 
 `include "pulp_soc_defines.sv"
+`include "pulp_peripheral_defines.svh"
 
 `define REG_INFO        12'h00  //BASEADDR+0x00 CONTAINS NUMBER OF CORES [31:16] AND CLUSTERS [15:0]
 `define REG_FCBOOT      12'h04 //BASEADDR+0x04 not used at the moment
 `define REG_FCFETCH     12'h08 //BASEADDR+0x08 not used at the moment
+`define REG_BUILD_DATE  12'h0C //BASEADDR+0x0C date of build
+`define REG_BUILD_TIME  12'h10 //BASEADDR+0x0C time of build
 
 //bit0    enable pull UP
 //bit1    enable pull DOWN
@@ -110,7 +113,7 @@ module apb_soc_ctrl #(
    localparam IDX_WIDTH = `LOG2(`N_IO);
    localparam CONFIG = 12'h4??;
    
-(* mark_debug = "yes" *)   logic [IDX_WIDTH-1:0]     r_io_pad;
+  logic [IDX_WIDTH-1:0]     r_io_pad;
    
 
    logic [31:0]     r_pwr_reg;
@@ -153,7 +156,7 @@ module apb_soc_ctrl #(
                                           
    logic s_apb_write;
 
-(* mark_debug = "yes" *)   logic [1:0] APB_fsm;
+   logic [1:0] APB_fsm;
    localparam FSM_IDLE = 0, FSM_READ = 1, FSM_WRITE = 2, FSM_WAIT = 3;
    
 
@@ -329,6 +332,10 @@ module apb_soc_ctrl #(
                    PRDATA <= r_bootaddr;
                  `REG_INFO:
                    PRDATA <= {n_cores,n_clusters};
+                `REG_BUILD_DATE:
+                   PRDATA <= `BUILD_DATE;
+                `REG_BUILD_TIME:
+                   PRDATA <= `BUILD_TIME;
                  `REG_CORESTATUS:
                    PRDATA <= r_corestatus;
                  `REG_CS_RO:
@@ -393,6 +400,6 @@ module apb_soc_ctrl #(
    assign n_clusters = NB_CLUSTERS;
    
    
-   assign PSLVERR    = 1'b0;
+   // assign PSLVERR    = 1'b0;
    
 endmodule
